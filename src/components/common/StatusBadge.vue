@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import type { BookingStatus, BusinessStatus } from '@/types'
 
-const props = defineProps<{
+defineProps<{
   status: BookingStatus | BusinessStatus | string
 }>()
 
 const bookingLabels: Record<string, string> = {
   PENDING: 'Kutilmoqda',
   CONFIRMED: 'Tasdiqlangan',
-  CANCELLED: 'Bekor qilindi',
+  IN_PROGRESS: 'Jarayonda',
   COMPLETED: 'Bajarildi',
-  NO_SHOW: "Kelmadi",
+  CANCELLED_BY_CUSTOMER: 'Mijoz bekor qildi',
+  CANCELLED_BY_BUSINESS: 'Biznes bekor qildi',
+  NO_SHOW: 'Kelmadi',
 }
 
 const businessLabels: Record<string, string> = {
@@ -25,9 +27,11 @@ const businessLabels: Record<string, string> = {
 const colorMap: Record<string, string> = {
   PENDING: 'bg-amber-100 text-amber-700 ring-amber-200',
   CONFIRMED: 'bg-emerald-100 text-emerald-700 ring-emerald-200',
-  CANCELLED: 'bg-red-100 text-red-700 ring-red-200',
-  COMPLETED: 'bg-blue-100 text-blue-700 ring-blue-200',
-  NO_SHOW: 'bg-slate-100 text-slate-600 ring-slate-200',
+  IN_PROGRESS: 'bg-blue-100 text-blue-700 ring-blue-200',
+  COMPLETED: 'bg-slate-100 text-slate-700 ring-slate-200',
+  CANCELLED_BY_CUSTOMER: 'bg-red-100 text-red-700 ring-red-200',
+  CANCELLED_BY_BUSINESS: 'bg-orange-100 text-orange-700 ring-orange-200',
+  NO_SHOW: 'bg-slate-100 text-slate-500 ring-slate-200',
   TRIAL: 'bg-amber-100 text-amber-700 ring-amber-200',
   ACTIVE: 'bg-emerald-100 text-emerald-700 ring-emerald-200',
   EXPIRED: 'bg-red-100 text-red-700 ring-red-200',
@@ -39,8 +43,10 @@ const colorMap: Record<string, string> = {
 const dotMap: Record<string, string> = {
   PENDING: 'bg-amber-500',
   CONFIRMED: 'bg-emerald-500',
-  CANCELLED: 'bg-red-500',
-  COMPLETED: 'bg-blue-500',
+  IN_PROGRESS: 'bg-blue-500',
+  COMPLETED: 'bg-slate-400',
+  CANCELLED_BY_CUSTOMER: 'bg-red-500',
+  CANCELLED_BY_BUSINESS: 'bg-orange-500',
   NO_SHOW: 'bg-slate-400',
   TRIAL: 'bg-amber-500',
   ACTIVE: 'bg-emerald-500',

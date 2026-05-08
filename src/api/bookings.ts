@@ -5,6 +5,9 @@ export const bookingsApi = {
   getAll: (params?: { customerId?: string; businessId?: string }) =>
     apiClient.get<Booking[]>('/bookings', { params }),
 
+  get: (id: string) =>
+    apiClient.get<Booking>(`/bookings/${id}`),
+
   create: (data: BookingCreateRequest) =>
     apiClient.post<Booking>('/bookings', data),
 

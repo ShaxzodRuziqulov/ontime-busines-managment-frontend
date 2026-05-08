@@ -6,7 +6,7 @@ import type { AuthResponse, LoginRequest, RegisterRequest } from '@/types'
 function parseJwtRoles(token: string): string[] {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.roles ? payload.roles.split(' ') : []
+    return Array.isArray(payload.roles) ? payload.roles : []
   } catch {
     return []
   }
@@ -21,9 +21,12 @@ export const useAuthStore = defineStore('auth', () => {
   const pendingCredentials = ref<{ login: string; password: string } | null>(null)
 
   const isAuthenticated = computed(() => !!user.value)
-  const isAdmin = computed(() => user.value?.admin || user.value?.roles?.includes('ROLE_ADMIN') || false)
-  const isBusinessOwner = computed(() =>
-    user.value?.roles?.some(r => ['ROLE_BUSINESS_OWNER', 'ROLE_ADMIN'].includes(r)) ?? false
+  const isAdmin = computed(() => user.value?.roles?.includes('ROLE_ADMIN') ?? false)
+  const isBusinessOwner = computed(() => user.value?.roles?.includes('ROLE_BUSINESS_OWNER') ?? false)
+  const isManager = computed(() => user.value?.roles?.includes('ROLE_MANAGER') ?? false)
+  const isStaff = computed(() => user.value?.roles?.includes('ROLE_STAFF') ?? false)
+  const canManageBusiness = computed(() =>
+    user.value?.roles?.some(r => ['ROLE_BUSINESS_OWNER', 'ROLE_MANAGER', 'ROLE_ADMIN'].includes(r)) ?? false
   )
 
   async function login(credentials: LoginRequest) {
@@ -52,6 +55,12 @@ export const useAuthStore = defineStore('auth', () => {
     return login(creds)
   }
 
+  function updateAvatar(avatarUrl: string | null) {
+    if (!user.value) return
+    user.value = { ...user.value, avatarUrl }
+    localStorage.setItem('user', JSON.stringify(user.value))
+  }
+
   function logout() {
     user.value = null
     pendingCredentials.value = null
@@ -64,10 +73,14 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     isAdmin,
     isBusinessOwner,
+    isManager,
+    isStaff,
+    canManageBusiness,
     hasPendingCredentials: computed(() => !!pendingCredentials.value),
     login,
     register,
     relogin,
+    updateAvatar,
     logout,
   }
 })

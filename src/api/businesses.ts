@@ -1,6 +1,12 @@
 import apiClient from './client'
 import type { Business, BusinessUpdateRequest, BusinessStatusUpdateRequest } from '@/types'
 
+export interface BusinessReviewRequest {
+  action: 'APPROVE' | 'REJECT'
+  note?: string
+  subscriptionEndDate?: string
+}
+
 export const businessesApi = {
   getAll: (params?: { ownerId?: string }) =>
     apiClient.get<Business[]>('/businesses', { params }),
@@ -19,4 +25,7 @@ export const businessesApi = {
 
   updateStatus: (id: string, data: BusinessStatusUpdateRequest) =>
     apiClient.put(`/businesses/${id}/status`, data),
+
+  review: (id: string, data: BusinessReviewRequest) =>
+    apiClient.post<Business>(`/businesses/${id}/review`, data),
 }

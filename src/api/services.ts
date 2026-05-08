@@ -13,4 +13,17 @@ export const servicesApi = {
 
   delete: (businessId: string, serviceId: string) =>
     apiClient.delete(`/businesses/${businessId}/services/${serviceId}`),
+
+  uploadImage: (businessId: string, serviceId: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return apiClient.post<OfferedService>(
+      `/businesses/${businessId}/services/${serviceId}/image`,
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    )
+  },
+
+  deleteImage: (businessId: string, serviceId: string) =>
+    apiClient.delete<OfferedService>(`/businesses/${businessId}/services/${serviceId}/image`),
 }

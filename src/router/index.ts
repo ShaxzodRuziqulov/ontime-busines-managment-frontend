@@ -5,6 +5,7 @@ declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
     requiresAdmin?: boolean
+    requiresStaff?: boolean
     guest?: boolean
   }
 }
@@ -65,6 +66,23 @@ const router = createRouter({
           name: 'reviews',
           component: () => import('@/views/reviews/ReviewsView.vue'),
         },
+        {
+          path: 'hours',
+          name: 'hours',
+          component: () => import('@/views/hours/BusinessHoursView.vue'),
+        },
+      ],
+    },
+    {
+      path: '/staff-portal',
+      component: () => import('@/components/layout/AppLayout.vue'),
+      meta: { requiresAuth: true, requiresStaff: true },
+      children: [
+        {
+          path: '',
+          name: 'staff-portal',
+          component: () => import('@/views/staff-portal/StaffPortalView.vue'),
+        },
       ],
     },
     {
@@ -87,6 +105,16 @@ const router = createRouter({
           name: 'admin-businesses',
           component: () => import('@/views/admin/AdminBusinessesView.vue'),
         },
+        {
+          path: 'businesses/:id',
+          name: 'admin-business-detail',
+          component: () => import('@/views/admin/AdminBusinessDetailView.vue'),
+        },
+        {
+          path: 'audit',
+          name: 'admin-audit',
+          component: () => import('@/views/admin/AdminAuditView.vue'),
+        },
       ],
     },
     {
@@ -103,15 +131,26 @@ router.beforeEach((to) => {
     return { name: 'login' }
   }
   if (to.meta.requiresAdmin && !auth.isAdmin) {
-    return { name: 'dashboard' }
+    return { name: auth.isStaff ? 'staff-portal' : 'dashboard' }
+  }
+  if (to.meta.requiresStaff && !auth.isStaff && !auth.isAdmin && !auth.isBusinessOwner) {
+    return { name: 'onboarding' }
   }
   if (to.meta.guest && auth.isAuthenticated) {
     if (auth.isAdmin) return { name: 'admin-dashboard' }
     if (auth.isBusinessOwner) return { name: 'dashboard' }
+    if (auth.isStaff) return { name: 'staff-portal' }
     return { name: 'onboarding' }
   }
   // Autentifikatsiyadan o'tgan lekin biznes egasi bo'lmagan foydalanuvchi
-  if (to.meta.requiresAuth && auth.isAuthenticated && !auth.isBusinessOwner && !auth.isAdmin && to.name !== 'onboarding') {
+  if (
+    to.meta.requiresAuth &&
+    auth.isAuthenticated &&
+    !auth.isBusinessOwner &&
+    !auth.isAdmin &&
+    !auth.isStaff &&
+    to.name !== 'onboarding'
+  ) {
     return { name: 'onboarding' }
   }
 })

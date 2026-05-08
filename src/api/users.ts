@@ -14,6 +14,14 @@ export const usersApi = {
   update: (id: string, data: UserUpdateRequest) =>
     apiClient.put<User>(`/users/${id}`, data),
 
+  uploadAvatar: (id: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return apiClient.post<User>(`/users/${id}/avatar`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
   delete: (id: string) =>
     apiClient.delete(`/users/${id}`),
 }

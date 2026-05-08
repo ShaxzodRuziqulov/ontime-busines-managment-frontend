@@ -24,7 +24,9 @@ export const useBusinessStore = defineStore('business', () => {
 
   async function fetchMyBusiness() {
     const authStore = useAuthStore()
-    if (!authStore.user) return
+    if (!authStore.user || authStore.isAdmin) return
+    // Faqat xodim bo'lsa (biznes egasi emas), biznes yuklamaslik
+    if (authStore.isStaff && !authStore.isBusinessOwner) return
 
     loading.value = true
     try {
