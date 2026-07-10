@@ -64,8 +64,19 @@ function openEdit(service: OfferedService) {
 }
 
 function onImagePick(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
   if (!file) return
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    toast.error('Faqat JPEG, PNG, GIF yoki WEBP formatidagi rasm yuklang')
+    input.value = ''
+    return
+  }
+  if (file.size > MAX_IMAGE_SIZE) {
+    toast.error('Rasm hajmi 5MB dan oshmasligi kerak')
+    input.value = ''
+    return
+  }
   imageFile.value = file
   imagePreview.value = URL.createObjectURL(file)
 }
@@ -125,10 +136,17 @@ async function save() {
 async function toggleActive(service: OfferedService) {
   const bid = businessStore.business?.id
   if (!bid) return
-  const { data } = await servicesApi.update(bid, service.id, { active: !service.active })
-  const idx = services.value.findIndex((s) => s.id === service.id)
-  if (idx !== -1) services.value[idx] = data
+  try {
+    const { data } = await servicesApi.update(bid, service.id, { active: !service.active })
+    const idx = services.value.findIndex((s) => s.id === service.id)
+    if (idx !== -1) services.value[idx] = data
+  } catch {
+    toast.error('Holatni o\'zgartirishda xatolik yuz berdi')
+  }
 }
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
 async function confirmDelete(id: string) {
   const bid = businessStore.business?.id

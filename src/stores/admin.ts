@@ -13,18 +13,26 @@ export const useAdminStore = defineStore('admin', () => {
   async function fetchBusinesses() {
     if (loaded.value) return
     try {
-      const { data } = await businessesApi.getAll()
-      businesses.value = data.map(b => ({ id: b.id, status: b.status }))
+      const { data } = await businessesApi.getAll({ size: 1000 })
+      businesses.value = data.content.map(b => ({ id: b.id, status: b.status }))
       loaded.value = true
     } catch {
       // sidebar badge uchun kritik emas
     }
   }
 
-  function markLoaded(list: { id: string; status: string }[]) {
+  /** To'liq ro'yxat qayta yuklanganda (masalan bizneslar sahifasida) butun keshni almashtiradi. */
+  function setAll(list: { id: string; status: string }[]) {
     businesses.value = list
     loaded.value = true
   }
 
-  return { pendingReviewCount, fetchBusinesses, markLoaded }
+  /** Bitta biznesning holati o'zgarganda (masalan review/status update) faqat o'shani yangilaydi — qolganlarini yo'qotmaydi. */
+  function upsertOne(item: { id: string; status: string }) {
+    const idx = businesses.value.findIndex((b) => b.id === item.id)
+    if (idx !== -1) businesses.value[idx] = item
+    else businesses.value.push(item)
+  }
+
+  return { pendingReviewCount, fetchBusinesses, setAll, upsertOne }
 })

@@ -74,9 +74,9 @@ async function loadData() {
   if (dataLoaded.value) return
   loading.value = true
   try {
-    const [u, b] = await Promise.allSettled([usersApi.getAll(), businessesApi.getAll()])
+    const [u, b] = await Promise.allSettled([usersApi.getAll(), businessesApi.getAll({ size: 1000 })])
     if (u.status === 'fulfilled') allUsers.value = u.value.data
-    if (b.status === 'fulfilled') allBusinesses.value = b.value.data
+    if (b.status === 'fulfilled') allBusinesses.value = b.value.data.content
     dataLoaded.value = true
   } finally {
     loading.value = false

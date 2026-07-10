@@ -73,10 +73,16 @@ export type BookingStatus =
 
 export interface Booking {
   id: string
-  customerId: string
+  customerId: string | null
+  customerName?: string | null
+  guestName: string | null
+  guestPhone: string | null
   businessId: string
+  businessName?: string
   offeredServiceId: string
+  offeredServiceName?: string
   staffId: string | null
+  staffName?: string | null
   startAt: string
   endAt: string
   status: BookingStatus
@@ -85,8 +91,18 @@ export interface Booking {
   updatedAt: string
 }
 
+export interface Page<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+}
+
 export interface BookingCreateRequest {
-  customerId: string
+  customerId?: string
+  guestName?: string
+  guestPhone?: string
   businessId: string
   offeredServiceId: string
   staffId?: string
@@ -102,6 +118,8 @@ export interface BookingUpdateRequest {
   endAt?: string
   status?: BookingStatus
   customerNote?: string
+  guestName?: string
+  guestPhone?: string
 }
 
 export interface OfferedService {
@@ -141,12 +159,28 @@ export interface StaffCreateRequest {
   active: boolean
 }
 
+export interface StaffRegisterRequest {
+  displayName: string
+  login: string
+  password: string
+  email?: string
+  phone?: string
+}
+
+export interface StaffAccountUpdateRequest {
+  displayName?: string
+  email?: string
+  phone?: string
+  password?: string
+}
+
 export interface Review {
   id: string
   bookingId: string
   businessId: string | null
   staffId: string | null
   staffName: string | null
+  customerName?: string | null
   stars: number
   comment: string
   createdAt: string
@@ -215,6 +249,8 @@ export interface UserCreateRequest {
 
 export interface UserUpdateRequest {
   password?: string
+  firstName?: string
+  lastName?: string
   displayName?: string
   email?: string
   phone?: string

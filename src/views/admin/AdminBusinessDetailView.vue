@@ -13,6 +13,7 @@ import { reviewsApi } from '@/api/reviews'
 import { useAdminStore } from '@/stores/admin'
 import AppModal from '@/components/common/AppModal.vue'
 import { useToast } from '@/composables/useToast'
+import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import type { Business, BusinessStatus, BusinessStatusUpdateRequest, OfferedService, StaffMember, BusinessHours, Review } from '@/types'
 
 const route = useRoute()
@@ -37,14 +38,7 @@ const reviewModal = ref(false)
 const reviewForm = ref<BusinessReviewRequest>({ action: 'APPROVE', note: '', subscriptionEndDate: '' })
 
 const allStatuses: BusinessStatus[] = ['TRIAL', 'ACTIVE', 'EXPIRED', 'SUSPENDED', 'DRAFT', 'PENDING_REVIEW']
-const statusLabels: Record<BusinessStatus, string> = {
-  TRIAL: 'Sinov',
-  ACTIVE: 'Faol',
-  EXPIRED: "Muddati o'tgan",
-  SUSPENDED: "To'xtatilgan",
-  DRAFT: 'Qoralama',
-  PENDING_REVIEW: 'Tekshiruvda',
-}
+const statusLabels = businessStatusLabels
 
 const statusForm = ref<BusinessStatusUpdateRequest>({ status: 'ACTIVE', subscriptionEndDate: '' })
 
@@ -70,17 +64,7 @@ const tabs = computed(() => [
   { key: 'reviews', label: 'Sharhlar', count: reviews.value.length, icon: Star },
 ])
 
-function statusColor(status: BusinessStatus) {
-  const map: Record<BusinessStatus, string> = {
-    ACTIVE: 'bg-emerald-100 text-emerald-700',
-    TRIAL: 'bg-amber-100 text-amber-700',
-    EXPIRED: 'bg-red-100 text-red-700',
-    SUSPENDED: 'bg-slate-100 text-slate-600',
-    DRAFT: 'bg-blue-100 text-blue-700',
-    PENDING_REVIEW: 'bg-violet-100 text-violet-700',
-  }
-  return map[status] ?? 'bg-slate-100 text-slate-600'
-}
+const statusColor = businessStatusColor
 
 function statusIcon(status: BusinessStatus) {
   if (status === 'ACTIVE') return CheckCircle2
@@ -107,7 +91,7 @@ async function updateStatus() {
     if (statusForm.value.subscriptionEndDate) payload.subscriptionEndDate = toInstant(statusForm.value.subscriptionEndDate)
     const { data } = await businessesApi.updateStatus(business.value.id, payload)
     business.value = data
-    adminStore.markLoaded([{ id: data.id, status: data.status }])
+    adminStore.upsertOne({ id: data.id, status: data.status })
     statusModal.value = false
     toast.success('Holat yangilandi')
   } catch {
@@ -132,7 +116,7 @@ async function submitReview() {
     }
     const { data } = await businessesApi.review(business.value.id, payload)
     business.value = data
-    adminStore.markLoaded([{ id: data.id, status: data.status }])
+    adminStore.upsertOne({ id: data.id, status: data.status })
     reviewModal.value = false
     toast.success(reviewForm.value.action === 'APPROVE' ? 'Biznes tasdiqlandi' : 'Biznes rad etildi')
   } catch {
@@ -156,7 +140,7 @@ async function loadTab(tab: typeof activeTab.value) {
       const { data } = await businessHoursApi.getAll(id)
       hours.value = data
     } else if (tab === 'reviews' && !reviews.value.length) {
-      const { data } = await reviewsApi.getAll(id)
+      const { data } = await reviewsApi.getAll({ businessId: id })
       reviews.value = data
     }
   } catch {

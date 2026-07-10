@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Menu, LogOut, ChevronDown, User, Search } from 'lucide-vue-next'
+import { Menu, LogOut, ChevronDown, User, UserCog, Search } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useBusinessStore } from '@/stores/business'
 import GlobalSearch from '@/components/common/GlobalSearch.vue'
 import { mediaUrl } from '@/utils/media'
+import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
+import type { BusinessStatus } from '@/types'
 
 defineEmits<{ toggleSidebar: [] }>()
 
@@ -20,30 +22,12 @@ function logout() {
   router.push('/login')
 }
 
-const statusLabels: Record<string, string> = {
-  TRIAL: 'Sinov davri',
-  ACTIVE: 'Faol',
-  EXPIRED: "Muddati o'tgan",
-  SUSPENDED: "To'xtatilgan",
-  DRAFT: 'Qoralama',
-  PENDING_REVIEW: 'Moderatsiyada',
+function getStatusLabel(status: BusinessStatus) {
+  return businessStatusLabels[status] || status
 }
 
-const statusColors: Record<string, string> = {
-  TRIAL: 'bg-amber-100 text-amber-700',
-  ACTIVE: 'bg-emerald-100 text-emerald-700',
-  EXPIRED: 'bg-red-100 text-red-700',
-  SUSPENDED: 'bg-red-100 text-red-700',
-  DRAFT: 'bg-slate-100 text-slate-600',
-  PENDING_REVIEW: 'bg-blue-100 text-blue-700',
-}
-
-function getStatusLabel(status: string) {
-  return statusLabels[status] || status
-}
-
-function getStatusColor(status: string) {
-  return statusColors[status] || 'bg-slate-100 text-slate-600'
+function getStatusColor(status: BusinessStatus) {
+  return businessStatusColor(status)
 }
 
 function onGlobalKeydown(e: KeyboardEvent) {
@@ -129,6 +113,14 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
           class="absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50"
           @click.outside="dropdownOpen = false"
         >
+          <RouterLink
+            to="/profile"
+            class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+            @click="dropdownOpen = false"
+          >
+            <UserCog class="w-4 h-4" />
+            Profilim
+          </RouterLink>
           <button
             class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
             @click="dropdownOpen = false; logout()"

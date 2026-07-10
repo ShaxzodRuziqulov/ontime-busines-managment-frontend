@@ -92,9 +92,23 @@ function openEdit(user: User) {
   showModal.value = true
 }
 
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024
+const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
 function onAvatarChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
   if (!file) return
+  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+    toast.error('Faqat JPEG, PNG yoki WEBP formatidagi rasm yuklang')
+    input.value = ''
+    return
+  }
+  if (file.size > MAX_AVATAR_SIZE) {
+    toast.error('Rasm hajmi 5MB dan oshmasligi kerak')
+    input.value = ''
+    return
+  }
   avatarFile.value = file
   avatarPreview.value = URL.createObjectURL(file)
 }

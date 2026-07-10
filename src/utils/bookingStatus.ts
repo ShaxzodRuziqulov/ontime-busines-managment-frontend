@@ -1,0 +1,53 @@
+import type { BookingStatus } from '@/types'
+
+export const bookingStatusLabels: Record<BookingStatus, string> = {
+  PENDING: 'Kutilmoqda',
+  CONFIRMED: 'Tasdiqlangan',
+  IN_PROGRESS: 'Jarayonda',
+  COMPLETED: 'Bajarildi',
+  CANCELLED_BY_CUSTOMER: 'Bekor (mijoz)',
+  CANCELLED_BY_BUSINESS: 'Bekor (biznes)',
+  NO_SHOW: 'Kelmadi',
+}
+
+/** Badge (matn ustida) ranglari — bg-.../text-... */
+export const bookingStatusBadgeColors: Record<BookingStatus, string> = {
+  PENDING: 'bg-amber-100 text-amber-700',
+  CONFIRMED: 'bg-blue-100 text-blue-700',
+  IN_PROGRESS: 'bg-indigo-100 text-indigo-700',
+  COMPLETED: 'bg-emerald-100 text-emerald-700',
+  CANCELLED_BY_CUSTOMER: 'bg-red-100 text-red-600',
+  CANCELLED_BY_BUSINESS: 'bg-red-100 text-red-600',
+  NO_SHOW: 'bg-slate-100 text-slate-500',
+}
+
+/** To'liq to'ldirilgan blok (masalan jadval katakchasi) uchun fon ranglari. */
+export const bookingStatusBlockColors: Record<BookingStatus, string> = {
+  PENDING: 'bg-amber-400',
+  CONFIRMED: 'bg-blue-500',
+  IN_PROGRESS: 'bg-indigo-500',
+  COMPLETED: 'bg-emerald-500',
+  CANCELLED_BY_CUSTOMER: 'bg-red-300',
+  CANCELLED_BY_BUSINESS: 'bg-red-300',
+  NO_SHOW: 'bg-slate-300',
+}
+
+/**
+ * Backenddagi BookingService.ALLOWED_TRANSITIONS bilan mos — xodim/biznes egasi
+ * bosishi mumkin bo'lgan keyingi amallar.
+ */
+export const nextBookingActions: Record<string, { status: BookingStatus; label: string; cls: string }[]> = {
+  PENDING: [
+    { status: 'CONFIRMED', label: 'Tasdiqlash', cls: 'bg-blue-600 hover:bg-blue-700 text-white' },
+    { status: 'CANCELLED_BY_BUSINESS', label: 'Bekor qilish', cls: 'bg-red-50 hover:bg-red-100 text-red-600' },
+  ],
+  CONFIRMED: [
+    { status: 'IN_PROGRESS', label: 'Boshlash', cls: 'bg-indigo-600 hover:bg-indigo-700 text-white' },
+    { status: 'NO_SHOW', label: 'Kelmadi', cls: 'bg-slate-100 hover:bg-slate-200 text-slate-600' },
+    { status: 'CANCELLED_BY_BUSINESS', label: 'Bekor qilish', cls: 'bg-red-50 hover:bg-red-100 text-red-600' },
+  ],
+  IN_PROGRESS: [
+    { status: 'COMPLETED', label: 'Yakunlash', cls: 'bg-emerald-600 hover:bg-emerald-700 text-white' },
+    { status: 'NO_SHOW', label: 'Kelmadi', cls: 'bg-slate-100 hover:bg-slate-200 text-slate-600' },
+  ],
+}

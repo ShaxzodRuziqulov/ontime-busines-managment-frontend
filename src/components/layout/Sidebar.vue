@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import {
   LayoutDashboard,
   CalendarCheck,
+  CalendarDays,
   Scissors,
   Users,
   Building2,
@@ -28,6 +29,7 @@ const adminStore = useAdminStore()
 const businessNavItems = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'Navbatlar', to: '/bookings', icon: CalendarCheck },
+  { name: 'Jadval', to: '/schedule', icon: CalendarDays },
   { name: 'Xizmatlar', to: '/services', icon: Scissors },
   { name: 'Xodimlar', to: '/staff', icon: Users },
   { name: 'Ish soatlari', to: '/hours', icon: AlarmClock },

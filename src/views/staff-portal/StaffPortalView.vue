@@ -11,8 +11,10 @@ import {
   TrendingUp,
 } from 'lucide-vue-next'
 import { staffPortalApi } from '@/api/staffPortal'
+import { bookingsApi } from '@/api/bookings'
 import { useToast } from '@/composables/useToast'
-import type { StaffMember, Booking, StaffStats } from '@/types'
+import { bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions } from '@/utils/bookingStatus'
+import type { StaffMember, Booking, BookingStatus, StaffStats } from '@/types'
 
 const toast = useToast()
 
@@ -21,15 +23,22 @@ const bookings = ref<Booking[]>([])
 const stats = ref<StaffStats | null>(null)
 const loading = ref(true)
 const activeTab = ref<'overview' | 'bookings'>('overview')
+const updatingId = ref<string | null>(null)
 
-const bookingStatusLabel: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: 'Kutilmoqda', cls: 'bg-amber-100 text-amber-700' },
-  CONFIRMED: { label: 'Tasdiqlangan', cls: 'bg-blue-100 text-blue-700' },
-  IN_PROGRESS: { label: 'Jarayonda', cls: 'bg-indigo-100 text-indigo-700' },
-  COMPLETED: { label: 'Bajarildi', cls: 'bg-emerald-100 text-emerald-700' },
-  CANCELLED_BY_CUSTOMER: { label: 'Bekor (mijoz)', cls: 'bg-red-100 text-red-600' },
-  CANCELLED_BY_BUSINESS: { label: 'Bekor (biznes)', cls: 'bg-red-100 text-red-600' },
-  NO_SHOW: { label: "Kelmadi", cls: 'bg-slate-100 text-slate-500' },
+const nextActions = nextBookingActions
+
+async function changeStatus(booking: Booking, status: BookingStatus) {
+  updatingId.value = booking.id
+  try {
+    await bookingsApi.update(booking.id, { status })
+    booking.status = status
+    toast.success('Holat yangilandi')
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Holatni yangilashda xatolik')
+  } finally {
+    updatingId.value = null
+  }
 }
 
 const upcomingBookings = computed(() =>
@@ -199,18 +208,33 @@ onMounted(async () => {
           <div
             v-for="booking in upcomingBookings"
             :key="booking.id"
-            class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-4"
+            class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4"
           >
-            <div class="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center flex-shrink-0">
-              <CalendarCheck class="w-5 h-5 text-primary-600" />
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center flex-shrink-0">
+                <CalendarCheck class="w-5 h-5 text-primary-600" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-slate-800 text-sm">{{ booking.customerName || booking.guestName || 'Mijoz' }}</p>
+                <p class="text-xs text-slate-500 mt-0.5 truncate">
+                  {{ formatDate(booking.startAt) }}<span v-if="booking.guestPhone"> · {{ booking.guestPhone }}</span>
+                </p>
+              </div>
+              <span :class="['text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0', bookingStatusBadgeColors[booking.status] ?? 'bg-slate-100 text-slate-500']">
+                {{ bookingStatusLabels[booking.status] ?? booking.status }}
+              </span>
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="font-medium text-slate-800 text-sm">{{ formatDate(booking.startAt) }}</p>
-              <p class="text-xs text-slate-500 mt-0.5 truncate">Bron #{{ booking.id.slice(0, 8) }}</p>
+            <div v-if="nextActions[booking.status]?.length" class="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+              <button
+                v-for="action in nextActions[booking.status]"
+                :key="action.status"
+                :disabled="updatingId === booking.id"
+                @click="changeStatus(booking, action.status)"
+                :class="['px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50', action.cls]"
+              >
+                {{ action.label }}
+              </button>
             </div>
-            <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', bookingStatusLabel[booking.status]?.cls ?? 'bg-slate-100 text-slate-500']">
-              {{ bookingStatusLabel[booking.status]?.label ?? booking.status }}
-            </span>
           </div>
         </div>
       </div>
@@ -226,19 +250,36 @@ onMounted(async () => {
           <table class="w-full text-sm">
             <thead class="border-b border-slate-100 bg-slate-50">
               <tr>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mijoz</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Boshlanish</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tugash</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Holat</th>
+                <th class="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Amal</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
               <tr v-for="booking in bookings" :key="booking.id" class="hover:bg-slate-50/50 transition-colors">
+                <td class="px-4 py-3 text-slate-700">{{ booking.customerName || booking.guestName || '—' }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ formatDate(booking.startAt) }}</td>
                 <td class="px-4 py-3 text-slate-500">{{ formatDate(booking.endAt) }}</td>
                 <td class="px-4 py-3 hidden sm:table-cell">
-                  <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', bookingStatusLabel[booking.status]?.cls ?? 'bg-slate-100 text-slate-500']">
-                    {{ bookingStatusLabel[booking.status]?.label ?? booking.status }}
+                  <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', bookingStatusBadgeColors[booking.status] ?? 'bg-slate-100 text-slate-500']">
+                    {{ bookingStatusLabels[booking.status] ?? booking.status }}
                   </span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex justify-end gap-1.5 flex-wrap">
+                    <button
+                      v-for="action in nextActions[booking.status] ?? []"
+                      :key="action.status"
+                      :disabled="updatingId === booking.id"
+                      @click="changeStatus(booking, action.status)"
+                      :class="['px-2.5 py-1 rounded-lg text-xs font-medium transition-colors disabled:opacity-50', action.cls]"
+                    >
+                      {{ action.label }}
+                    </button>
+                    <span v-if="!nextActions[booking.status]?.length" class="text-xs text-slate-300">—</span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -261,8 +302,8 @@ onMounted(async () => {
               <tr v-for="booking in recentBookings" :key="booking.id" class="hover:bg-slate-50/50 transition-colors">
                 <td class="px-4 py-3 text-slate-700">{{ formatDate(booking.startAt) }}</td>
                 <td class="px-4 py-3 hidden sm:table-cell">
-                  <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', bookingStatusLabel[booking.status]?.cls ?? 'bg-slate-100 text-slate-500']">
-                    {{ bookingStatusLabel[booking.status]?.label ?? booking.status }}
+                  <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', bookingStatusBadgeColors[booking.status] ?? 'bg-slate-100 text-slate-500']">
+                    {{ bookingStatusLabels[booking.status] ?? booking.status }}
                   </span>
                 </td>
               </tr>

@@ -47,6 +47,11 @@ const router = createRouter({
           component: () => import('@/views/bookings/BookingsView.vue'),
         },
         {
+          path: 'schedule',
+          name: 'schedule',
+          component: () => import('@/views/schedule/ScheduleView.vue'),
+        },
+        {
           path: 'services',
           name: 'services',
           component: () => import('@/views/services/ServicesView.vue'),
@@ -70,6 +75,11 @@ const router = createRouter({
           path: 'hours',
           name: 'hours',
           component: () => import('@/views/hours/BusinessHoursView.vue'),
+        },
+        {
+          path: 'profile',
+          name: 'profile',
+          component: () => import('@/views/profile/ProfileView.vue'),
         },
       ],
     },
@@ -142,14 +152,16 @@ router.beforeEach((to) => {
     if (auth.isStaff) return { name: 'staff-portal' }
     return { name: 'onboarding' }
   }
-  // Autentifikatsiyadan o'tgan lekin biznes egasi bo'lmagan foydalanuvchi
+  // Autentifikatsiyadan o'tgan lekin biznes egasi bo'lmagan foydalanuvchi — biznes yaratish sahifasiga.
+  // Mijoz sifatida xizmatdan foydalanish bu loyihada yo'q (alohida loyiha sifatida rejalashtirilgan).
   if (
     to.meta.requiresAuth &&
     auth.isAuthenticated &&
     !auth.isBusinessOwner &&
     !auth.isAdmin &&
     !auth.isStaff &&
-    to.name !== 'onboarding'
+    to.name !== 'onboarding' &&
+    to.name !== 'profile'
   ) {
     return { name: 'onboarding' }
   }

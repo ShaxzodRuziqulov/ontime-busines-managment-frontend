@@ -31,7 +31,7 @@ export const useBusinessStore = defineStore('business', () => {
     loading.value = true
     try {
       const { data } = await businessesApi.getAll({ ownerId: authStore.user.userId })
-      business.value = data[0] || null
+      business.value = data.content[0] || null
     } finally {
       loading.value = false
     }

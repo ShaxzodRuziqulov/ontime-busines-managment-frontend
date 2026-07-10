@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
   const pendingCredentials = ref<{ login: string; password: string } | null>(null)
 
   const isAuthenticated = computed(() => !!user.value)
-  const isAdmin = computed(() => user.value?.roles?.includes('ROLE_ADMIN') ?? false)
+  const isAdmin = computed(() => user.value?.admin === true || (user.value?.roles?.includes('ROLE_ADMIN') ?? false))
   const isBusinessOwner = computed(() => user.value?.roles?.includes('ROLE_BUSINESS_OWNER') ?? false)
   const isManager = computed(() => user.value?.roles?.includes('ROLE_MANAGER') ?? false)
   const isStaff = computed(() => user.value?.roles?.includes('ROLE_STAFF') ?? false)
@@ -31,6 +31,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(credentials: LoginRequest) {
     const { data } = await authApi.login(credentials)
+    if (!data || typeof data !== 'object') {
+      throw new Error('Serverdan noto\'g\'ri javob keldi')
+    }
     if (!data.roles || data.roles.length === 0) {
       data.roles = parseJwtRoles(data.accessToken)
     }
@@ -61,6 +64,12 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('user', JSON.stringify(user.value))
   }
 
+  function updateProfile(partial: { displayName?: string; avatarUrl?: string | null }) {
+    if (!user.value) return
+    user.value = { ...user.value, ...partial }
+    localStorage.setItem('user', JSON.stringify(user.value))
+  }
+
   function logout() {
     user.value = null
     pendingCredentials.value = null
@@ -81,6 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     relogin,
     updateAvatar,
+    updateProfile,
     logout,
   }
 })

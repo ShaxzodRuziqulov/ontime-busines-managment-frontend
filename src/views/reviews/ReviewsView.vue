@@ -33,7 +33,7 @@ function formatDate(iso?: string) {
 
 onMounted(async () => {
   try {
-    const { data } = await reviewsApi.getAll(businessStore.business?.id)
+    const { data } = await reviewsApi.getAll({ businessId: businessStore.business?.id })
     reviews.value = data
   } finally {
     loading.value = false
@@ -108,10 +108,10 @@ onMounted(async () => {
           <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center text-sm font-semibold text-primary-700">
-                M
+                {{ (review.customerName || 'M').charAt(0).toUpperCase() }}
               </div>
               <div>
-                <p class="text-sm font-medium text-slate-700">Mijoz</p>
+                <p class="text-sm font-medium text-slate-700">{{ review.customerName || 'Mijoz' }}</p>
                 <p class="text-xs text-slate-400">{{ formatDate(review.createdAt) }}</p>
               </div>
             </div>

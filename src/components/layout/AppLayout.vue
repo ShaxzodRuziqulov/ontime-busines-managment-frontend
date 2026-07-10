@@ -7,9 +7,15 @@ import TrialBanner from '@/components/common/TrialBanner.vue'
 
 const businessStore = useBusinessStore()
 const sidebarOpen = ref(false)
+// Har bir sahifa businessStore.business'ni o'z holicha (mount vaqtida) o'qiydi.
+// Agar RouterView business hali yuklanmasdan turib render bo'lsa, o'sha sahifa
+// businessId'siz so'rov yuborib bo'sh/xato natija olardi — shu poyga holatini
+// (race condition) oldini olish uchun birinchi yuklanish tugaguncha kutamiz.
+const ready = ref(false)
 
-onMounted(() => {
-  businessStore.fetchMyBusiness()
+onMounted(async () => {
+  await businessStore.fetchMyBusiness()
+  ready.value = true
 })
 </script>
 
@@ -34,7 +40,10 @@ onMounted(() => {
 
       <!-- Page content -->
       <main class="flex-1 overflow-y-auto p-6">
-        <RouterView />
+        <div v-if="!ready" class="flex items-center justify-center h-full text-slate-400 text-sm">
+          Yuklanmoqda...
+        </div>
+        <RouterView v-else />
       </main>
     </div>
   </div>

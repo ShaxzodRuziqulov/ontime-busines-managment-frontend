@@ -33,19 +33,22 @@ async function handleLogin() {
     const data = await authStore.login(form)
     const isAdmin = data.admin || data.roles?.includes('ROLE_ADMIN')
     const isOwner = data.businessOwner || data.roles?.includes('ROLE_BUSINESS_OWNER')
+    const isStaff = data.roles?.includes('ROLE_STAFF')
     if (isAdmin) {
       router.push('/admin')
     } else if (isOwner) {
       router.push('/')
+    } else if (isStaff) {
+      router.push('/staff-portal')
     } else {
-      // Oddiy user — biznes yaratish sahifasiga
+      // Oddiy foydalanuvchi — biznes yaratish sahifasiga
       router.push('/onboarding')
     }
   } catch (e: any) {
     if (e.response?.status === 401) {
       error.value = 'Login yoki parol noto\'g\'ri'
     } else {
-      error.value = 'Serverga ulanishda xatolik'
+      error.value = e.response?.data?.message || 'Serverga ulanishda xatolik'
     }
   } finally {
     loading.value = false

@@ -1,5 +1,5 @@
 import apiClient from './client'
-import type { Business, BusinessUpdateRequest, BusinessStatusUpdateRequest } from '@/types'
+import type { Business, BusinessUpdateRequest, BusinessStatusUpdateRequest, Page } from '@/types'
 
 export interface BusinessReviewRequest {
   action: 'APPROVE' | 'REJECT'
@@ -8,8 +8,8 @@ export interface BusinessReviewRequest {
 }
 
 export const businessesApi = {
-  getAll: (params?: { ownerId?: string }) =>
-    apiClient.get<Business[]>('/businesses', { params }),
+  getAll: (params?: { ownerId?: string; page?: number; size?: number }) =>
+    apiClient.get<Page<Business>>('/businesses', { params }),
 
   getById: (id: string) =>
     apiClient.get<Business>(`/businesses/${id}`),

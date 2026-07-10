@@ -10,6 +10,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useToast } from '@/composables/useToast'
+import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import type { Business, BusinessStatus, BusinessStatusUpdateRequest } from '@/types'
 
 const toast = useToast()
@@ -30,14 +31,7 @@ const bulkStatusOpen = ref(false)
 
 const allStatuses: BusinessStatus[] = ['TRIAL', 'ACTIVE', 'EXPIRED', 'SUSPENDED', 'DRAFT', 'PENDING_REVIEW']
 
-const statusLabels: Record<BusinessStatus, string> = {
-  TRIAL: 'Sinov',
-  ACTIVE: 'Faol',
-  EXPIRED: "Muddati o'tgan",
-  SUSPENDED: "To'xtatilgan",
-  DRAFT: 'Qoralama',
-  PENDING_REVIEW: 'Tekshiruvda',
-}
+const statusLabels = businessStatusLabels
 
 const statusForm = ref<BusinessStatusUpdateRequest>({ status: 'ACTIVE', subscriptionEndDate: '' })
 
@@ -88,7 +82,7 @@ async function bulkUpdateStatus(status: BusinessStatus) {
       const idx = businesses.value.findIndex(b => b.id === id)
       if (idx !== -1) businesses.value[idx] = { ...businesses.value[idx], status }
     }
-    adminStore.markLoaded(businesses.value.map(b => ({ id: b.id, status: b.status })))
+    adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
     clearSelection()
     toast.success(`${ids.length} ta biznes holati yangilandi`)
   } catch {
@@ -104,7 +98,7 @@ async function bulkDelete() {
   try {
     await Promise.all(ids.map(id => businessesApi.delete(id)))
     businesses.value = businesses.value.filter(b => !ids.includes(b.id))
-    adminStore.markLoaded(businesses.value.map(b => ({ id: b.id, status: b.status })))
+    adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
     clearSelection()
     toast.success(`${ids.length} ta biznes o'chirildi`)
   } catch {
@@ -139,7 +133,7 @@ async function updateStatus() {
         subscriptionEndDate: statusForm.value.subscriptionEndDate || null,
       }
     }
-    adminStore.markLoaded(businesses.value.map(b => ({ id: b.id, status: b.status })))
+    adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
     statusModal.value = null
     toast.success('Holat yangilandi')
   } catch {
@@ -153,7 +147,7 @@ async function confirmDelete(id: string) {
   try {
     await businessesApi.delete(id)
     businesses.value = businesses.value.filter(b => b.id !== id)
-    adminStore.markLoaded(businesses.value.map(b => ({ id: b.id, status: b.status })))
+    adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
     deleteConfirm.value = null
     toast.success("O'chirildi")
   } catch {
@@ -161,17 +155,7 @@ async function confirmDelete(id: string) {
   }
 }
 
-function statusColor(status: BusinessStatus) {
-  const map: Record<BusinessStatus, string> = {
-    ACTIVE: 'bg-emerald-100 text-emerald-700',
-    TRIAL: 'bg-amber-100 text-amber-700',
-    EXPIRED: 'bg-red-100 text-red-700',
-    SUSPENDED: 'bg-slate-100 text-slate-600',
-    DRAFT: 'bg-blue-100 text-blue-700',
-    PENDING_REVIEW: 'bg-violet-100 text-violet-700',
-  }
-  return map[status] ?? 'bg-slate-100 text-slate-600'
-}
+const statusColor = businessStatusColor
 
 function statusIcon(status: BusinessStatus) {
   if (status === 'ACTIVE') return CheckCircle2
@@ -206,9 +190,9 @@ function exportCsv() {
 
 onMounted(async () => {
   try {
-    const { data } = await businessesApi.getAll()
-    businesses.value = data
-    adminStore.markLoaded(data.map(b => ({ id: b.id, status: b.status })))
+    const { data } = await businessesApi.getAll({ size: 1000 })
+    businesses.value = data.content
+    adminStore.setAll(data.content.map(b => ({ id: b.id, status: b.status })))
   } finally {
     loading.value = false
   }

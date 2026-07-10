@@ -1,12 +1,23 @@
 import apiClient from './client'
 import type { User, UserCreateRequest, UserUpdateRequest } from '@/types'
 
+export interface UserLookup {
+  id: string
+  login: string
+  displayName: string
+  email?: string
+  phone?: string
+}
+
 export const usersApi = {
   getAll: () =>
     apiClient.get<User[]>('/users'),
 
   getById: (id: string) =>
     apiClient.get<User>(`/users/${id}`),
+
+  lookupByLogin: (login: string) =>
+    apiClient.get<UserLookup>(`/users/by-login/${encodeURIComponent(login)}`),
 
   create: (data: UserCreateRequest) =>
     apiClient.post<User>('/users', data),

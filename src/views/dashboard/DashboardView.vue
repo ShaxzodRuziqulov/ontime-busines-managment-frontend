@@ -47,12 +47,12 @@ onMounted(async () => {
   const bid = businessStore.business?.id
   try {
     const [b, s, st, r] = await Promise.allSettled([
-      bookingsApi.getAll(bid ? { businessId: bid } : {}),
+      bookingsApi.getAll(bid ? { businessId: bid, size: 200 } : { size: 200 }),
       bid ? servicesApi.getAll(bid) : Promise.resolve({ data: [] }),
       bid ? staffApi.getAll(bid) : Promise.resolve({ data: [] }),
-      reviewsApi.getAll(bid),
+      reviewsApi.getAll(bid ? { businessId: bid } : {}),
     ])
-    if (b.status === 'fulfilled') bookings.value = b.value.data
+    if (b.status === 'fulfilled') bookings.value = b.value.data.content
     else console.error('Navbatlar yuklanmadi:', b.reason)
     if (s.status === 'fulfilled') services.value = s.value.data
     else console.error('Xizmatlar yuklanmadi:', s.reason)

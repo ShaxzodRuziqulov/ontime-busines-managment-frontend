@@ -3,8 +3,11 @@ import { ref, onMounted, watch } from 'vue'
 import { Building2, Save, Phone, MapPin, FileText, Clock, Calendar } from 'lucide-vue-next'
 import { businessesApi } from '@/api/businesses'
 import { useBusinessStore } from '@/stores/business'
+import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+
+const toast = useToast()
 
 const businessStore = useBusinessStore()
 const saving = ref(false)
@@ -40,6 +43,9 @@ async function saveChanges() {
     await businessStore.fetchMyBusiness()
     saved.value = true
     setTimeout(() => (saved.value = false), 2500)
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Saqlashda xatolik yuz berdi')
   } finally {
     saving.value = false
   }

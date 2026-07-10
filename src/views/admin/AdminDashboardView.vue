@@ -10,6 +10,7 @@ import { businessesApi } from '@/api/businesses'
 import { useAdminStore } from '@/stores/admin'
 import SkeletonTable from '@/components/common/SkeletonTable.vue'
 import MiniBarChart from '@/components/common/MiniBarChart.vue'
+import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import type { User, Business, BusinessStatus } from '@/types'
 
 const adminStore = useAdminStore()
@@ -79,30 +80,16 @@ const businessChart = computed(() => {
   return days
 })
 
-function statusColor(status: BusinessStatus) {
-  const map: Record<BusinessStatus, string> = {
-    ACTIVE: 'bg-emerald-100 text-emerald-700',
-    TRIAL: 'bg-amber-100 text-amber-700',
-    EXPIRED: 'bg-red-100 text-red-700',
-    SUSPENDED: 'bg-slate-100 text-slate-600',
-    DRAFT: 'bg-blue-100 text-blue-700',
-    PENDING_REVIEW: 'bg-violet-100 text-violet-700',
-  }
-  return map[status] ?? 'bg-slate-100 text-slate-600'
-}
-
-const statusLabels: Record<BusinessStatus, string> = {
-  TRIAL: 'Sinov', ACTIVE: 'Faol', EXPIRED: "Muddati o'tgan",
-  SUSPENDED: "To'xtatilgan", DRAFT: 'Qoralama', PENDING_REVIEW: 'Tekshiruvda',
-}
+const statusColor = businessStatusColor
+const statusLabels = businessStatusLabels
 
 onMounted(async () => {
   try {
-    const [u, b] = await Promise.allSettled([usersApi.getAll(), businessesApi.getAll()])
+    const [u, b] = await Promise.allSettled([usersApi.getAll(), businessesApi.getAll({ size: 1000 })])
     if (u.status === 'fulfilled') users.value = u.value.data
     if (b.status === 'fulfilled') {
-      businesses.value = b.value.data
-      adminStore.markLoaded(b.value.data.map(biz => ({ id: biz.id, status: biz.status })))
+      businesses.value = b.value.data.content
+      adminStore.setAll(b.value.data.content.map(biz => ({ id: biz.id, status: biz.status })))
     }
   } finally {
     loading.value = false

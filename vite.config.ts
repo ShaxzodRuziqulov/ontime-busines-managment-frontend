@@ -9,4 +9,21 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+  server: {
+    port: 5174,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:9092',
+        changeOrigin: true,
+      },
+      '/media': {
+        target: 'http://localhost:9092',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: 'http://localhost:9092',
+        changeOrigin: true,
+      },
+    },
+  },
 })

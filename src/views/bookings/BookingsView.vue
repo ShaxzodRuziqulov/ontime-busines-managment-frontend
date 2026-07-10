@@ -1,31 +1,44 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Plus, Search, CalendarCheck, Trash2, Clock } from 'lucide-vue-next'
 import { bookingsApi } from '@/api/bookings'
 import { servicesApi } from '@/api/services'
 import { staffApi } from '@/api/staff'
+import { businessHoursApi } from '@/api/businessHours'
 import { useBusinessStore } from '@/stores/business'
-import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import SkeletonTable from '@/components/common/SkeletonTable.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppModal from '@/components/common/AppModal.vue'
-import type { Booking, BookingStatus, BookingCreateRequest, OfferedService, StaffMember } from '@/types'
+import {
+  weekdayFromDate, toMinutes, todayIso, isStaffBusy, generatePossibleStarts, minutesToLabel,
+} from '@/utils/scheduling'
+import type { Booking, BookingStatus, BookingCreateRequest, OfferedService, StaffMember, BusinessHours } from '@/types'
 
 const businessStore = useBusinessStore()
-const authStore = useAuthStore()
 const toast = useToast()
 
 const bookings = ref<Booking[]>([])
 const services = ref<OfferedService[]>([])
 const staffList = ref<StaffMember[]>([])
+const hours = ref<BusinessHours[]>([])
+const dayBookings = ref<Booking[]>([])
+const slotsLoading = ref(false)
+const bookingDate = ref(todayIso())
+const selectedStartMin = ref<number | null>(null)
 const loading = ref(true)
 const saving = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref<BookingStatus | ''>('')
 const showCreateModal = ref(false)
 const deleteConfirm = ref<string | null>(null)
+const createError = ref('')
+
+const page = ref(0)
+const pageSize = 20
+const totalPages = ref(0)
+const totalElements = ref(0)
 
 const statuses: { label: string; value: BookingStatus | '' }[] = [
   { label: 'Barchasi', value: '' },
@@ -39,13 +52,13 @@ const statuses: { label: string; value: BookingStatus | '' }[] = [
 ]
 
 const defaultForm = (): BookingCreateRequest => ({
-  customerId: authStore.user?.userId ?? '',
+  guestName: '',
+  guestPhone: '',
   businessId: businessStore.business?.id ?? '',
   offeredServiceId: '',
   staffId: undefined,
   startAt: '',
   endAt: '',
-  status: 'PENDING',
   customerNote: '',
 })
 
@@ -55,19 +68,60 @@ const selectedService = computed(() =>
   services.value.find((s) => s.id === form.value.offeredServiceId)
 )
 
-function onServiceChange() {
-  recalcEndAt()
+const activeStaffList = computed(() => staffList.value.filter((s) => s.active))
+
+const todaysHoursForBooking = computed(() =>
+  hours.value.find((h) => h.weekday === weekdayFromDate(bookingDate.value)) ?? null
+)
+
+// Tanlangan xizmat davomiyligiga mos, ish vaqti ichidagi mumkin bo'lgan boshlanish vaqtlari (30 daqiqalik qadam bilan).
+const possibleStarts = computed(() => {
+  const service = selectedService.value
+  const th = todaysHoursForBooking.value
+  if (!service || !th || th.closed || !th.opensAt || !th.closesAt) return []
+  return generatePossibleStarts(toMinutes(th.opensAt), toMinutes(th.closesAt), service.durationMinutes, 30)
+})
+
+function isSlotBusyForSelectedStaff(startMin: number) {
+  if (!form.value.staffId || !selectedService.value) return false
+  return isStaffBusy(dayBookings.value, form.value.staffId, startMin, startMin + selectedService.value.durationMinutes)
 }
 
-function onStartAtChange() {
-  recalcEndAt()
+function freeSlotCount(staffId: string) {
+  if (!selectedService.value) return 0
+  return possibleStarts.value.filter(
+    (start) => !isStaffBusy(dayBookings.value, staffId, start, start + selectedService.value!.durationMinutes)
+  ).length
 }
 
-function recalcEndAt() {
-  if (!form.value.startAt || !selectedService.value) return
-  const start = new Date(form.value.startAt)
-  start.setMinutes(start.getMinutes() + selectedService.value.durationMinutes)
-  form.value.endAt = start.toISOString().slice(0, 16)
+function selectStaff(staffId: string | undefined) {
+  form.value.staffId = staffId
+  selectedStartMin.value = null
+  form.value.startAt = ''
+  form.value.endAt = ''
+}
+
+function selectSlot(startMin: number) {
+  if (!selectedService.value) return
+  selectedStartMin.value = startMin
+  const [y, mo, d] = bookingDate.value.split('-').map(Number)
+  const start = new Date(y, mo - 1, d, Math.floor(startMin / 60), startMin % 60)
+  const end = new Date(start.getTime() + selectedService.value.durationMinutes * 60000)
+  // Backend `Instant` kutadi — zonasiz mahalliy vaqt emas, to'liq ISO instant kerak.
+  form.value.startAt = start.toISOString()
+  form.value.endAt = end.toISOString()
+}
+
+async function loadDayBookings() {
+  const bid = businessStore.business?.id
+  if (!bid) return
+  slotsLoading.value = true
+  try {
+    const { data } = await bookingsApi.getAll({ businessId: bid, date: bookingDate.value, size: 200 })
+    dayBookings.value = data.content
+  } finally {
+    slotsLoading.value = false
+  }
 }
 
 const filtered = computed(() =>
@@ -105,27 +159,68 @@ async function load() {
   loading.value = true
   try {
     const bid = businessStore.business?.id
-    const [b, s, st] = await Promise.all([
-      bookingsApi.getAll(bid ? { businessId: bid } : {}),
+    const [b, s, st, h] = await Promise.all([
+      bookingsApi.getAll({ ...(bid ? { businessId: bid } : {}), page: page.value, size: pageSize }),
       bid ? servicesApi.getAll(bid) : Promise.resolve({ data: [] as OfferedService[] }),
       bid ? staffApi.getAll(bid) : Promise.resolve({ data: [] as StaffMember[] }),
+      bid ? businessHoursApi.getAll(bid) : Promise.resolve({ data: [] as BusinessHours[] }),
     ])
-    bookings.value = b.data
+    bookings.value = b.data.content
+    totalPages.value = b.data.totalPages
+    totalElements.value = b.data.totalElements
     services.value = s.data
     staffList.value = st.data
+    hours.value = h.data
   } finally {
     loading.value = false
   }
 }
 
+function goToPage(next: number) {
+  if (next < 0 || next >= totalPages.value) return
+  page.value = next
+  load()
+}
+
 function openCreate() {
   form.value = defaultForm()
+  createError.value = ''
+  bookingDate.value = todayIso()
+  selectedStartMin.value = null
   showCreateModal.value = true
+  loadDayBookings()
+}
+
+watch(bookingDate, () => {
+  selectedStartMin.value = null
+  form.value.startAt = ''
+  form.value.endAt = ''
+  if (showCreateModal.value) loadDayBookings()
+})
+
+watch(() => form.value.offeredServiceId, () => {
+  selectedStartMin.value = null
+  form.value.startAt = ''
+  form.value.endAt = ''
+})
+
+function errorMessage(e: unknown, fallback: string) {
+  const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+  return msg || fallback
 }
 
 async function createBooking() {
+  createError.value = ''
+  if (!form.value.guestName?.trim()) {
+    createError.value = 'Mijoz ismini kiriting'
+    return
+  }
   if (!form.value.offeredServiceId || !form.value.startAt || !form.value.endAt) {
-    toast.error('Xizmat va vaqtni tanlang')
+    createError.value = 'Xizmat va vaqtni tanlang'
+    return
+  }
+  if (new Date(form.value.endAt) <= new Date(form.value.startAt)) {
+    createError.value = 'Tugash vaqti boshlanish vaqtidan keyin bo\'lishi kerak'
     return
   }
   saving.value = true
@@ -136,34 +231,36 @@ async function createBooking() {
       endAt: new Date(form.value.endAt).toISOString(),
       staffId: form.value.staffId || undefined,
     }
-    const { data } = await bookingsApi.create(payload)
-    bookings.value.unshift(data)
+    await bookingsApi.create(payload)
     showCreateModal.value = false
     toast.success('Navbat yaratildi')
-  } catch {
-    toast.error('Navbat yaratishda xatolik')
+    await load()
+  } catch (e) {
+    createError.value = errorMessage(e, 'Navbat yaratishda xatolik')
   } finally {
     saving.value = false
   }
 }
 
 async function updateStatus(booking: Booking, status: BookingStatus) {
+  const previous = booking.status
   try {
     await bookingsApi.update(booking.id, { status })
     booking.status = status
     toast.success('Status yangilandi')
-  } catch {
-    toast.error('Statusni yangilashda xatolik')
+  } catch (e) {
+    booking.status = previous
+    toast.error(errorMessage(e, 'Statusni yangilashda xatolik'))
   }
 }
 
 async function confirmDelete(id: string) {
   try {
     await bookingsApi.delete(id)
-    bookings.value = bookings.value.filter((b) => b.id !== id)
     toast.success('Navbat o\'chirildi')
-  } catch {
-    toast.error('O\'chirishda xatolik yuz berdi')
+    await load()
+  } catch (e) {
+    toast.error(errorMessage(e, 'O\'chirishda xatolik yuz berdi'))
   }
   deleteConfirm.value = null
 }
@@ -177,11 +274,11 @@ onMounted(load)
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Navbatlar</h1>
-        <p class="text-slate-500 text-sm mt-1">Jami {{ bookings.length }} ta navbat</p>
+        <p class="text-slate-500 text-sm mt-1">Jami {{ totalElements }} ta navbat</p>
       </div>
       <button
         v-if="!businessStore.isExpired"
-        @click="openCreate"
+        @click="openCreate()"
         class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
       >
         <Plus class="w-4 h-4" />
@@ -217,7 +314,7 @@ onMounted(load)
       </div>
     </div>
 
-    <SkeletonTable v-if="loading" :rows="6" :cols="6" />
+    <SkeletonTable v-if="loading" :rows="6" :cols="7" />
 
     <template v-else>
       <EmptyState
@@ -231,7 +328,7 @@ onMounted(load)
         <template #action>
           <button
             v-if="!businessStore.isExpired"
-            @click="openCreate"
+            @click="openCreate()"
             class="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700"
           >
             Navbat qo'shish
@@ -254,6 +351,10 @@ onMounted(load)
               </div>
               <StatusBadge :status="booking.status" />
             </div>
+            <p class="text-xs text-slate-500 mb-1">
+              <span class="font-medium">Mijoz:</span> {{ booking.customerName || booking.guestName || '—' }}
+              <span v-if="booking.guestPhone"> · {{ booking.guestPhone }}</span>
+            </p>
             <p class="text-xs text-slate-500 mb-1">
               <span class="font-medium">Xizmat:</span> {{ serviceNameById(booking.offeredServiceId) }}
             </p>
@@ -291,6 +392,7 @@ onMounted(load)
             <table class="w-full text-sm">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-100">
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Mijoz</th>
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Boshlanish</th>
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Davomiylik</th>
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Xizmat</th>
@@ -306,6 +408,10 @@ onMounted(load)
                   :key="booking.id"
                   class="hover:bg-slate-50/50 transition-colors"
                 >
+                  <td class="px-5 py-4 text-slate-700">
+                    <div>{{ booking.customerName || booking.guestName || '—' }}</div>
+                    <div v-if="booking.guestPhone" class="text-xs text-slate-400">{{ booking.guestPhone }}</div>
+                  </td>
                   <td class="px-5 py-4 text-slate-700 whitespace-nowrap">{{ formatDate(booking.startAt) }}</td>
                   <td class="px-5 py-4 text-slate-500 whitespace-nowrap">
                     <span class="flex items-center gap-1">
@@ -349,6 +455,27 @@ onMounted(load)
             </table>
           </div>
         </div>
+
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="flex items-center justify-between mt-4 text-sm text-slate-500">
+          <span>{{ page + 1 }} / {{ totalPages }} sahifa</span>
+          <div class="flex gap-2">
+            <button
+              :disabled="page === 0"
+              @click="goToPage(page - 1)"
+              class="px-3 py-1.5 rounded-lg border border-slate-200 disabled:opacity-40 hover:bg-slate-50"
+            >
+              Oldingi
+            </button>
+            <button
+              :disabled="page + 1 >= totalPages"
+              @click="goToPage(page + 1)"
+              class="px-3 py-1.5 rounded-lg border border-slate-200 disabled:opacity-40 hover:bg-slate-50"
+            >
+              Keyingi
+            </button>
+          </div>
+        </div>
       </template>
     </template>
 
@@ -359,12 +486,35 @@ onMounted(load)
       @close="showCreateModal = false"
     >
       <form @submit.prevent="createBooking" class="space-y-4">
+        <p v-if="createError" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ createError }}</p>
+
+        <!-- Guest customer info -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Mijoz ismi *</label>
+            <input
+              v-model="form.guestName"
+              type="text"
+              placeholder="Ali Valiyev"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Telefon (ixtiyoriy)</label>
+            <input
+              v-model="form.guestPhone"
+              type="tel"
+              placeholder="+998901234567"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+        </div>
+
         <!-- Service -->
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">Xizmat *</label>
           <select
             v-model="form.offeredServiceId"
-            @change="onServiceChange"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
           >
             <option value="">— Xizmatni tanlang —</option>
@@ -378,48 +528,79 @@ onMounted(load)
           </select>
         </div>
 
+        <!-- Date -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Sana *</label>
+          <input
+            v-model="bookingDate"
+            type="date"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+
         <!-- Staff -->
-        <div>
+        <div v-if="selectedService">
           <label class="block text-sm font-medium text-slate-700 mb-1.5">Xodim (ixtiyoriy)</label>
-          <select
-            v-model="form.staffId"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-          >
-            <option :value="undefined">— Xodim tanlanmagan —</option>
-            <option
-              v-for="st in staffList.filter(s => s.active)"
-              :key="st.id"
-              :value="st.id"
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              @click="selectStaff(undefined)"
+              :class="[
+                'px-3 py-2 rounded-xl text-xs font-medium border text-left transition-all',
+                !form.staffId ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
+              ]"
             >
-              {{ st.displayName }}
-            </option>
-          </select>
+              Xodim tanlanmagan
+            </button>
+            <button
+              v-for="st in activeStaffList"
+              :key="st.id"
+              type="button"
+              @click="selectStaff(st.id)"
+              :class="[
+                'px-3 py-2 rounded-xl text-xs font-medium border text-left transition-all',
+                form.staffId === st.id ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
+              ]"
+            >
+              <div class="truncate">{{ st.displayName }}</div>
+              <div :class="['text-[10px] mt-0.5', form.staffId === st.id ? 'text-white/80' : 'text-slate-400']">
+                {{ slotsLoading ? '...' : (freeSlotCount(st.id) > 0 ? `${freeSlotCount(st.id)} ta bo'sh` : "To'liq band") }}
+              </div>
+            </button>
+          </div>
         </div>
 
-        <!-- Start time -->
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Boshlanish vaqti *</label>
-          <input
-            v-model="form.startAt"
-            type="datetime-local"
-            @change="onStartAtChange"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
-
-        <!-- End time -->
-        <div>
+        <!-- Time slots -->
+        <div v-if="selectedService">
           <label class="block text-sm font-medium text-slate-700 mb-1.5">
-            Tugash vaqti *
-            <span v-if="selectedService" class="text-slate-400 font-normal ml-1">
-              ({{ selectedService.durationMinutes }} daqiqa avtomatik hisoblanadi)
-            </span>
+            Boshlanish vaqti *
+            <span class="text-slate-400 font-normal ml-1">({{ selectedService.durationMinutes }} daqiqa)</span>
           </label>
-          <input
-            v-model="form.endAt"
-            type="datetime-local"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
+          <p v-if="!todaysHoursForBooking || todaysHoursForBooking.closed" class="text-xs text-slate-400">
+            Bu kunda ish vaqti belgilanmagan yoki dam olish kuni
+          </p>
+          <p v-else-if="possibleStarts.length === 0" class="text-xs text-slate-400">
+            Bu kun uchun bo'sh vaqt yo'q
+          </p>
+          <div v-else class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+            <button
+              v-for="start in possibleStarts"
+              :key="start"
+              type="button"
+              :disabled="isSlotBusyForSelectedStaff(start)"
+              @click="selectSlot(start)"
+              :class="[
+                'px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all',
+                selectedStartMin === start
+                  ? 'bg-primary-600 text-white border-primary-600'
+                  : isSlotBusyForSelectedStaff(start)
+                    ? 'bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-primary-300',
+              ]"
+            >
+              {{ minutesToLabel(start) }}
+            </button>
+          </div>
         </div>
 
         <!-- Note -->

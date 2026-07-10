@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Plus, Users, Trash2, Edit2, ToggleLeft, ToggleRight, Briefcase, Star } from 'lucide-vue-next'
+import { Plus, Users, Trash2, Edit2, ToggleLeft, ToggleRight, Briefcase, Star, Search, X as XIcon, CheckCircle2 } from 'lucide-vue-next'
 import { staffApi } from '@/api/staff'
 import { reviewsApi } from '@/api/reviews'
+import { usersApi, type UserLookup } from '@/api/users'
 import { useBusinessStore } from '@/stores/business'
 import { useToast } from '@/composables/useToast'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import type { StaffMember, StaffCreateRequest } from '@/types'
+import type { StaffMember, StaffCreateRequest, StaffRegisterRequest, StaffAccountUpdateRequest } from '@/types'
 
 const businessStore = useBusinessStore()
 const toast = useToast()
@@ -25,47 +26,176 @@ const editingStaff = ref<StaffMember | null>(null)
 const defaultForm = (): StaffCreateRequest => ({
   displayName: '',
   active: true,
+  linkedUserId: null,
 })
 
 const form = ref<StaffCreateRequest>(defaultForm())
 
+// Hisob rejimi: hisobsiz / mavjud loginni bog'lash / yangi hisob yaratish
+type AccountMode = 'none' | 'link' | 'register'
+const accountMode = ref<AccountMode>('none')
+
+// "link" rejimi uchun
+const linkLogin = ref('')
+const linkLookupLoading = ref(false)
+const linkLookupError = ref('')
+const linkedUser = ref<UserLookup | null>(null)
+
+// "register" rejimi uchun
+const registerForm = ref({ login: '', password: '', email: '', phone: '' })
+
+// Allaqachon bog'langan hisobni yangilash uchun (tahrirlashda)
+const accountUpdateForm = ref({ email: '', phone: '', password: '' })
+
 function openAdd() {
   editingStaff.value = null
   form.value = defaultForm()
+  accountMode.value = 'register'
+  linkLogin.value = ''
+  linkedUser.value = null
+  linkLookupError.value = ''
+  registerForm.value = { login: '', password: '', email: '', phone: '' }
   showModal.value = true
 }
 
-function openEdit(member: StaffMember) {
+async function openEdit(member: StaffMember) {
   editingStaff.value = member
   form.value = {
     displayName: member.displayName,
     active: member.active,
+    linkedUserId: member.linkedUserId,
   }
-  showModal.value = true
+  linkLogin.value = ''
+  linkLookupError.value = ''
+  registerForm.value = { login: '', password: '', email: '', phone: '' }
+  accountUpdateForm.value = { email: '', phone: '', password: '' }
+  if (member.linkedUserId) {
+    accountMode.value = 'link'
+    linkedUser.value = { id: member.linkedUserId, login: '', displayName: "Bog'langan foydalanuvchi" }
+    showModal.value = true
+    const bid = businessStore.business?.id
+    try {
+      if (bid) {
+        const { data } = await staffApi.getAccount(bid, member.id)
+        linkedUser.value = { id: data.id, login: data.login, displayName: data.displayName }
+        accountUpdateForm.value = { email: data.email || '', phone: data.phone || '', password: '' }
+      }
+    } catch {
+      toast.error("Bog'langan hisob ma'lumotlarini yuklab bo'lmadi")
+    }
+  } else {
+    accountMode.value = 'none'
+    linkedUser.value = null
+    showModal.value = true
+  }
+}
+
+async function lookupUser() {
+  if (!linkLogin.value.trim()) return
+  linkLookupLoading.value = true
+  linkLookupError.value = ''
+  try {
+    const { data } = await usersApi.lookupByLogin(linkLogin.value.trim())
+    linkedUser.value = data
+    form.value.linkedUserId = data.id
+    form.value.displayName = data.displayName
+  } catch {
+    linkLookupError.value = 'Bu login bilan foydalanuvchi topilmadi'
+    linkedUser.value = null
+    form.value.linkedUserId = null
+  } finally {
+    linkLookupLoading.value = false
+  }
+}
+
+function unlinkUser() {
+  linkedUser.value = null
+  linkLogin.value = ''
+  form.value.linkedUserId = null
+}
+
+function setAccountMode(mode: AccountMode) {
+  accountMode.value = mode
+  if (mode !== 'link') unlinkUser()
 }
 
 async function save() {
-  if (!form.value.displayName) return
   const bid = businessStore.business?.id
   if (!bid) return
+
+  if (accountMode.value === 'link' && !linkedUser.value) {
+    toast.error('Avval loginni tekshiring')
+    return
+  }
+  if (accountMode.value === 'register') {
+    if (!registerForm.value.login || registerForm.value.password.length < 4) {
+      toast.error('Login va kamida 4 belgili parol kiriting')
+      return
+    }
+  }
+  if (accountUpdateForm.value.password && accountUpdateForm.value.password.length < 4) {
+    toast.error('Yangi parol kamida 4 belgidan iborat bo\'lishi kerak')
+    return
+  }
+  if (!form.value.displayName) {
+    toast.error('Ism familiya kiritilishi shart')
+    return
+  }
+
   saving.value = true
   try {
-    if (editingStaff.value) {
+    if (editingStaff.value && accountMode.value === 'register') {
       const editingId = editingStaff.value.id
-      const { data } = await staffApi.update(bid, editingId, form.value)
+      const payload: StaffRegisterRequest = {
+        displayName: form.value.displayName,
+        login: registerForm.value.login.trim(),
+        password: registerForm.value.password,
+        email: registerForm.value.email || undefined,
+        phone: registerForm.value.phone || undefined,
+      }
+      const { data } = await staffApi.registerForExisting(bid, editingId, payload)
       const idx = staff.value.findIndex((s) => s.id === editingId)
       if (idx !== -1) staff.value[idx] = data
+      toast.success('Xodimga hisob yaratildi')
+    } else if (editingStaff.value) {
+      const editingId = editingStaff.value.id
+      const { data } = await staffApi.update(bid, editingId, form.value)
+      let finalData = data
+      const acc = accountUpdateForm.value
+      if (linkedUser.value && (acc.email || acc.phone || acc.password)) {
+        const payload: StaffAccountUpdateRequest = {
+          email: acc.email || undefined,
+          phone: acc.phone || undefined,
+          password: acc.password || undefined,
+        }
+        const { data: accData } = await staffApi.updateAccount(bid, editingId, payload)
+        finalData = accData
+      }
+      const idx = staff.value.findIndex((s) => s.id === editingId)
+      if (idx !== -1) staff.value[idx] = finalData
       toast.success('Xodim yangilandi')
+    } else if (accountMode.value === 'register') {
+      const payload: StaffRegisterRequest = {
+        displayName: form.value.displayName,
+        login: registerForm.value.login.trim(),
+        password: registerForm.value.password,
+        email: registerForm.value.email || undefined,
+        phone: registerForm.value.phone || undefined,
+      }
+      const { data } = await staffApi.register(bid, payload)
+      staff.value.unshift(data)
+      ratings.value[data.id] = 0
+      toast.success("Yangi xodim va uning hisobi yaratildi")
     } else {
       const { data } = await staffApi.create(bid, form.value)
       staff.value.unshift(data)
-      // Load rating for new staff (will be 0)
       ratings.value[data.id] = 0
       toast.success("Yangi xodim qo'shildi")
     }
     showModal.value = false
-  } catch {
-    toast.error('Xatolik yuz berdi')
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Xatolik yuz berdi')
   } finally {
     saving.value = false
   }
@@ -272,6 +402,149 @@ onMounted(async () => {
             placeholder="Ali Valiyev"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">
+            Hisob (portalga kirish)
+            <span class="text-slate-400 font-normal">— xodim o'z bandlovlarini ko'rishi uchun</span>
+          </label>
+
+          <!-- Mode tabs -->
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <button
+              type="button"
+              @click="setAccountMode('register')"
+              :disabled="!!editingStaff?.linkedUserId"
+              :title="editingStaff?.linkedUserId ? 'Xodim allaqachon hisobga bog\'langan' : ''"
+              :class="[
+                'px-3 py-2 rounded-xl text-xs font-medium border transition-all disabled:opacity-40 disabled:cursor-not-allowed',
+                accountMode === 'register' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
+              ]"
+            >
+              Yangi hisob yaratish
+            </button>
+            <button
+              type="button"
+              @click="setAccountMode('link')"
+              :class="[
+                'px-3 py-2 rounded-xl text-xs font-medium border transition-all',
+                accountMode === 'link' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
+              ]"
+            >
+              Mavjud loginni bog'lash
+            </button>
+          </div>
+
+          <!-- "register" rejimi: yangi login/parol -->
+          <div v-if="accountMode === 'register'" class="space-y-3 bg-slate-50 rounded-xl p-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Login *</label>
+              <input
+                v-model="registerForm.login"
+                type="text"
+                placeholder="ali.valiyev"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Parol *</label>
+              <input
+                v-model="registerForm.password"
+                type="text"
+                placeholder="Kamida 4 belgi"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Email (ixtiyoriy)</label>
+                <input
+                  v-model="registerForm.email"
+                  type="email"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Telefon (ixtiyoriy)</label>
+                <input
+                  v-model="registerForm.phone"
+                  type="tel"
+                  placeholder="+998901234567"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+            </div>
+            <p class="text-xs text-slate-500">Bu login/parolni xodimga bering — u shu bilan tizimga kirib, o'z portalidan foydalana oladi.</p>
+          </div>
+
+          <!-- "link" rejimi: mavjud loginni qidirish -->
+          <template v-else-if="accountMode === 'link'">
+            <template v-if="linkedUser">
+              <div class="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5">
+                <span class="flex items-center gap-2 text-sm text-emerald-700">
+                  <CheckCircle2 class="w-4 h-4" />
+                  {{ linkedUser.displayName }}<template v-if="linkedUser.login"> ({{ linkedUser.login }})</template>
+                </span>
+                <button type="button" @click="unlinkUser" class="text-emerald-600 hover:text-emerald-800">
+                  <XIcon class="w-4 h-4" />
+                </button>
+              </div>
+
+              <!-- Bog'langan hisobning ma'lumotlarini yangilash (faqat tahrirlashda) -->
+              <div v-if="editingStaff" class="space-y-3 bg-slate-50 rounded-xl p-4 mt-3">
+                <p class="text-xs font-medium text-slate-600">Hisob ma'lumotlarini yangilash <span class="font-normal text-slate-400">(faqat to'ldirilgan maydonlar o'zgaradi)</span></p>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Email</label>
+                    <input
+                      v-model="accountUpdateForm.email"
+                      type="email"
+                      class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Telefon</label>
+                    <input
+                      v-model="accountUpdateForm.phone"
+                      type="tel"
+                      placeholder="+998901234567"
+                      class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 mb-1">Yangi parol</label>
+                  <input
+                    v-model="accountUpdateForm.password"
+                    type="text"
+                    placeholder="O'zgartirmaslik uchun bo'sh qoldiring"
+                    class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+              </div>
+            </template>
+            <div v-else class="flex gap-2">
+              <input
+                v-model="linkLogin"
+                type="text"
+                placeholder="Foydalanuvchi login"
+                class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                @keydown.enter.prevent="lookupUser"
+              />
+              <button
+                type="button"
+                :disabled="linkLookupLoading || !linkLogin.trim()"
+                @click="lookupUser"
+                class="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+              >
+                <Search class="w-4 h-4" />
+                {{ linkLookupLoading ? 'Qidirilmoqda...' : 'Tekshirish' }}
+              </button>
+            </div>
+            <p v-if="linkLookupError" class="text-xs text-red-600 mt-1.5">{{ linkLookupError }}</p>
+            <p class="text-xs text-slate-500 mt-1.5">Xodim avval o'zi ro'yxatdan o'tgan (login yaratgan) bo'lishi kerak.</p>
+          </template>
         </div>
 
         <label class="flex items-center gap-3 cursor-pointer select-none">
