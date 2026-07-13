@@ -26,7 +26,7 @@ function validateLogin() {
   fieldErrors.login = form.login.length < 3 ? 'Login kamida 3 ta belgi bo\'lishi kerak' : ''
 }
 function validatePassword() {
-  fieldErrors.password = form.password.length < 8 ? 'Parol kamida 8 ta belgi bo\'lishi kerak' : ''
+  fieldErrors.password = form.password.length < 4 ? 'Parol kamida 4 ta belgi bo\'lishi kerak' : ''
 }
 
 async function handleRegister() {
@@ -34,8 +34,8 @@ async function handleRegister() {
     error.value = 'Login va ism kiritilishi shart'
     return
   }
-  if (form.password.length < 8) {
-    error.value = 'Parol kamida 8 ta belgidan iborat bo\'lishi kerak'
+  if (form.password.length < 4) {
+    error.value = 'Parol kamida 4 ta belgidan iborat bo\'lishi kerak'
     return
   }
 

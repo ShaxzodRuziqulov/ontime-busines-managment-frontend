@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { Building2, Clock, Loader2, AlertCircle, CheckCircle2, MapPin, Phone, FileText } from 'lucide-vue-next'
+import { Building2, Clock, Loader2, AlertCircle, CheckCircle2, MapPin, Phone, FileText, Info } from 'lucide-vue-next'
 import { businessesApi } from '@/api/businesses'
 import { useAuthStore } from '@/stores/auth'
 
@@ -19,6 +19,11 @@ const form = reactive({
 const loading = ref(false)
 const error = ref('')
 const step = ref<'form' | 'relogin' | 'done'>('form')
+
+function logoutAndWait() {
+  authStore.logout()
+  router.push('/login')
+}
 
 async function handleCreate() {
   if (!form.name.trim()) {
@@ -117,6 +122,21 @@ async function handleCreate() {
           <div class="flex items-center gap-1.5 text-xs text-primary-600 font-medium">
             <div class="w-5 h-5 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-bold">2</div>
             Biznes ma'lumotlari
+          </div>
+        </div>
+
+        <!-- Xodim sifatida taklif qilinganlar uchun eslatma -->
+        <div class="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5 text-sm">
+          <Info class="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+          <div class="text-blue-700">
+            <p>Bu forma faqat <strong>o'zingiz biznes ochmoqchi</strong> bo'lsangiz kerak.</p>
+            <p class="mt-1">
+              Agar sizni kimdir <strong>xodim</strong> sifatida taklif qilgan bo'lsa — hech narsa qilish shart emas.
+              Biznes egasi loginingizni bog'lashini kuting, so'ng
+              <button type="button" class="underline font-medium hover:text-blue-800" @click="logoutAndWait">
+                tizimdan chiqib qayta kiring
+              </button>.
+            </p>
           </div>
         </div>
 

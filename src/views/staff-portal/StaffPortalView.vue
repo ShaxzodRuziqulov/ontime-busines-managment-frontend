@@ -5,7 +5,6 @@ import {
   Star,
   CheckCircle2,
   Clock,
-  XCircle,
   User,
   Briefcase,
   TrendingUp,
@@ -14,6 +13,7 @@ import { staffPortalApi } from '@/api/staffPortal'
 import { bookingsApi } from '@/api/bookings'
 import { useToast } from '@/composables/useToast'
 import { bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions } from '@/utils/bookingStatus'
+import { todayIso } from '@/utils/scheduling'
 import type { StaffMember, Booking, BookingStatus, StaffStats } from '@/types'
 
 const toast = useToast()
@@ -42,10 +42,14 @@ async function changeStatus(booking: Booking, status: BookingStatus) {
 }
 
 const upcomingBookings = computed(() =>
-  bookings.value.filter((b) =>
-    ['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(b.status),
-  ),
+  bookings.value
+    .filter((b) => ['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(b.status))
+    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()),
 )
+
+function isToday(iso: string) {
+  return iso.slice(0, 10) === todayIso()
+}
 
 const recentBookings = computed(() =>
   bookings.value
@@ -215,7 +219,10 @@ onMounted(async () => {
                 <CalendarCheck class="w-5 h-5 text-primary-600" />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="font-medium text-slate-800 text-sm">{{ booking.customerName || booking.guestName || 'Mijoz' }}</p>
+                <p class="font-medium text-slate-800 text-sm flex items-center gap-2">
+                  {{ booking.customerName || booking.guestName || 'Mijoz' }}
+                  <span v-if="isToday(booking.startAt)" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary-100 text-primary-700">BUGUN</span>
+                </p>
                 <p class="text-xs text-slate-500 mt-0.5 truncate">
                   {{ formatDate(booking.startAt) }}<span v-if="booking.guestPhone"> · {{ booking.guestPhone }}</span>
                 </p>

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Users, Building2, TrendingUp, ShieldCheck,
   CheckCircle2, Clock, XCircle, AlertCircle, PauseCircle, FileEdit,
-  ArrowRight, UserX,
+  ArrowRight, UserX, TimerReset,
 } from 'lucide-vue-next'
 import { usersApi } from '@/api/users'
 import { businessesApi } from '@/api/businesses'
@@ -14,6 +15,7 @@ import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatu
 import type { User, Business, BusinessStatus } from '@/types'
 
 const adminStore = useAdminStore()
+const router = useRouter()
 
 const users = ref<User[]>([])
 const businesses = ref<Business[]>([])
@@ -46,6 +48,20 @@ const statusCards = computed<StatusCard[]>(() => [
 const pendingReviewList = computed(() =>
   businesses.value.filter(b => b.status === 'PENDING_REVIEW').slice(0, 5)
 )
+
+const trialsEndingSoon = computed(() => {
+  const now = Date.now()
+  const in3Days = now + 3 * 24 * 60 * 60 * 1000
+  return businesses.value
+    .filter(b => b.status === 'TRIAL' && b.trialEndDate && new Date(b.trialEndDate).getTime() <= in3Days)
+    .sort((a, b) => new Date(a.trialEndDate!).getTime() - new Date(b.trialEndDate!).getTime())
+    .slice(0, 5)
+})
+
+function trialDaysLeft(dateStr: string) {
+  const diff = Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+  return Math.max(0, diff)
+}
 
 const recentBusinesses = computed(() =>
   [...businesses.value]
@@ -183,6 +199,35 @@ onMounted(async () => {
         </RouterLink>
       </div>
 
+      <!-- Trials ending soon -->
+      <div v-if="trialsEndingSoon.length > 0" class="bg-white rounded-2xl border border-amber-200 shadow-sm mb-6">
+        <div class="px-6 py-4 border-b border-amber-100 flex items-center gap-2">
+          <TimerReset class="w-4 h-4 text-amber-500" />
+          <h2 class="font-semibold text-slate-800">Sinov muddati tez orada tugaydi</h2>
+          <span class="ml-auto px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+            {{ trialsEndingSoon.length }}
+          </span>
+        </div>
+        <div class="divide-y divide-slate-50">
+          <div
+            v-for="biz in trialsEndingSoon" :key="biz.id"
+            class="px-6 py-3 flex items-center gap-3 hover:bg-slate-50/50 cursor-pointer"
+            @click="router.push(`/admin/businesses/${biz.id}`)"
+          >
+            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Building2 class="w-4 h-4 text-amber-600" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-slate-800 truncate">{{ biz.name }}</p>
+              <p class="text-xs text-slate-400 truncate">{{ biz.city || biz.addressLine || '—' }}</p>
+            </div>
+            <span class="text-xs font-semibold text-amber-600 whitespace-nowrap">
+              {{ trialDaysLeft(biz.trialEndDate!) }} kun qoldi
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Business status breakdown -->
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm mb-6">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -266,7 +311,7 @@ onMounted(async () => {
               <tr
                 v-for="biz in recentBusinesses" :key="biz.id"
                 class="hover:bg-slate-50/50 transition-colors cursor-pointer"
-                @click="$router.push(`/admin/businesses/${biz.id}`)"
+                @click="router.push(`/admin/businesses/${biz.id}`)"
               >
                 <td class="px-6 py-3 font-medium text-slate-800">{{ biz.name }}</td>
                 <td class="px-6 py-3 text-slate-500">{{ biz.city || biz.addressLine || '—' }}</td>
