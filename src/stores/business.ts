@@ -32,8 +32,9 @@ export const useBusinessStore = defineStore('business', () => {
     try {
       const { data } = await businessesApi.getAll({ ownerId: authStore.user.userId })
       business.value = data.content[0] || null
-    } finally {
-      loading.value = false
+        loading.value = false
+    } catch (error: any) {
+        console.log('Error message:', error.response?.data?.message)
     }
   }
 

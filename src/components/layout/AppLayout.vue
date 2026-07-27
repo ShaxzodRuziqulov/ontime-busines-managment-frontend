@@ -24,7 +24,7 @@ onMounted(async () => {
     <!-- Mobile overlay -->
     <div
       v-if="sidebarOpen"
-      class="fixed inset-0 z-20 bg-black/50 lg:hidden"
+      class="fixed inset-0 z-40 bg-black/50 lg:hidden"
       @click="sidebarOpen = false"
     />
 

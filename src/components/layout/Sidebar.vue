@@ -68,7 +68,7 @@ onMounted(() => {
 <template>
   <aside
     :class="[
-      'fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto',
+      'fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto',
       open ? 'translate-x-0' : '-translate-x-full',
     ]"
   >
