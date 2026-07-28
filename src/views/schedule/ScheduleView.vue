@@ -2,8 +2,10 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between flex-wrap gap-4 mb-6">
       <div class="flex w-full items-center justify-between">
-        <h1 class="text-2xl font-bold text-slate-800">Jadval</h1>
-<!--        <p class="text-slate-500 text-sm mt-1">{{ dateLabel }}</p>-->
+        <div class="flex flex-col">
+          <h2 class="font-bold text-slate-800">Jadval</h2>
+<!--          <p class="text-slate-500 text-sm">{{ formatDate() }}</p>-->
+        </div>
         <div class="flex items-center gap-2">
           <button @click="shiftDate(-1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500">
             <ChevronLeft class="w-4 h-4" />
@@ -29,28 +31,31 @@
         </div>
       </div>
       <div
-          class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 items-center text-gray-600 text-sm font-medium gap-2"
+          class="flex flex-wrap items-center text-gray-600 text-sm font-medium gap-1"
       >
-        <div class="flex bg-slate-200 px-2 py-1 rounded items-center gap-1">
+        <div class="flex flex-1 bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span>
           Bajarilgan
         </div>
-        <div class="flex bg-slate-200 px-2 py-1 rounded items-center gap-1">
+        <div class="flex bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
           Bekor
         </div>
-        <div class="flex bg-slate-200 px-2 py-1 rounded items-center gap-1">
-          <span class="w-2.5 h-2.5 bg-blue-500 rounded-full"></span>
-          Tasdiqlandi
+        <div class="flex bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2.5 h-2.5 bg-blue-400 rounded-full"></span>
+          Tasdiqlangan
         </div>
-        <div class="flex bg-slate-200 px-2 py-1 rounded items-center gap-1">
+        <div class="flex bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2.5 h-2.5 bg-indigo-500 rounded-full"></span>
           Jarayonda
         </div>
-        <div class="flex bg-slate-200 px-2 py-1 rounded items-center gap-1">
+        <div class="flex bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2.5 h-2.5 bg-gray-400 rounded-full"></span>
           Kelmadi
         </div>
+      </div>
+      <div class="flex text-gray-600 text-sm font-medium gap-1">
+        Jami: <span class="text-gray-800 border-b border-gray-400 inline-block">{{ bookings.length }} ta navbat</span>
       </div>
     </div>
 
@@ -67,7 +72,7 @@
     </EmptyState>
 
     <EmptyState
-        v-else-if="!todaysHours || todaysHours.closed"
+        v-else-if="!todayHours || todayHours.closed"
         :title="`${WEEKDAY_LABELS[weekdayForSelectedDate]} kuni ish yo'q`"
         description="Bu kun uchun ish vaqti belgilanmagan yoki dam olish kuni"
     >
@@ -129,7 +134,7 @@
               <button
                   v-for="b in bookingsForColumn(col.id)"
                   :key="b.id"
-                  class="absolute left-1 right-1 rounded-lg px-2 text-left overflow-hidden text-white text-xs shadow-sm hover:brightness-95 transition-all z-10"
+                  class="absolute left-1 right-1 rounded-lg px-2 text-left text-xs shadow-sm transition-all z-10"
                   :class="bookingStatusBlockColors[b.status]"
                   :style="blockStyle(b)"
                   @click="selectedBooking = b"
@@ -160,7 +165,7 @@
 
             <div
                 v-if="nowTop !== null"
-                class="absolute left-16 right-0 border-t-2 border-red-500 z-10 pointer-events-none"
+                class="absolute left-16 right-0 border-t-2 border-red-500 z-1 pointer-events-none"
                 :style="{ top: `${nowTop}px` }"
             >
               <span class="absolute -left-0.4 -top-1.5 w-3 h-3 rounded-full bg-red-500" />
@@ -176,18 +181,38 @@
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="selectedBooking = null" />
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm z-10">
           <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <h3 class="font-semibold text-slate-800">{{ selectedBooking.customerName || selectedBooking.guestName || 'Mijoz' }}</h3>
-            <button class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100" @click="selectedBooking = null">
+            <h3 class="font-semibold text-slate-800 flex items-center gap-2">
+              <span class="bg-indigo-200 flex items-center justify-center w-10 h-10 text-indigo-600 rounded-full">
+                {{getInitials(selectedBooking.customerName || selectedBooking.guestName || 'Mijoz')}}
+              </span>
+              {{ selectedBooking.customerName || selectedBooking.guestName || 'Mijoz' }}
+            </h3>
+            <button
+                class="p-1.5 border border-gray-200 rounded-lg text-slate-400 hover:bg-slate-100"
+                @click="selectedBooking = null"
+            >
               <XIcon class="w-4 h-4" />
             </button>
           </div>
           <div class="px-5 py-4 space-y-2 text-sm">
-            <p v-if="selectedBooking.guestPhone" class="text-slate-500">{{ selectedBooking.guestPhone }}</p>
-            <p class="text-slate-700">{{ selectedBooking.offeredServiceName || '—' }}</p>
-            <p class="text-slate-500">{{ formatTime(selectedBooking.startAt) }} — {{ formatTime(selectedBooking.endAt) }}</p>
-            <span :class="['inline-block text-xs font-medium px-2.5 py-1 rounded-full', bookingStatusBadgeColors[selectedBooking.status]]">
+            <p v-if="selectedBooking.guestPhone" class="text-slate-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between">
+              Telefon
+              <span>{{ selectedBooking.guestPhone }}</span>
+            </p>
+            <p class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1 text-slate-700">
+              Xizmat
+              <span>{{ selectedBooking.offeredServiceName || '—' }}</span>
+            </p>
+            <p class="text-gray-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between">
+              <span>Vaqt</span>
+              <span>{{ formatTime(selectedBooking.startAt) }} — {{ formatTime(selectedBooking.endAt) }}</span>
+            </p>
+            <p class="flex text-gray-600 items-center justify-between border-b border-dashed border-slate-300 pb-1">
+              <span>Holat</span>
+              <span :class="['inline-block text-xs font-medium px-2.5 py-1 rounded-full', bookingStatusBadgeColors[selectedBooking.status]]">
               {{ bookingStatusLabels[selectedBooking.status] }}
-            </span>
+              </span>
+            </p>
           </div>
           <div v-if="nextBookingActions[selectedBooking.status]?.length" class="flex flex-wrap gap-2 px-5 pb-5">
             <button
@@ -208,13 +233,15 @@
     <Teleport to="body" v-if="quickCreate">
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeQuickCreate" />
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm z-10">
+        <div class="relative text-gray-600 bg-white rounded-2xl shadow-2xl w-full max-w-sm z-10">
           <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <div>
               <h3 class="font-semibold text-slate-800">Yangi navbat</h3>
-              <p class="text-xs text-slate-400 mt-0.5">{{ quickCreate.staffName }} · {{ dateLabel }}</p>
+              <p class="text-xs text-slate-600 mt-0.5">{{ quickCreate.staffName }} - {{ formatDate() }}</p>
             </div>
-            <button class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100" @click="closeQuickCreate">
+            <button class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100"
+                    @click="closeQuickCreate"
+            >
               <XIcon class="w-4 h-4" />
             </button>
           </div>
@@ -224,27 +251,33 @@
               <label class="block text-xs font-medium text-slate-600 mb-1">Xizmat *</label>
               <select
                   v-model="quickForm.offeredServiceId"
-                  class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+                  class="w-full px-3 py-2 rounded-lg text-gray-600 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
               >
                 <option value="" disabled>Tanlang...</option>
-                <option v-for="s in services" :key="s.id" :value="s.id">{{ s.name }} — {{ s.durationMinutes }} daq.</option>
+                <option
+                    v-for="s in services"
+                    :key="s.id"
+                    :value="s.id"
+                >
+                  {{ s.name }} — ({{ s.durationMinutes }} daq. - {{s.basePrice}} so'm).
+                </option>
               </select>
             </div>
 
             <div v-if="quickSelectedService">
               <label class="block text-xs font-medium text-slate-600 mb-1">Vaqt *</label>
               <div v-if="quickPossibleStarts.length === 0" class="text-xs text-slate-400">Bu kunda bo'sh vaqt yo'q</div>
-              <div v-else class="grid grid-cols-4 gap-1.5 max-h-32 overflow-y-auto">
+              <div v-else class="grid grid-cols-4 gap-1.5">
                 <button
                     v-for="m in quickPossibleStarts"
                     :key="m"
                     type="button"
-                    :disabled="isQuickSlotBusy(m)"
+                    :disabled="isQuickSlotDisabled(m)"
                     @click="quickForm.startMin = m"
                     :class="[
                     'text-xs font-medium py-1.5 rounded-lg border transition-colors',
                     quickForm.startMin === m ? 'bg-primary-600 text-white border-primary-600' :
-                    isQuickSlotBusy(m) ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' :
+                    isQuickSlotDisabled(m) ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' :
                     'border-slate-200 hover:border-primary-400 text-slate-600',
                   ]"
                 >
@@ -258,7 +291,7 @@
               <input
                   v-model="quickForm.guestName"
                   type="text"
-                  placeholder="Ali Valiyev"
+                  placeholder="Ism kiriting"
                   class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
@@ -344,6 +377,15 @@ const WEEKDAY_LABELS: Record<string, string> = {
   THURSDAY: 'Payshanba', FRIDAY: 'Juma', SATURDAY: 'Shanba', SUNDAY: 'Yakshanba',
 }
 
+function getInitials(name: string) {
+  return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+}
+
 const AVATAR_COLORS = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6']
 
 function colorForStaff(id: string) {
@@ -354,17 +396,23 @@ function colorForStaff(id: string) {
 
 const weekdayForSelectedDate = computed(() => weekdayFromDate(selectedDate.value))
 
-const todaysHours = computed(() =>
+const todayHours = computed(() =>
   hours.value.find((h) => h.weekday === weekdayForSelectedDate.value) ?? null
 )
 
 const isToday = computed(() => selectedDate.value === todayIso())
 
-const dateLabel = computed(() => {
-  const d = new Date(selectedDate.value + 'T00:00:00')
-  const formatted = d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long' })
-  return `${WEEKDAY_LABELS[weekdayForSelectedDate.value]}, ${formatted}`
-})
+const formatDate = () => {
+  if (!selectedDate.value) return '';
+
+  const date = new Date(selectedDate.value);
+  if (isNaN(date.getTime())) return '';
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2,'0');
+  return `${year}-${month}-${day}`;
+};
 
 const activeStaff = computed(() => staffList.value.filter((s) => s.active))
 
@@ -395,8 +443,8 @@ const COLUMN_WIDTH = 180
 // birinchi yorliq tepada kesilib qolmasligi uchun butun panjaraga yuqoridan bo'sh joy qo'shiladi.
 const TOP_PAD = 0
 
-const openMinutes = computed(() => (todaysHours.value?.opensAt ? toMinutes(todaysHours.value.opensAt) : 9 * 60))
-const closeMinutes = computed(() => (todaysHours.value?.closesAt ? toMinutes(todaysHours.value.closesAt) : 18 * 60))
+const openMinutes = computed(() => (todayHours.value?.opensAt ? toMinutes(todayHours.value.opensAt) : 9 * 60))
+const closeMinutes = computed(() => (todayHours.value?.closesAt ? toMinutes(todayHours.value.closesAt) : 18 * 60))
 const gridHeight = computed(() => Math.max((closeMinutes.value - openMinutes.value) * PX_PER_MIN, 100))
 
 const timeSlots = computed(() => {
@@ -445,7 +493,7 @@ const nowTop = computed(() => {
 
 function onColumnClick(event: MouseEvent, staffId: string | null, staffName: string) {
   const target = event.currentTarget as HTMLElement
-  const y = event.clientY - target.getBoundingClientRect().top - TOP_PAD
+  const y = event.clientY - target.getBoundingClientRect().top
   const raw = openMinutes.value + y / PX_PER_MIN
   const snapped = Math.round(raw / SLOT_INTERVAL) * SLOT_INTERVAL
   const startMin = Math.min(Math.max(snapped, openMinutes.value), Math.max(closeMinutes.value - SLOT_INTERVAL, openMinutes.value))
@@ -459,14 +507,23 @@ const quickSelectedService = computed(() => services.value.find((s) => s.id === 
 
 const quickPossibleStarts = computed(() => {
   const service = quickSelectedService.value
-  if (!service || !todaysHours.value || todaysHours.value.closed || !todaysHours.value.opensAt || !todaysHours.value.closesAt) return []
-  return generatePossibleStarts(toMinutes(todaysHours.value.opensAt), toMinutes(todaysHours.value.closesAt), service.durationMinutes, SLOT_INTERVAL)
+  if (!service || !todayHours.value || todayHours.value.closed || !todayHours.value.opensAt || !todayHours.value.closesAt) return []
+  return generatePossibleStarts(toMinutes(todayHours.value.opensAt), toMinutes(todayHours.value.closesAt), service.durationMinutes, SLOT_INTERVAL)
 })
 
 function isQuickSlotBusy(startMin: number) {
   if (!quickCreate.value?.staffId || !quickSelectedService.value) return false
   return isStaffBusy(bookings.value, quickCreate.value.staffId, startMin, startMin + quickSelectedService.value.durationMinutes)
 }
+
+const isQuickSlotDisabled = (minute: number) => {
+
+  if (isQuickSlotBusy(minute)) return true;
+
+  if (quickForm.value.startMin === null) return false;
+
+  return quickForm.value.startMin !== minute;
+};
 
 watch(() => quickForm.value.offeredServiceId, () => {
   // Xizmat almashtirilganda, tanlangan vaqt yangi ro'yxatda mavjud bo'lmasa, eng yaqinini tanlaymiz
