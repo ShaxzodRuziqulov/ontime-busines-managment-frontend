@@ -39,6 +39,7 @@ const businessNavItems = [
 
 const staffNavItems = [
   { name: 'Mening portalim', to: '/staff-portal', icon: UserCircle2 },
+  { name: 'Jadval', to: '/staff-portal/schedule', icon: CalendarDays },
 ]
 
 const adminNavItems = [
@@ -54,7 +55,7 @@ const adminNavItems = [
 ]
 
 function isActive(path: string) {
-  if (path === '/' || path === '/admin') return route.path === path
+  if (path === '/' || path === '/admin' || path === '/staff-portal') return route.path === path
   return route.path.startsWith(path)
 }
 

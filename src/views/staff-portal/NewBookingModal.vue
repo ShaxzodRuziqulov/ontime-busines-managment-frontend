@@ -21,6 +21,7 @@ const props = defineProps<{
   businessId: string
   staffId: string
   bookings: Booking[]
+  initialDate?: string
 }>()
 
 const emit = defineEmits<{
@@ -76,7 +77,7 @@ function resetCustomer() {
 }
 
 // ── Sana + bo'sh vaqt slotlari ──────────────────────────────
-const date = ref(todayIso())
+const date = ref(props.initialDate && props.initialDate >= todayIso() ? props.initialDate : todayIso())
 const selectedStartMin = ref<number | null>(null)
 
 // Toshkent vaqti bo'yicha hozirgi sana va daqiqa (o'tib ketgan slotlarni bloklash uchun)

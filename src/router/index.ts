@@ -93,6 +93,11 @@ const router = createRouter({
           name: 'staff-portal',
           component: () => import('@/views/staff-portal/StaffPortalView.vue'),
         },
+        {
+          path: 'schedule',
+          name: 'staff-schedule',
+          component: () => import('@/views/staff-portal/StaffScheduleView.vue'),
+        },
       ],
     },
     {
