@@ -57,14 +57,16 @@ const recentBookings = computed(() =>
     .slice(0, 10),
 )
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('uz-UZ', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+const formatDate = (dateString: string) => {
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2,'0');
+  return `${year}-${month}-${day}, ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+};
 
 function renderStars(avg: number) {
   return Math.round(avg)
