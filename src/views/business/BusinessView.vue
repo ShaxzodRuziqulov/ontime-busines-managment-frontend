@@ -51,12 +51,16 @@ async function saveChanges() {
   }
 }
 
-function formatDate(iso: string | null) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('uz-UZ', {
-    day: '2-digit', month: 'long', year: 'numeric',
-  })
-}
+const formatDate = (iso: string) => {
+
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return '';
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2,'0');
+  return `${year}-${month}-${day}`;
+};
 </script>
 
 <template>
