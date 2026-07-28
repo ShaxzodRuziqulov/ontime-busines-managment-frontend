@@ -96,9 +96,9 @@ onMounted(async () => {
         <User class="w-7 h-7" />
       </div>
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">
+        <h2 class="text-2xl font-bold text-slate-800">
           Salom, {{ profile?.displayName ?? '...' }}!
-        </h1>
+        </h2>
         <p class="text-slate-500 text-sm mt-0.5 flex items-center gap-1.5">
           <Briefcase class="w-3.5 h-3.5" />
           Xodim portali

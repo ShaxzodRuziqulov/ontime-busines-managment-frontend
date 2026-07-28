@@ -273,7 +273,7 @@ onMounted(load)
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Navbatlar</h1>
+        <h2 class="text-2xl font-bold text-slate-800">Navbatlar</h2>
         <p class="text-slate-500 text-sm mt-1">Jami {{ totalElements }} ta navbat</p>
       </div>
       <button

@@ -276,7 +276,7 @@ onMounted(async () => {
   <div>
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Xodimlar</h1>
+        <h2 class="text-2xl font-bold text-slate-800">Xodimlar</h2>
         <p class="text-slate-500 text-sm mt-1">{{ staff.length }} ta xodim</p>
       </div>
       <button

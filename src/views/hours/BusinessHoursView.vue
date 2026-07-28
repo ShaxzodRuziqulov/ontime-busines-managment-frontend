@@ -152,7 +152,7 @@ onMounted(async () => {
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Ish soatlari</h1>
+        <h2 class="text-2xl font-bold text-slate-800">Ish soatlari</h2>
         <p class="text-slate-500 text-sm mt-1">Navbatlar va jadval shu vaqtlarga qarab hisoblanadi</p>
       </div>
       <button

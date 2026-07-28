@@ -53,9 +53,9 @@
           <span class="w-2.5 h-2.5 bg-gray-400 rounded-full"></span>
           Kelmadi
         </div>
-      </div>
-      <div class="flex text-gray-600 text-sm font-medium gap-1">
-        Jami: <span class="text-gray-800 border-b border-gray-400 inline-block">{{ bookings.length }} ta navbat</span>
+        <div class="flex text-gray-600 text-sm font-medium ml-2 gap-1">
+          Jami: <span class="text-gray-800 border-b border-gray-400 inline-block">{{ bookings.length }} ta navbat</span>
+        </div>
       </div>
     </div>
 

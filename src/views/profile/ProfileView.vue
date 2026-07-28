@@ -111,7 +111,7 @@ async function save() {
 <template>
   <div class="max-w-xl">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-slate-800">Mening profilim</h1>
+      <h2 class="text-2xl font-bold text-slate-800">Mening profilim</h2>
       <p class="text-slate-500 text-sm mt-1">Shaxsiy ma'lumotlaringizni bu yerdan yangilashingiz mumkin</p>
     </div>
 
