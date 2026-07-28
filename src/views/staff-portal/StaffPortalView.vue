@@ -8,12 +8,14 @@ import {
   User,
   Briefcase,
   TrendingUp,
+  Plus,
 } from 'lucide-vue-next'
 import { staffPortalApi } from '@/api/staffPortal'
 import { bookingsApi } from '@/api/bookings'
 import { useToast } from '@/composables/useToast'
 import { bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions } from '@/utils/bookingStatus'
 import { todayIso } from '@/utils/scheduling'
+import NewBookingModal from './NewBookingModal.vue'
 import type { StaffMember, Booking, BookingStatus, StaffStats } from '@/types'
 
 const toast = useToast()
@@ -24,8 +26,22 @@ const stats = ref<StaffStats | null>(null)
 const loading = ref(true)
 const activeTab = ref<'overview' | 'bookings'>('overview')
 const updatingId = ref<string | null>(null)
+const showNewBooking = ref(false)
 
 const nextActions = nextBookingActions
+
+async function onBookingCreated() {
+  try {
+    const [bookingsRes, statsRes] = await Promise.all([
+      staffPortalApi.myBookings(),
+      staffPortalApi.myStats(),
+    ])
+    bookings.value = bookingsRes.data
+    stats.value = statsRes.data
+  } catch {
+    // yangilash muvaffaqiyatsiz bo'lsa — jim, bron baribir yaratilgan
+  }
+}
 
 async function changeStatus(booking: Booking, status: BookingStatus) {
   updatingId.value = booking.id
@@ -106,7 +122,26 @@ onMounted(async () => {
           Xodim portali
         </p>
       </div>
+
+      <button
+        v-if="profile"
+        class="ml-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors flex-shrink-0"
+        @click="showNewBooking = true"
+      >
+        <Plus class="w-4 h-4" />
+        <span class="hidden sm:inline">Yangi bron</span>
+      </button>
     </div>
+
+    <!-- Yangi bron modali -->
+    <NewBookingModal
+      v-if="showNewBooking && profile"
+      :business-id="profile.businessId"
+      :staff-id="profile.id"
+      :bookings="bookings"
+      @close="showNewBooking = false"
+      @created="onBookingCreated"
+    />
 
     <!-- Loading skeleton -->
     <div v-if="loading" class="grid grid-cols-2 md:grid-cols-4 gap-4">

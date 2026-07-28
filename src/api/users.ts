@@ -19,6 +19,10 @@ export const usersApi = {
   lookupByLogin: (login: string) =>
     apiClient.get<UserLookup>(`/users/by-login/${encodeURIComponent(login)}`),
 
+  /** Telefon bo'yicha ro'yxatdagi mijoz(lar)ni qidiradi — topilmasa bo'sh massiv. */
+  lookupByPhone: (phone: string) =>
+    apiClient.get<UserLookup[]>(`/users/by-phone/${encodeURIComponent(phone)}`),
+
   create: (data: UserCreateRequest) =>
     apiClient.post<User>('/users', data),
 
