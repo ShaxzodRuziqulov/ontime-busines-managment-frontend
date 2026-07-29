@@ -392,6 +392,7 @@ onMounted(load)
             <table class="w-full text-sm">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-100">
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">№</th>
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Mijoz</th>
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Boshlanish</th>
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Davomiylik</th>
@@ -399,15 +400,16 @@ onMounted(load)
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Xodim</th>
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Izoh</th>
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Status</th>
-                  <th class="text-right px-5 py-3.5 font-semibold text-slate-600">Amal</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Amallar</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-50">
+              <tbody class="divide-y">
                 <tr
-                  v-for="booking in filtered"
+                  v-for="(booking, index) in filtered"
                   :key="booking.id"
                   class="hover:bg-slate-50/50 transition-colors"
                 >
+                  <td class="px-5 py-4 text-slate-700">{{index + 1}}</td>
                   <td class="px-5 py-4 text-slate-700">
                     <div>{{ booking.customerName || booking.guestName || '—' }}</div>
                     <div v-if="booking.guestPhone" class="text-xs text-slate-400">{{ booking.guestPhone }}</div>
@@ -428,7 +430,7 @@ onMounted(load)
                     <StatusBadge :status="booking.status" />
                   </td>
                   <td class="px-5 py-4">
-                    <div class="flex items-center justify-end gap-1">
+                    <div class="flex items-center justify-between gap-1">
                       <select
                         :value="booking.status"
                         @change="updateStatus(booking, ($event.target as HTMLSelectElement).value as BookingStatus)"
@@ -443,7 +445,7 @@ onMounted(load)
                         <option value="NO_SHOW">Kelmadi</option>
                       </select>
                       <button
-                        class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1"
+                        class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                         @click="deleteConfirm = booking.id"
                       >
                         <Trash2 class="w-4 h-4" />
@@ -485,7 +487,7 @@ onMounted(load)
       title="Yangi navbat qo'shish"
       @close="showCreateModal = false"
     >
-      <form @submit.prevent="createBooking" class="space-y-4">
+      <form @submit.prevent="createBooking" class="space-y-4 text-gray-600">
         <p v-if="createError" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ createError }}</p>
 
         <!-- Guest customer info -->
@@ -495,7 +497,7 @@ onMounted(load)
             <input
               v-model="form.guestName"
               type="text"
-              placeholder="Ali Valiyev"
+              placeholder="Ismni kiriting"
               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
@@ -562,10 +564,10 @@ onMounted(load)
                 form.staffId === st.id ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
               ]"
             >
-              <div class="truncate">{{ st.displayName }}</div>
-              <div :class="['text-[10px] mt-0.5', form.staffId === st.id ? 'text-white/80' : 'text-slate-400']">
+              <span class="truncate">{{ st.displayName }}</span>
+              <span :class="['text-[10px] mt-0.5', form.staffId === st.id ? 'text-white/80' : 'text-slate-400']">
                 {{ slotsLoading ? '...' : (freeSlotCount(st.id) > 0 ? `${freeSlotCount(st.id)} ta bo'sh` : "To'liq band") }}
-              </div>
+              </span>
             </button>
           </div>
         </div>

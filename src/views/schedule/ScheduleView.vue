@@ -7,7 +7,7 @@
 <!--          <p class="text-slate-500 text-sm">{{ formatDate() }}</p>-->
         </div>
         <div class="flex items-center gap-2">
-          <button @click="shiftDate(-1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500">
+          <button @click="shiftDate(-1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 cursor-pointer text-slate-500">
             <ChevronLeft class="w-4 h-4" />
           </button>
           <div class="relative">
@@ -18,43 +18,46 @@
                 class="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
             />
           </div>
-          <button @click="shiftDate(1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500">
+          <button @click="shiftDate(1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 cursor-pointer text-slate-500">
             <ChevronRight class="w-4 h-4" />
           </button>
           <button
               v-if="!isToday"
               @click="selectedDate = todayIso()"
-              class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-sm text-slate-600"
+              class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 cursor-pointer text-sm text-slate-600"
           >
             Bugun
           </button>
         </div>
       </div>
       <div
-          class="flex flex-wrap items-center text-gray-600 text-sm font-medium gap-1"
+          class="flex flex-wrap items-center text-gray-600 text-xs font-semibold gap-1"
       >
-        <div class="flex flex-1 bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
           Bajarilgan
         </div>
-        <div class="flex bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-red-500 rounded-full"></span>
           Bekor
         </div>
-        <div class="flex bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2.5 h-2.5 bg-blue-400 rounded-full"></span>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
           Tasdiqlangan
         </div>
-        <div class="flex bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2.5 h-2.5 bg-indigo-500 rounded-full"></span>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
           Jarayonda
         </div>
-        <div class="flex bg-slate-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2.5 h-2.5 bg-gray-400 rounded-full"></span>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
           Kelmadi
         </div>
         <div class="flex text-gray-600 text-sm font-medium ml-2 gap-1">
-          Jami: <span class="text-gray-800 border-b border-gray-400 inline-block">{{ bookings.length }} ta navbat</span>
+          Jami: <span class="text-gray-800 border-b border-gray-400 inline-block"
+        >
+          {{ bookings.length }} ta navbat
+        </span>
         </div>
       </div>
     </div>
@@ -80,7 +83,10 @@
     </EmptyState>
 
     <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative">
-      <div v-if="bookingsLoading" class="absolute inset-0 bg-white/60 z-30 flex items-center justify-center text-sm text-slate-400">
+      <div
+          v-if="bookingsLoading"
+          class="absolute inset-0 bg-white/60 z-30 flex items-center justify-center text-sm text-slate-400"
+      >
         Yuklanmoqda...
       </div>
       <div class="overflow-auto" style="max-height: min(65vh, 620px)">
@@ -97,7 +103,9 @@
                 class="flex-1 p-2 z-1 border-r border-gray-200  flex items-center gap-2"
                 :style="{ minWidth: `${COLUMN_WIDTH}px` }"
             >
-              <span class="w-2 h-2 rounded-full flex-shrink-0" :style="{ background: col.color }" />
+              <span class="w-2 h-2 rounded-full flex-shrink-0"
+                    :style="{ background: col.color }"
+              />
               <span class="text-sm font-medium text-slate-700 truncate">{{ col.name }}</span>
             </div>
           </div>
@@ -134,17 +142,26 @@
               <button
                   v-for="b in bookingsForColumn(col.id)"
                   :key="b.id"
-                  class="absolute left-1 right-1 rounded-lg px-2 text-left text-xs shadow-sm transition-all z-10"
+                  class="absolute flex border-t-2 border-gray-100 items-center left-1 right-1 rounded-md px-2 text-left text-xs shadow-sm transition-all z-10"
                   :class="bookingStatusBlockColors[b.status]"
                   :style="blockStyle(b)"
                   @click="selectedBooking = b"
               >
                 <span class="flex flex-col text-xs gap-1">
-                  <span class="font-medium break-words">{{ b.customerName || b.guestName || 'Mijoz' }}</span>
+                  <span
+                      class="font-medium break-words"
+                  >
+                    {{ b.customerName || b.guestName || 'Mijoz' }}
+                  </span>
                   <span
                       class="flex flex-1 gap-1 justify-between w-full items-center text-xs"
                   >
-                    <span v-if="b.offeredServiceName" class="break-words opacity-90 leading-tight">{{ b.offeredServiceName }}</span>
+                    <span
+                        v-if="b.offeredServiceName"
+                        class="break-words opacity-90 leading-tight"
+                    >
+                      {{ b.offeredServiceName }}
+                    </span>
                     <span>
                       {{formatTime(b.startAt)}} - {{formatTime(b.endAt)}}
                     </span>
@@ -156,9 +173,12 @@
                   class="absolute left-0 right-0 flex items-center justify-center pointer-events-none transition-all duration-75"
                   :style="{ top: `${hoverY -16}px`, height: '32px' }"
               >
-                <div class="flex items-center
-                text-indigo-500 text-xs font-medium px-2 py-1 shadow-lg rounded-full bg-indigo-100">
-                  <span class="text-base font-light leading-none">+</span>
+                <div class="flex items-center text-indigo-500 text-xs font-medium px-2 py-1 shadow-lg rounded-full bg-indigo-100"
+                >
+                  <span class="text-base font-light leading-none"
+                  >
+                    +
+                  </span>
                 </div>
               </div>
             </div>
@@ -178,14 +198,27 @@
     <!-- Booking detail modal -->
     <Teleport to="body" v-if="selectedBooking">
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="selectedBooking = null" />
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+             @click="selectedBooking = null"
+        />
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm z-10">
           <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <h3 class="font-semibold text-slate-800 flex items-center gap-2">
-              <span class="bg-indigo-200 flex items-center justify-center w-10 h-10 text-indigo-600 rounded-full">
+            <h3 class="text-slate-800 flex items-center gap-2">
+              <span
+                  class="bg-indigo-200 flex font-semibold items-center justify-center w-10 h-10 text-indigo-600 rounded-full"
+              >
                 {{getInitials(selectedBooking.customerName || selectedBooking.guestName || 'Mijoz')}}
               </span>
-              {{ selectedBooking.customerName || selectedBooking.guestName || 'Mijoz' }}
+              <span class="flex flex-col">
+                <span class="font-semibold">
+                {{ selectedBooking.customerName || selectedBooking.guestName || 'Mijoz' }}
+                </span>
+                <span
+                    class="text-gray-400 text-xs"
+                >
+                  {{createdDate(selectedBooking.createdAt)}}
+                </span>
+              </span>
             </h3>
             <button
                 class="p-1.5 border border-gray-200 rounded-lg text-slate-400 hover:bg-slate-100"
@@ -195,32 +228,58 @@
             </button>
           </div>
           <div class="px-5 py-4 space-y-2 text-sm">
-            <p v-if="selectedBooking.guestPhone" class="text-slate-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between">
+            <p class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1">
+              <span>Xodim:</span>
+              {{selectedBooking.staffName}}
+            </p>
+            <p
+                class="text-slate-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
+            >
               Telefon
               <span>{{ selectedBooking.guestPhone }}</span>
             </p>
-            <p class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1 text-slate-700">
+            <p
+                class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1 text-slate-700"
+            >
               Xizmat
               <span>{{ selectedBooking.offeredServiceName || '—' }}</span>
             </p>
-            <p class="text-gray-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between">
+            <p
+                class="text-gray-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
+            >
               <span>Vaqt</span>
-              <span>{{ formatTime(selectedBooking.startAt) }} — {{ formatTime(selectedBooking.endAt) }}</span>
+              <span>
+                {{ formatTime(selectedBooking.startAt) }} — {{ formatTime(selectedBooking.endAt) }}
+              </span>
             </p>
-            <p class="flex text-gray-600 items-center justify-between border-b border-dashed border-slate-300 pb-1">
+            <p
+                class="flex text-gray-600 items-center justify-between border-b border-dashed border-slate-300 pb-1"
+            >
               <span>Holat</span>
-              <span :class="['inline-block text-xs font-medium px-2.5 py-1 rounded-full', bookingStatusBadgeColors[selectedBooking.status]]">
+              <span
+                  :class="['inline-block text-xs font-medium px-2.5 py-1 rounded-full',
+                  bookingStatusBadgeColors[selectedBooking.status]]"
+              >
               {{ bookingStatusLabels[selectedBooking.status] }}
               </span>
             </p>
+            <p
+                class="flex text-gray-600 items-center justify-between border-b border-dashed border-slate-300 pb-1"
+            >
+              <span>Izoh:</span>
+              {{selectedBooking.customerNote}}
+            </p>
           </div>
-          <div v-if="nextBookingActions[selectedBooking.status]?.length" class="flex flex-wrap gap-2 px-5 pb-5">
+          <div v-if="nextBookingActions[selectedBooking.status]?.length"
+               class="flex flex-wrap gap-2 px-5 pb-5"
+          >
             <button
                 v-for="action in nextBookingActions[selectedBooking.status]"
                 :key="action.status"
                 :disabled="updatingId === selectedBooking.id"
                 @click="changeStatus(action.status)"
-                :class="['px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50', action.cls]"
+                :class="['px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50',
+                 action.cls]"
             >
               {{ action.label }}
             </button>
@@ -232,14 +291,20 @@
     <!-- Tezkor navbat yaratish -->
     <Teleport to="body" v-if="quickCreate">
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeQuickCreate" />
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+             @click="closeQuickCreate"
+        />
         <div class="relative text-gray-600 bg-white rounded-2xl shadow-2xl w-full max-w-sm z-10">
           <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <div>
               <h3 class="font-semibold text-slate-800">Yangi navbat</h3>
-              <p class="text-xs text-slate-600 mt-0.5">{{ quickCreate.staffName }} - {{ formatDate() }}</p>
+              <p
+                  class="text-xs text-slate-600 mt-0.5"
+              >
+                {{ quickCreate.staffName }} - {{ formatDate() }}
+              </p>
             </div>
-            <button class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100"
+            <button class="p-1.5 border border-gray-200 rounded-lg text-slate-400 hover:bg-slate-100"
                     @click="closeQuickCreate"
             >
               <XIcon class="w-4 h-4" />
@@ -248,7 +313,11 @@
 
           <div class="px-5 py-4 space-y-3">
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Xizmat *</label>
+              <label
+                  class="block text-xs font-medium text-slate-600 mb-1"
+              >
+                Xizmat *
+              </label>
               <select
                   v-model="quickForm.offeredServiceId"
                   class="w-full px-3 py-2 rounded-lg text-gray-600 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
@@ -266,7 +335,12 @@
 
             <div v-if="quickSelectedService">
               <label class="block text-xs font-medium text-slate-600 mb-1">Vaqt *</label>
-              <div v-if="quickPossibleStarts.length === 0" class="text-xs text-slate-400">Bu kunda bo'sh vaqt yo'q</div>
+              <div
+                  v-if="quickPossibleStarts.length === 0"
+                  class="text-xs text-slate-400"
+              >
+                Bu kunda bo'sh vaqt yo'q
+              </div>
               <div v-else class="grid grid-cols-4 gap-1.5">
                 <button
                     v-for="m in quickPossibleStarts"
@@ -296,7 +370,11 @@
               />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Telefon</label>
+              <label
+                  class="block text-xs font-medium text-slate-600 mb-1"
+              >
+                Telefon
+              </label>
               <input
                   v-model="quickForm.guestPhone"
                   type="tel"
@@ -414,6 +492,18 @@ const formatDate = () => {
   return `${year}-${month}-${day}`;
 };
 
+const createdDate = (dateString: string) => {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  const hour = date.getHours().toString().padStart(2, '0');
+  const time = `${hour}:${date.getMinutes().toString().padStart(2, '0')}`
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${year}.${month}.${day}, ${time}`;
+}
+
 const activeStaff = computed(() => staffList.value.filter((s) => s.active))
 
 // Ustunlar: har bir faol xodim + "Tayinlanmagan" (staffId yo'q bronlar uchun)
@@ -495,7 +585,7 @@ function onColumnClick(event: MouseEvent, staffId: string | null, staffName: str
   const target = event.currentTarget as HTMLElement
   const y = event.clientY - target.getBoundingClientRect().top
   const raw = openMinutes.value + y / PX_PER_MIN
-  const snapped = Math.round(raw / SLOT_INTERVAL) * SLOT_INTERVAL
+  const snapped = Math.floor(raw / SLOT_INTERVAL) * SLOT_INTERVAL
   const startMin = Math.min(Math.max(snapped, openMinutes.value), Math.max(closeMinutes.value - SLOT_INTERVAL, openMinutes.value))
 
   quickCreate.value = { staffId, staffName }
@@ -634,7 +724,7 @@ async function changeStatus(status: BookingStatus) {
 onMounted(async () => {
   await loadStaticData()
   await loadBookings()
-  nowTimer = setInterval(() => { nowTick.value = Date.now() }, 60_000)
+  nowTimer = setInterval(() => { nowTick.value = Date.now() }, 10_000)
 })
 
 onUnmounted(() => {
