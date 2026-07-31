@@ -175,32 +175,72 @@ onUnmounted(() => {
         <span class="hidden sm:inline">Yangi bron</span>
       </button>
     </div>
-    <div class="flex items-center justify-between bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3">
-      <button
-        class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-        @click="shiftDay(-1)"
+    <div class="flex flex-col-reverse sm:flex-col-reverse md:flex-col-reverse lg:flex-row sm:items-center justify-between flex-wrap lg:flex-nowrap gap-4 mb-6">
+      <div
+          class="flex w-full flex-wrap items-center text-gray-600 text-xs font-semibold gap-1"
       >
-        <ChevronLeft class="w-5 h-5" />
-      </button>
-
-      <div class="flex items-center gap-2">
-        <p class="text-sm font-semibold text-slate-800 capitalize">{{ dateLabel() }}</p>
-        <button
-          v-if="!isToday"
-          class="text-xs text-white px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 hover:underline mt-0.5"
-          @click="selectedDate = todayIso()"
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+          Klient
+        </div>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+          Bekor(mijoz)
+        </div>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-red-400 rounded-full"></span>
+          Bekor(xodim)
+        </div>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+          Kelmadi
+        </div>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+          Tasdiqlangan
+        </div>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
+          Jarayonda
+        </div>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+          Bajarildi
+        </div>
+        <div class="flex text-gray-600 text-sm font-medium ml-2 gap-1">
+          Jami: <span class="text-gray-800 border-b border-gray-400 inline-block"
         >
-          Bugunga qaytish
-        </button>
-        <span v-else class="text-xs text-slate-400">Bugun</span>
+          {{ bookings.length }} ta navbat
+        </span>
+        </div>
       </div>
+      <div class="flex w-full max-w-lg items-center justify-between bg-white rounded-2xl border border-slate-100 shadow-sm p-2">
+        <button
+            class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+            @click="shiftDay(-1)"
+        >
+          <ChevronLeft class="w-5 h-5" />
+        </button>
 
-      <button
-        class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-        @click="shiftDay(1)"
-      >
-        <ChevronRight class="w-5 h-5" />
-      </button>
+        <div class="flex items-center gap-2">
+          <p class="text-sm font-semibold text-slate-800 capitalize">{{ dateLabel() }}</p>
+          <button
+              v-if="!isToday"
+              class="text-xs text-white px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 hover:underline"
+              @click="selectedDate = todayIso()"
+          >
+            Bugunga qaytish
+          </button>
+          <span v-else class="text-xs text-slate-400">Bugun</span>
+        </div>
+
+        <button
+            class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+            @click="shiftDay(1)"
+        >
+          <ChevronRight class="w-5 h-5" />
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="bg-white rounded-2xl border border-slate-100 p-10 text-center">
@@ -211,7 +251,7 @@ onUnmounted(() => {
       <CalendarX class="w-10 h-10 text-slate-200 mx-auto mb-3" />
       <p class="text-slate-500 text-sm">Bu kun biznes ishlamaydi</p>
     </div>
-    <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+    <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm px-4">
       <div class="relative" :style="{ height: gridHeight + 'px' }">
         <div
           v-for="slot in timeSlots"
@@ -225,7 +265,7 @@ onUnmounted(() => {
           <div
             v-for="booking in dayBookings"
             :key="booking.id"
-            class="absolute left-0 border-t-2 border-gray-100 right-2 rounded-lg border px-2.5 py-1.5 overflow-hidden shadow-sm"
+            class="absolute left-0 border-t-2 border-gray-100 right-2 cursor-pointer rounded-lg border px-2.5 py-1.5 overflow-hidden shadow-sm"
             :class="bookingStatusBadgeColors[booking.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'"
             :style="blockStyle(booking)"
             @click="selectedBooking = booking"

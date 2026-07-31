@@ -34,12 +34,20 @@
           class="flex flex-wrap items-center text-gray-600 text-xs font-semibold gap-1"
       >
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-          Bajarilgan
+          <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+          Klient
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-          Bekor
+          Bekor(mijoz)
+        </div>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-red-400 rounded-full"></span>
+          Bekor(xodim)
+        </div>
+        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+          <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+          Kelmadi
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
@@ -50,8 +58,8 @@
           Jarayonda
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
-          Kelmadi
+          <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+          Bajarildi
         </div>
         <div class="flex text-gray-600 text-sm font-medium ml-2 gap-1">
           Jami: <span class="text-gray-800 border-b border-gray-400 inline-block"
@@ -93,7 +101,7 @@
         <div :style="{ minWidth: `${64 + columns.length * COLUMN_WIDTH}px` }">
           <!-- Header -->
           <div class="flex sticky top-0 z-30 bg-slate-100 border-b border-gray-200">
-            <div class="w-16 flex-shrink-0 bg-slate-50 flex items-center justify-center text-sm font-medium border-r border-gray-200 text-slate-600 sticky left-0"
+            <div class="w-16 flex-shrink-0 bg-slate-50 flex items-center justify-center text-xs font-medium border-r border-gray-200 text-slate-600 sticky left-0"
             >
               Vaqt
             </div>
@@ -103,10 +111,12 @@
                 class="flex-1 p-2 z-1 border-r border-gray-200  flex items-center gap-2"
                 :style="{ minWidth: `${COLUMN_WIDTH}px` }"
             >
-              <span class="w-2 h-2 rounded-full flex-shrink-0"
-                    :style="{ background: col.color }"
-              />
-              <span class="text-sm font-medium text-slate-700 truncate">{{ col.name }}</span>
+              <span
+                  class="bg-indigo-200 flex font-semibold items-center justify-center w-6 h-6 text-xs text-indigo-600 rounded-full"
+              >
+                {{getInitials(col.name)}}
+              </span>
+              <span class="text-xs font-medium text-slate-700">{{ col.name }}</span>
             </div>
           </div>
 

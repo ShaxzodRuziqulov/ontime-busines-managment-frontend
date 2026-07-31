@@ -332,7 +332,7 @@ onMounted(async () => {
         @click="submit"
       >
         <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
-        {{ saving ? 'Saqlanmoqda...' : 'Bron qilish' }}
+        {{ saving ? 'Saqlanmoqda...' : 'Navbatga qo\'yish' }}
       </button>
     </div>
   </AppModal>

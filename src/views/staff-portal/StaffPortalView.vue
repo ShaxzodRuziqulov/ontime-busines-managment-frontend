@@ -157,7 +157,7 @@ onMounted(async () => {
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div class="flex items-center gap-2 text-slate-500 text-sm mb-2">
             <CalendarCheck class="w-4 h-4 text-primary-500" />
-            Jami bronlar
+            Jami navbatlar
           </div>
           <p class="text-3xl font-bold text-slate-800">{{ stats?.totalBookings ?? 0 }}</p>
         </div>

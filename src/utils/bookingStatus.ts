@@ -6,7 +6,7 @@ export const bookingStatusLabels: Record<BookingStatus, string> = {
   IN_PROGRESS: 'Jarayonda',
   COMPLETED: 'Bajarildi',
   CANCELLED_BY_CUSTOMER: 'Bekor (mijoz)',
-  CANCELLED_BY_BUSINESS: 'Bekor (biznes)',
+  CANCELLED_BY_BUSINESS: 'Bekor (xodim)',
   NO_SHOW: 'Kelmadi',
 }
 
@@ -23,11 +23,11 @@ export const bookingStatusBadgeColors: Record<BookingStatus, string> = {
 
 /** To'liq to'ldirilgan blok (masalan jadval katakchasi) uchun fon ranglari. */
 export const bookingStatusBlockColors: Record<BookingStatus, string> = {
-  PENDING: 'bg-amber-400',
+  PENDING: 'bg-amber-200 text-amber-800',
   CONFIRMED: 'bg-blue-200 text-blue-800',
   IN_PROGRESS: 'bg-indigo-300 text-indigo-800',
   COMPLETED: 'bg-emerald-200 text-emerald-800',
-  CANCELLED_BY_CUSTOMER: 'bg-red-300',
+  CANCELLED_BY_CUSTOMER: 'bg-red-300 text-red-800',
   CANCELLED_BY_BUSINESS: 'bg-red-200 text-red-800',
   NO_SHOW: 'bg-slate-200 text-slate-500',
 }

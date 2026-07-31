@@ -25,10 +25,17 @@ const ratingDistribution = computed(() => {
 })
 
 function formatDate(iso?: string) {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString('uz-UZ', {
-    day: '2-digit', month: 'long', year: 'numeric',
-  })
+  if (!iso) return '';
+
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return '';
+
+  const hours = date.getHours().toString().padStart(2, '0');
+  const time = hours + ':' + date.getMinutes().toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2,'0');
+  return `${year}-${month}-${day}, ${time}`;
 }
 
 onMounted(async () => {
@@ -43,20 +50,20 @@ onMounted(async () => {
 
 <template>
   <div>
-    <div class="mb-6">
-      <h2 class="text-2xl font-bold text-slate-800">Sharhlar</h2>
-      <p class="text-slate-500 text-sm mt-1">Mijozlar fikrlari</p>
+    <div class="mb-4">
+      <h2 class="text-lg font-bold text-slate-800">Sharhlar</h2>
+      <p class="text-slate-500 text-sm font-semibold">Mijozlar fikrlari</p>
     </div>
 
     <LoadingSpinner v-if="loading" />
 
     <template v-else>
       <!-- Rating overview -->
-      <div v-if="reviews.length > 0" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-5">
+      <div v-if="reviews.length > 0" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
         <div class="flex flex-col sm:flex-row gap-8 items-start sm:items-center">
           <!-- Big rating -->
           <div class="text-center flex-shrink-0">
-            <div class="text-5xl font-bold text-slate-800">{{ avgRating.toFixed(1) }}</div>
+            <div class="text-4xl font-bold text-slate-800">{{ avgRating.toFixed(1) }}</div>
             <div class="flex items-center justify-center gap-0.5 mt-2">
               <Star
                 v-for="i in 5"
@@ -99,19 +106,19 @@ onMounted(async () => {
       </EmptyState>
 
       <!-- Reviews list -->
-      <div v-else class="space-y-3">
+      <div v-else class="space-y-2">
         <div
           v-for="review in reviews"
           :key="review.id"
-          class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5"
+          class="bg-white rounded-2xl border border-slate-100 flex flex-col gap-3 shadow-sm p-4"
         >
-          <div class="flex items-start justify-between mb-3">
+          <div class="flex items-start justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center text-sm font-semibold text-primary-700">
+              <div class="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center text-sm font-semibold text-primary-700">
                 {{ (review.customerName || 'M').charAt(0).toUpperCase() }}
               </div>
               <div>
-                <p class="text-sm font-medium text-slate-700">{{ review.customerName || 'Mijoz' }}</p>
+                <p class="text-xs font-semibold text-slate-700">{{ review.customerName || 'Mijoz' }}</p>
                 <p class="text-xs text-slate-400">{{ formatDate(review.createdAt) }}</p>
               </div>
             </div>
@@ -121,12 +128,12 @@ onMounted(async () => {
               <Star
                 v-for="i in 5"
                 :key="i"
-                :class="['w-4 h-4', i <= review.stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200']"
+                :class="['w-3 h-3', i <= review.stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200']"
               />
             </div>
           </div>
 
-          <p v-if="review.comment" class="text-sm text-slate-600 leading-relaxed">
+          <p v-if="review.comment" class="text-xs text-slate-600 leading-relaxed">
             "{{ review.comment }}"
           </p>
         </div>

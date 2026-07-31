@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   AlarmClock,
   ClipboardList,
+    House,
   UserCircle2,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
@@ -38,7 +39,7 @@ const businessNavItems = [
 ]
 
 const staffNavItems = [
-  { name: 'Mening portalim', to: '/staff-portal', icon: UserCircle2 },
+  { name: 'Bosh sahifa', to: '/staff-portal', icon: House },
   { name: 'Jadval', to: '/staff-portal/schedule', icon: CalendarDays },
 ]
 
