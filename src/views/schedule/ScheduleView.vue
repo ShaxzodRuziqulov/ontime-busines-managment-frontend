@@ -35,15 +35,15 @@
       >
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
-          Klient
+          Mijoz
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-          Bekor(mijoz)
+          <span class="text-gray-400">Bekor:</span> Mijoz
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-red-400 rounded-full"></span>
-          Bekor(xodim)
+          <span class="text-gray-400">Bekor:</span> Xodim
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
@@ -51,7 +51,7 @@
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-          Tasdiqlangan
+          Tasdiqlandi
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
@@ -97,7 +97,7 @@
       >
         Yuklanmoqda...
       </div>
-      <div class="overflow-auto" style="max-height: min(65vh, 620px)">
+      <div class="overflow-auto" style="max-height: min(67vh, 620px)">
         <div :style="{ minWidth: `${64 + columns.length * COLUMN_WIDTH}px` }">
           <!-- Header -->
           <div class="flex sticky top-0 z-30 bg-slate-100 border-b border-gray-200">
@@ -126,7 +126,7 @@
               <span
                   v-for="slot in timeSlots"
                   :key="slot.label"
-                  class="absolute border-t border-gray-100 pointer-events-none w-full text-[11px] px-5 py-3 text-slate-400"
+                  class="absolute border-t border-gray-100 pointer-events-none w-full text-[11px] px-5 py-0.5 text-slate-400"
                   :style="{ top: `${slot.top}px` }"
               >
                 {{ slot.label }}
@@ -149,35 +149,77 @@
                   class="absolute left-0 right-0 border-t border-slate-100 pointer-events-none"
                   :style="{ top: `${slot.top}px` }"
               />
-              <button
-                  v-for="b in bookingsForColumn(col.id)"
-                  :key="b.id"
-                  class="absolute flex border-t-2 border-gray-100 items-center left-1 right-1 rounded-md px-2 text-left text-xs shadow-sm transition-all z-10"
-                  :class="bookingStatusBlockColors[b.status]"
-                  :style="blockStyle(b)"
-                  @click="selectedBooking = b"
+              <template
+                  v-for="item in layoutForColumn(col.id)"
+                  :key="item.kind === 'group' ? item.key : item.booking.id"
               >
-                <span class="flex flex-col text-xs gap-1">
-                  <span
-                      class="font-medium break-words"
-                  >
-                    {{ b.customerName || b.guestName || 'Mijoz' }}
+                <!-- Oddiy bron (faol yoki yolg'iz bekor/kelmadi) -->
+                <button
+                    v-if="item.kind === 'single'"
+                    class="absolute flex border-t-2 border-gray-100 items-center rounded-md text-left text-xs shadow-sm transition-all overflow-hidden hover:z-30 hover:shadow-md"
+                    :class="[bookingStatusBlockColors[item.booking.status], isProblem(item.booking.status) ? 'px-1' : 'px-2']"
+                    :style="item.style"
+                    :title="isProblem(item.booking.status) ? `${item.booking.customerName || item.booking.guestName || 'Mijoz'} — ${bookingStatusLabels[item.booking.status]}` : ''"
+                    @click="selectedBooking = item.booking"
+                >
+                  <span v-if="!isProblem(item.booking.status)" class="flex w-full flex-col text-xs gap-1">
+                    <span class="font-medium break-words">
+                      {{ item.booking.customerName || item.booking.guestName || 'Mijoz' }}
+                    </span>
+                    <span class="flex gap-1 justify-between w-full items-center text-xs">
+                      <span v-if="item.booking.offeredServiceName" class="break-all opacity-90 text-xs w-full">
+                        {{ item.booking.offeredServiceName }}
+                      </span>
+                      <span class="text-[12px] w-full justify-end flex">
+                        {{ formatTime(item.booking.startAt) }}-{{ formatTime(item.booking.endAt) }}
+                      </span>
+                    </span>
                   </span>
-                  <span
-                      class="flex flex-1 gap-1 justify-between w-full items-center text-xs"
+                  <span v-else class="w-full h-full flex items-center justify-center text-[10px]">✕</span>
+                </button>
+
+                <!-- Guruh: bir nechta bekor/kelmadi bitta joyda -->
+                <div v-else class="absolute" :style="item.style">
+                  <button
+                      class="w-full h-full rounded-md flex items-center justify-center text-[11px] font-semibold text-white bg-slate-400 hover:bg-slate-500 shadow-sm transition-colors z-20"
+                      :title="`${item.bookings.length} ta bekor/kelmadi`"
+                      @click.stop="toggleGroup(item.key)"
                   >
-                    <span
-                        v-if="b.offeredServiceName"
-                        class="break-words opacity-90 leading-tight"
+                    {{ item.bookings.length }}✕
+                  </button>
+
+                  <Teleport to="body" v-if="openGroupKey === item.key">
+                    <div class="fixed inset-0 z-40" @click="openGroupKey = null" />
+                    <div
+                        class="fixed z-50 bg-white rounded-xl shadow-2xl border border-slate-100 w-56 overflow-hidden"
+                        :style="{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }"
                     >
-                      {{ b.offeredServiceName }}
-                    </span>
-                    <span>
-                      {{formatTime(b.startAt)}} - {{formatTime(b.endAt)}}
-                    </span>
-                  </span>
-                </span>
-              </button>
+                      <div class="px-3 py-2 border-b border-slate-100 bg-slate-50">
+                        <p class="text-xs font-medium text-slate-600">Bekor / kelmadi bronlar</p>
+                      </div>
+                      <div class="max-h-64 overflow-auto divide-y divide-slate-100">
+                        <button
+                            v-for="b in item.bookings"
+                            :key="b.id"
+                            class="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between gap-2"
+                            @click="openFromGroup(b)"
+                        >
+                          <span class="flex flex-col">
+                            <span class="text-xs font-medium text-slate-700">{{ b.customerName || b.guestName || 'Mijoz' }}</span>
+                            <span class="text-[11px] text-slate-400">{{ formatTime(b.startAt) }} - {{ formatTime(b.endAt) }}</span>
+                          </span>
+                          <span
+                              class="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full"
+                              :class="bookingStatusBadgeColors[b.status]"
+                          >
+                            {{ bookingStatusLabels[b.status] }}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </Teleport>
+                </div>
+              </template>
               <div
                   v-if="hoverCol === (col.id ?? '__unassigned__')"
                   class="absolute left-0 right-0 flex items-center justify-center pointer-events-none transition-all duration-75"
@@ -537,7 +579,7 @@ function onColumnMouseLeave() {
 }
 
 const PX_PER_MIN = 2
-const SLOT_INTERVAL = 30
+const SLOT_INTERVAL = 15
 const COLUMN_WIDTH = 180
 // Vaqt yorlig'i chiziq ustida markazlashtirilgani uchun ("-translate-y-1/2"),
 // birinchi yorliq tepada kesilib qolmasligi uchun butun panjaraga yuqoridan bo'sh joy qo'shiladi.
@@ -578,6 +620,160 @@ const bookingsByStaff = computed(() => {
 
 function bookingsForColumn(staffId: string | null) {
   return bookingsByStaff.value.get(staffId) ?? []
+}
+
+// Muammoli holatlar: bekor va kelmadi — enum nomlarini o'z faylingizga moslang
+// const PROBLEM_STATUSES: BookingStatus[] = [
+//   'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_BUSINESS', 'NO_SHOW',
+// ] as BookingStatus[]
+
+function isProblem(status: BookingStatus) {
+  // return PROBLEM_STATUSES.includes(status)
+  return bookingStatusBlockColors.CANCELLED_BY_CUSTOMER.includes(status)
+  || bookingStatusBlockColors.CANCELLED_BY_BUSINESS.includes(status)
+  || bookingStatusBlockColors.NO_SHOW.includes(status)
+}
+
+function overlaps(a: Booking, b: Booking) {
+  const aS = minutesOfDay(a.startAt), aE = minutesOfDay(a.endAt)
+  const bS = minutesOfDay(b.startAt), bE = minutesOfDay(b.endAt)
+  return aS < bE && bS < aE
+}
+
+// Umumiy: ro'yxatni bir-biri bilan to'qnashuvchi klasterlarga bo'lish
+function clusterOverlaps(list: Booking[]): Booking[][] {
+  const sorted = list.slice().sort((a, b) => minutesOfDay(a.startAt) - minutesOfDay(b.startAt))
+  const clusters: Booking[][] = []
+  let current: Booking[] = []
+  let currentEnd = -Infinity
+  for (const b of sorted) {
+    const start = minutesOfDay(b.startAt)
+    if (current.length && start < currentEnd) {
+      current.push(b)
+      currentEnd = Math.max(currentEnd, minutesOfDay(b.endAt))
+    } else {
+      if (current.length) clusters.push(current)
+      current = [b]
+      currentEnd = minutesOfDay(b.endAt)
+    }
+  }
+  if (current.length) clusters.push(current)
+  return clusters
+}
+
+// Faol bronlar orasidagi to'qnashuvni ustunlarga taqsimlash (Google Calendar uslubi)
+function assignColumns(list: Booking[]) {
+  const result = new Map<string, { col: number; cols: number }>()
+  for (const cluster of clusterOverlaps(list)) {
+    const colEnds: number[] = []
+    const assigned: { b: Booking; col: number }[] = []
+    for (const b of cluster) {
+      const start = minutesOfDay(b.startAt)
+      let placed = false
+      for (let c = 0; c < colEnds.length; c++) {
+        if (colEnds[c] <= start) {
+          colEnds[c] = minutesOfDay(b.endAt)
+          assigned.push({ b, col: c })
+          placed = true
+          break
+        }
+      }
+      if (!placed) {
+        colEnds.push(minutesOfDay(b.endAt))
+        assigned.push({ b, col: colEnds.length - 1 })
+      }
+    }
+    const cols = colEnds.length
+    for (const { b, col } of assigned) result.set(b.id, { col, cols })
+  }
+  return result
+}
+
+type LayoutItem =
+    | { kind: 'single'; booking: Booking; style: Record<string, string> }
+    | { kind: 'group'; key: string; bookings: Booking[]; style: Record<string, string> }
+
+// Butun ustun uchun tayyor layout
+function layoutForColumn(staffId: string | null): LayoutItem[] {
+  const list = bookingsForColumn(staffId)
+  const active = list.filter((b) => !isProblem(b.status))
+  const problem = list.filter((b) => isProblem(b.status))
+  const activeLayout = assignColumns(active)
+
+  const items: LayoutItem[] = []
+
+  for (const b of active) {
+    const { col, cols } = activeLayout.get(b.id)!
+    const widthPct = 100 / cols
+    items.push({
+      kind: 'single',
+      booking: b,
+      style: {
+        ...blockStyle(b),
+        left: `calc(${col * widthPct}% + 2px)`,
+        width: `calc(${widthPct}% - 4px)`,
+        right: 'auto',
+        zIndex: '20',
+      },
+    })
+  }
+
+  for (const cluster of clusterOverlaps(problem)) {
+    const hidden = cluster.some((p) => active.some((a) => overlaps(a, p)))
+
+    if (!hidden) {
+      // Faol bron bilan to'qnashmagan — o'z holicha, kerak bo'lsa yonma-yon
+      const layout = assignColumns(cluster)
+      for (const b of cluster) {
+        const { col, cols } = layout.get(b.id)!
+        const widthPct = 100 / cols
+        items.push({
+          kind: 'single',
+          booking: b,
+          style: {
+            ...blockStyle(b),
+            left: `calc(${col * widthPct}% + 2px)`,
+            width: `calc(${widthPct}% - 4px)`,
+            right: 'auto',
+            zIndex: '10',
+          },
+        })
+      }
+    } else if (cluster.length === 1) {
+      // Yolg'iz — ingichka chiziqcha
+      items.push({
+        kind: 'single',
+        booking: cluster[0],
+        style: { ...blockStyle(cluster[0]), left: 'auto', right: '2px', width: '28px', zIndex: '15', opacity: '0.75' },
+      })
+    } else {
+      // Bir nechtasi — yagona badge, vertikal oraliq klasterni to'liq qamrab olsin
+      const top = Math.min(...cluster.map((b) => minutesOfDay(b.startAt)))
+      const bottom = Math.max(...cluster.map((b) => minutesOfDay(b.endAt)))
+      const topPx = Math.max((top - openMinutes.value) * PX_PER_MIN, 0) + TOP_PAD
+      const heightPx = Math.max((bottom - top) * PX_PER_MIN, 28)
+      items.push({
+        kind: 'group',
+        key: cluster.map((b) => b.id).join('-'),
+        bookings: cluster,
+        style: { top: `${topPx}px`, height: `${Math.min(heightPx, 32)}px`, right: '2px', left: 'auto', width: '30px', zIndex: '15' },
+      })
+    }
+  }
+
+  return items
+}
+
+// Qaysi guruh popoveri ochiq turgani
+const openGroupKey = ref<string | null>(null)
+
+function toggleGroup(key: string) {
+  openGroupKey.value = openGroupKey.value === key ? null : key
+}
+
+function openFromGroup(b: Booking) {
+  openGroupKey.value = null
+  selectedBooking.value = b
 }
 
 const nowTick = ref(Date.now())

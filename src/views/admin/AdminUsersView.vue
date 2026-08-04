@@ -316,10 +316,10 @@ onMounted(async () => {
         <div class="px-5 py-3 border-b border-slate-100 text-xs text-slate-500">
           {{ filtered.length }} ta natija
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+        <div class="overflow-x-auto overflow-y-auto max-h-[700px]">
+          <table class="w-full text-xs">
             <thead>
-              <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
+              <tr class="sticky z-30 top-0 bg-white border-b border-gray-50 shadow-sm text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
                 <th class="px-5 py-3 text-left font-medium">Foydalanuvchi</th>
                 <th class="px-5 py-3 text-left font-medium">Login</th>
                 <th class="px-5 py-3 text-left font-medium">Telefon</th>
@@ -328,13 +328,13 @@ onMounted(async () => {
                 <th class="px-5 py-3 text-right font-medium">Amallar</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50">
+            <tbody class="divide-y">
               <tr
                 v-for="user in filtered"
                 :key="user.id"
                 :class="['hover:bg-slate-50/50 transition-colors', !user.active && 'opacity-60']"
               >
-                <td class="px-5 py-3.5">
+                <td class="px-5 py-3">
                   <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-slate-100 flex items-center justify-center">
                       <img
