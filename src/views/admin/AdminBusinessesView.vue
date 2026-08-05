@@ -77,10 +77,10 @@ async function bulkUpdateStatus(status: BusinessStatus) {
   bulkStatusOpen.value = false
   const ids = [...selected.value]
   try {
-    await Promise.all(ids.map(id => businessesApi.updateStatus(id, { status })))
-    for (const id of ids) {
-      const idx = businesses.value.findIndex(b => b.id === id)
-      if (idx !== -1) businesses.value[idx] = { ...businesses.value[idx], status }
+    const results = await Promise.all(ids.map(id => businessesApi.updateStatus(id, { status })))
+    for (const { data } of results) {
+      const idx = businesses.value.findIndex(b => b.id === data.id)
+      if (idx !== -1) businesses.value[idx] = data
     }
     adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
     clearSelection()
@@ -110,12 +110,32 @@ async function bulkDelete() {
 
 function openStatusModal(biz: Business) {
   statusModal.value = biz
-  statusForm.value = { status: biz.status, subscriptionEndDate: biz.subscriptionEndDate ?? '' }
+  const subscriptionDate = dateInputValue(biz.subscriptionEndDate)
+  statusForm.value = {
+    status: biz.status,
+    subscriptionEndDate: isPastDate(subscriptionDate) ? '' : subscriptionDate,
+  }
 }
 
-function toInstant(dateStr: string | undefined | null): string | undefined {
+function toEndOfDayInstant(dateStr: string | undefined | null): string | undefined {
   if (!dateStr) return undefined
-  return new Date(dateStr).toISOString()
+  return new Date(`${dateStr}T23:59:59.999`).toISOString()
+}
+
+function dateInputValue(iso: string | null | undefined): string {
+  return iso ? iso.slice(0, 10) : ''
+}
+
+function isPastDate(dateStr: string | undefined | null): boolean {
+  if (!dateStr) return false
+  return dateStr < new Date().toISOString().slice(0, 10)
+}
+
+function selectStatus(status: BusinessStatus) {
+  statusForm.value.status = status
+  if (status === 'ACTIVE' && isPastDate(statusForm.value.subscriptionEndDate)) {
+    statusForm.value.subscriptionEndDate = ''
+  }
 }
 
 async function updateStatus() {
@@ -123,21 +143,18 @@ async function updateStatus() {
   saving.value = true
   try {
     const payload: BusinessStatusUpdateRequest = { status: statusForm.value.status }
-    if (statusForm.value.subscriptionEndDate) payload.subscriptionEndDate = toInstant(statusForm.value.subscriptionEndDate)
-    await businessesApi.updateStatus(statusModal.value.id, payload)
+    payload.subscriptionEndDate = statusForm.value.subscriptionEndDate
+      ? toEndOfDayInstant(statusForm.value.subscriptionEndDate)
+      : null
+    const { data } = await businessesApi.updateStatus(statusModal.value.id, payload)
     const idx = businesses.value.findIndex(b => b.id === statusModal.value!.id)
-    if (idx !== -1) {
-      businesses.value[idx] = {
-        ...businesses.value[idx],
-        status: statusForm.value.status,
-        subscriptionEndDate: statusForm.value.subscriptionEndDate || null,
-      }
-    }
+    if (idx !== -1) businesses.value[idx] = data
     adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
     statusModal.value = null
     toast.success('Holat yangilandi')
-  } catch {
-    toast.error('Xatolik yuz berdi')
+  } catch (e) {
+    const message = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(message || 'Xatolik yuz berdi')
   } finally {
     saving.value = false
   }
@@ -413,7 +430,7 @@ onMounted(async () => {
           <div class="grid grid-cols-2 gap-2">
             <button
               v-for="s in allStatuses" :key="s" type="button"
-              @click="statusForm.status = s"
+              @click="selectStatus(s)"
               :class="[
                 'px-3 py-2.5 rounded-xl text-xs font-medium border-2 transition-all text-left',
                 statusForm.status === s ? statusColor(s) + ' border-current' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
@@ -430,7 +447,7 @@ onMounted(async () => {
           <label class="block text-sm font-medium text-slate-700 mb-1.5">Obuna tugash sanasi</label>
           <input v-model="statusForm.subscriptionEndDate" type="date"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-          <p class="text-xs text-slate-400 mt-1">Bo'sh qoldiring — mavjud qiymat o'zgarmaydi</p>
+          <p class="text-xs text-slate-400 mt-1">Bo'sh qoldiring — obuna sanasi tozalanadi</p>
         </div>
         <div class="flex gap-3 pt-2">
           <button type="button" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50" @click="statusModal = null">Bekor</button>

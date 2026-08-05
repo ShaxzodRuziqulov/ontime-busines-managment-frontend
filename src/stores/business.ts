@@ -14,6 +14,15 @@ export const useBusinessStore = defineStore('business', () => {
 
   const isTrial = computed(() => business.value?.status === 'TRIAL')
 
+  /**
+   * Faqat o'qish rejimi: biznes mavjud va backend "accessAllowed=false" degan.
+   * Bu real vaqtda hisoblanadi — sinov/obuna muddati o'tishi bilan darhol true bo'ladi,
+   * hatto scheduler status'ni EXPIRED ga o'zgartirmasidan oldin ham.
+   */
+  const isReadOnly = computed(() =>
+    business.value != null && business.value.accessAllowed === false
+  )
+
   const trialDaysLeft = computed(() => {
     if (!business.value?.trialEndDate) return 0
     const end = new Date(business.value.trialEndDate)
@@ -24,19 +33,31 @@ export const useBusinessStore = defineStore('business', () => {
 
   async function fetchMyBusiness() {
     const authStore = useAuthStore()
-    if (!authStore.user || authStore.isAdmin) return
+    if (!authStore.user || authStore.isAdmin) {
+      business.value = null
+      return
+    }
     // Faqat xodim bo'lsa (biznes egasi emas), biznes yuklamaslik
-    if (authStore.isStaff && !authStore.isBusinessOwner) return
+    if (authStore.isStaff && !authStore.isBusinessOwner) {
+      business.value = null
+      return
+    }
 
     loading.value = true
     try {
       const { data } = await businessesApi.getAll({ ownerId: authStore.user.userId })
       business.value = data.content[0] || null
-        loading.value = false
     } catch (error: any) {
-        console.log('Error message:', error.response?.data?.message)
+      console.log('Error message:', error.response?.data?.message)
+    } finally {
+      loading.value = false
     }
   }
 
-  return { business, loading, isExpired, isTrial, trialDaysLeft, fetchMyBusiness }
+  function clear() {
+    business.value = null
+    loading.value = false
+  }
+
+  return { business, loading, isExpired, isTrial, isReadOnly, trialDaysLeft, fetchMyBusiness, clear }
 })

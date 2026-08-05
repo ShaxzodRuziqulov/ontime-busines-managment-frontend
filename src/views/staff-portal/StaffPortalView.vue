@@ -15,6 +15,7 @@ import { bookingsApi } from '@/api/bookings'
 import { useToast } from '@/composables/useToast'
 import { bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions } from '@/utils/bookingStatus'
 import { todayIso } from '@/utils/scheduling'
+import { personName } from '@/utils/names'
 import NewBookingModal from './NewBookingModal.vue'
 import type { StaffMember, Booking, BookingStatus, StaffStats } from '@/types'
 
@@ -115,7 +116,7 @@ onMounted(async () => {
       </div>
       <div>
         <h2 class="text-2xl font-bold text-slate-800">
-          Salom, {{ profile?.displayName ?? '...' }}!
+          Salom, {{ personName(profile, '...') }}!
         </h2>
         <p class="text-slate-500 text-sm mt-0.5 flex items-center gap-1.5">
           <Briefcase class="w-3.5 h-3.5" />

@@ -14,6 +14,7 @@ import AppModal from '@/components/common/AppModal.vue'
 import {
   weekdayFromDate, toMinutes, todayIso, isStaffBusy, generatePossibleStarts, minutesToLabel,
 } from '@/utils/scheduling'
+import { personName } from '@/utils/names'
 import type { Booking, BookingStatus, BookingCreateRequest, OfferedService, StaffMember, BusinessHours } from '@/types'
 
 const businessStore = useBusinessStore()
@@ -68,7 +69,13 @@ const selectedService = computed(() =>
   services.value.find((s) => s.id === form.value.offeredServiceId)
 )
 
-const activeStaffList = computed(() => staffList.value.filter((s) => s.active))
+const activeStaffList = computed(() =>
+  staffList.value.filter((s) => {
+    if (!s.active) return false
+    if (!form.value.offeredServiceId) return true
+    return s.serviceIds?.includes(form.value.offeredServiceId)
+  })
+)
 
 const todaysHoursForBooking = computed(() =>
   hours.value.find((h) => h.weekday === weekdayFromDate(bookingDate.value)) ?? null
@@ -152,7 +159,7 @@ function serviceNameById(id: string) {
 
 function staffNameById(id: string | null) {
   if (!id) return '—'
-  return staffList.value.find((s) => s.id === id)?.displayName ?? '—'
+  return personName(staffList.value.find((s) => s.id === id))
 }
 
 async function load() {
@@ -202,6 +209,9 @@ watch(() => form.value.offeredServiceId, () => {
   selectedStartMin.value = null
   form.value.startAt = ''
   form.value.endAt = ''
+  if (form.value.staffId && !activeStaffList.value.some((staff) => staff.id === form.value.staffId)) {
+    form.value.staffId = undefined
+  }
 })
 
 function errorMessage(e: unknown, fallback: string) {
@@ -277,7 +287,7 @@ onMounted(load)
         <p class="text-slate-500 text-sm mt-1">Jami {{ totalElements }} ta navbat</p>
       </div>
       <button
-        v-if="!businessStore.isExpired"
+        v-if="!businessStore.isReadOnly"
         @click="openCreate()"
         class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
       >
@@ -327,7 +337,7 @@ onMounted(load)
         </template>
         <template #action>
           <button
-            v-if="!businessStore.isExpired"
+            v-if="!businessStore.isReadOnly"
             @click="openCreate()"
             class="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700"
           >
@@ -564,7 +574,7 @@ onMounted(load)
                 form.staffId === st.id ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
               ]"
             >
-              <span class="truncate">{{ st.displayName }}</span>
+              <span class="truncate">{{ personName(st) }}</span>
               <span :class="['text-[10px] mt-0.5', form.staffId === st.id ? 'text-white/80' : 'text-slate-400']">
                 {{ slotsLoading ? '...' : (freeSlotCount(st.id) > 0 ? `${freeSlotCount(st.id)} ta bo'sh` : "To'liq band") }}
               </span>

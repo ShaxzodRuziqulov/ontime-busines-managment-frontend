@@ -10,6 +10,7 @@ import AppModal from '@/components/common/AppModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
+import { personName } from '@/utils/names'
 import type { User, UserCreateRequest, UserUpdateRequest } from '@/types'
 
 const toast = useToast()
@@ -29,7 +30,7 @@ const togglingId = ref<string | null>(null)
 
 interface CreateForm extends UserCreateRequest {
   password: string
-  firstName?: string
+  firstName: string
   lastName?: string
 }
 
@@ -38,12 +39,11 @@ const defaultForm = (): CreateForm => ({
   password: '',
   firstName: '',
   lastName: '',
-  displayName: '',
   email: '',
   phone: '',
 })
 
-const editForm = ref<UserUpdateRequest>({ firstName: '', lastName: '', displayName: '', email: '', phone: '', password: '' })
+const editForm = ref<UserUpdateRequest>({ firstName: '', lastName: '', email: '', phone: '', password: '' })
 const avatarFile = ref<File | null>(null)
 const avatarPreview = ref<string | null>(null)
 const createForm = ref<CreateForm>(defaultForm())
@@ -57,7 +57,7 @@ const filtered = computed(() => {
   if (!q) return list
   return list.filter(u =>
     u.login.toLowerCase().includes(q) ||
-    u.displayName?.toLowerCase().includes(q) ||
+    personName(u, '').toLowerCase().includes(q) ||
     u.email?.toLowerCase().includes(q)
   )
 })
@@ -77,12 +77,9 @@ function openAdd() {
 
 function openEdit(user: User) {
   editingUser.value = user
-  // firstName/lastName null bo'lsa displayName dan avtomatik ajratib olish
-  const parts = (user.displayName ?? '').trim().split(/\s+/)
   editForm.value = {
-    firstName: user.firstName ?? parts[0] ?? '',
-    lastName: user.lastName ?? parts.slice(1).join(' ') ?? '',
-    displayName: user.displayName ?? '',
+    firstName: user.firstName ?? '',
+    lastName: user.lastName ?? '',
     email: user.email ?? '',
     phone: user.phone ?? '',
     password: '',
@@ -132,10 +129,6 @@ async function save() {
       if (idx !== -1) users.value[idx] = data
     } else {
       const payload = { ...createForm.value }
-      // displayName bo'sh bo'lsa firstName + lastName dan yasash
-      if (!payload.displayName?.trim()) {
-        payload.displayName = [payload.firstName, payload.lastName].filter(Boolean).join(' ') || payload.login
-      }
       const { data } = await usersApi.create(payload)
       users.value.unshift(data)
     }
@@ -221,7 +214,7 @@ function exportCsv() {
     ...filtered.value.map(u => [
       u.id,
       u.login,
-      u.displayName ?? '',
+      personName(u, ''),
       u.email ?? '',
       u.phone ?? '',
       roleLabel(u),
@@ -341,7 +334,7 @@ onMounted(async () => {
                         v-if="mediaUrl(user.avatarUrl)"
                         :src="mediaUrl(user.avatarUrl)!"
                         class="w-full h-full object-cover"
-                        :alt="user.displayName"
+                        :alt="personName(user, user.login)"
                       />
                       <template v-else>
                         <ShieldCheck v-if="isAdmin(user)" class="w-4 h-4 text-red-500" />
@@ -350,7 +343,7 @@ onMounted(async () => {
                       </template>
                     </div>
                     <div>
-                      <p class="font-medium text-slate-800">{{ user.displayName || '—' }}</p>
+                      <p class="font-medium text-slate-800">{{ personName(user) }}</p>
                       <p class="text-xs text-slate-400">{{ user.email || '—' }}</p>
                     </div>
                   </div>
@@ -439,7 +432,7 @@ onMounted(async () => {
         <!-- Ism + Familiya -->
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Ism</label>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Ism *</label>
             <input v-model="createForm.firstName" type="text" placeholder="Ism"
               class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
           </div>
@@ -448,16 +441,6 @@ onMounted(async () => {
             <input v-model="createForm.lastName" type="text" placeholder="Familiya"
               class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
           </div>
-        </div>
-
-        <!-- Ko'rsatish nomi -->
-        <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">
-            Ko'rsatish nomi
-            <span class="text-slate-400 font-normal">(bo'sh qoldirsangiz ism+familiyadan yasaladi)</span>
-          </label>
-          <input v-model="createForm.displayName" type="text" placeholder="Ism Familiya"
-            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
 
         <!-- Email + Telefon -->
@@ -480,7 +463,7 @@ onMounted(async () => {
             @click="showModal = false">
             Bekor qilish
           </button>
-          <button type="submit" :disabled="saving || !createForm.login || !createForm.password"
+          <button type="submit" :disabled="saving || !createForm.login || !createForm.password || !createForm.firstName?.trim()"
             class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors">
             {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
           </button>
@@ -506,7 +489,7 @@ onMounted(async () => {
             </label>
           </div>
           <div>
-            <p class="text-sm font-medium text-slate-700">{{ editingUser.displayName || '—' }}</p>
+            <p class="text-sm font-medium text-slate-700">{{ personName(editingUser) }}</p>
             <p class="text-xs text-slate-400 mt-0.5">JPG, PNG, WEBP · max 5MB</p>
           </div>
         </div>
@@ -523,13 +506,6 @@ onMounted(async () => {
             <input v-model="editForm.lastName" type="text" placeholder="Familiya"
               class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
           </div>
-        </div>
-
-        <!-- Ko'rsatish nomi -->
-        <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Ko'rsatish nomi</label>
-          <input v-model="editForm.displayName" type="text" placeholder="Ism Familiya"
-            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
 
         <!-- Email + Telefon -->
@@ -576,11 +552,11 @@ onMounted(async () => {
     >
       <p class="text-slate-600 text-sm mb-5">
         <template v-if="adminConfirm.wasAdmin">
-          <span class="font-semibold">{{ adminConfirm.user.displayName || adminConfirm.user.login }}</span>
+          <span class="font-semibold">{{ personName(adminConfirm.user, adminConfirm.user.login) }}</span>
           foydalanuvchidan admin huquqini olmoqchisiz. Tasdiqlaysizmi?
         </template>
         <template v-else>
-          <span class="font-semibold">{{ adminConfirm.user.displayName || adminConfirm.user.login }}</span>
+          <span class="font-semibold">{{ personName(adminConfirm.user, adminConfirm.user.login) }}</span>
           foydalanuvchiga admin huquqi bermoqchisiz. Tasdiqlaysizmi?
         </template>
       </p>
@@ -600,7 +576,7 @@ onMounted(async () => {
       @close="activeConfirm = null"
     >
       <p class="text-slate-600 text-sm mb-5">
-        <span class="font-semibold">{{ activeConfirm.displayName || activeConfirm.login }}</span>
+        <span class="font-semibold">{{ personName(activeConfirm, activeConfirm.login) }}</span>
         foydalanuvchini
         <span class="font-semibold">{{ activeConfirm.active ? 'bloklashni' : 'aktivlashtirishni' }}</span>
         tasdiqlaysizmi?

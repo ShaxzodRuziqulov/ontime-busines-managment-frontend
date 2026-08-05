@@ -376,13 +376,16 @@
               >
                 <option value="" disabled>Tanlang...</option>
                 <option
-                    v-for="s in services"
+                    v-for="s in quickAvailableServices"
                     :key="s.id"
                     :value="s.id"
                 >
                   {{ s.name }} — ({{ s.durationMinutes }} daq. - {{s.basePrice}} so'm).
                 </option>
               </select>
+              <p v-if="quickCreate.staffId && quickAvailableServices.length === 0" class="mt-1 text-xs text-red-500">
+                Bu xodimga xizmat biriktirilmagan
+              </p>
             </div>
 
             <div v-if="quickSelectedService">
@@ -480,6 +483,7 @@ import {
 import {
   weekdayFromDate, toMinutes, minutesOfDay, todayIso, isStaffBusy, generatePossibleStarts, minutesToLabel,
 } from '@/utils/scheduling'
+import { personName } from '@/utils/names'
 import type { StaffMember, BusinessHours, Booking, BookingStatus, OfferedService, BookingCreateRequest } from '@/types'
 
 const businessStore = useBusinessStore()
@@ -558,9 +562,17 @@ const createdDate = (dateString: string) => {
 
 const activeStaff = computed(() => staffList.value.filter((s) => s.active))
 
+const quickAvailableServices = computed(() => {
+  const staffId = quickCreate.value?.staffId
+  if (!staffId) return services.value
+  const staff = staffList.value.find((s) => s.id === staffId)
+  if (!staff) return []
+  return services.value.filter((service) => staff.serviceIds?.includes(service.id))
+})
+
 // Ustunlar: har bir faol xodim + "Tayinlanmagan" (staffId yo'q bronlar uchun)
 const columns = computed(() => [
-  ...activeStaff.value.map((s) => ({ id: s.id, name: s.displayName, color: colorForStaff(s.id) })),
+  ...activeStaff.value.map((s) => ({ id: s.id, name: personName(s), color: colorForStaff(s.id) })),
   // { id: null, name: 'Tayinlanmagan', color: '#94a3b8' },
 ])
 
@@ -823,6 +835,11 @@ const isQuickSlotDisabled = (minute: number) => {
 
 watch(() => quickForm.value.offeredServiceId, () => {
   // Xizmat almashtirilganda, tanlangan vaqt yangi ro'yxatda mavjud bo'lmasa, eng yaqinini tanlaymiz
+  if (quickForm.value.offeredServiceId && !quickAvailableServices.value.some((s) => s.id === quickForm.value.offeredServiceId)) {
+    quickForm.value.offeredServiceId = ''
+    quickForm.value.startMin = null
+    return
+  }
   const starts = quickPossibleStarts.value
   if (starts.length === 0) return
   const current = quickForm.value.startMin

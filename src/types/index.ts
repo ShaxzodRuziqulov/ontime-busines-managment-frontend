@@ -6,7 +6,8 @@ export interface LoginRequest {
 export interface RegisterRequest {
   login: string
   password: string
-  displayName: string
+  firstName: string
+  lastName?: string
   email: string
   phone: string
 }
@@ -17,7 +18,8 @@ export interface AuthResponse {
   expiresInSeconds: number
   userId: string
   login: string
-  displayName: string | null
+  firstName: string | null
+  lastName: string | null
   avatarUrl: string | null
   businessOwner: boolean
   admin: boolean
@@ -59,7 +61,7 @@ export interface BusinessUpdateRequest {
 
 export interface BusinessStatusUpdateRequest {
   status: BusinessStatus
-  subscriptionEndDate?: string  // ISO-8601 format (toISOString() bilan yuboriladi)
+  subscriptionEndDate?: string | null  // ISO-8601 format (toISOString() bilan yuboriladi)
 }
 
 export type BookingStatus =
@@ -147,7 +149,9 @@ export interface StaffMember {
   id: string
   businessId: string
   linkedUserId: string | null
-  displayName: string
+  firstName: string
+  lastName: string | null
+  serviceIds: string[]
   active: boolean
   createdAt: string
   updatedAt: string
@@ -155,20 +159,54 @@ export interface StaffMember {
 
 export interface StaffCreateRequest {
   linkedUserId?: string | null
-  displayName: string
+  firstName: string
+  lastName?: string | null
+  serviceIds?: string[]
   active: boolean
 }
 
 export interface StaffRegisterRequest {
-  displayName: string
+  firstName: string
+  lastName?: string | null
+  serviceIds?: string[]
   login: string
   password: string
   email?: string
   phone?: string
 }
 
+export interface Customer {
+  id: string
+  businessId: string
+  fullName: string
+  phone: string | null
+  email: string | null
+  note: string | null
+  visitCount: number
+  lastVisitAt: string | null
+  active: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CustomerCreateRequest {
+  fullName: string
+  phone?: string
+  email?: string
+  note?: string
+}
+
+export interface CustomerUpdateRequest {
+  fullName?: string
+  phone?: string
+  email?: string
+  note?: string
+  active?: boolean
+}
+
 export interface StaffAccountUpdateRequest {
-  displayName?: string
+  firstName?: string
+  lastName?: string | null
   email?: string
   phone?: string
   password?: string
@@ -224,7 +262,6 @@ export interface User {
   login: string
   firstName: string | null
   lastName: string | null
-  displayName: string
   email: string
   phone: string
   avatarUrl: string | null
@@ -238,9 +275,8 @@ export interface User {
 export interface UserCreateRequest {
   login: string
   password: string
-  firstName?: string
+  firstName: string
   lastName?: string
-  displayName: string
   email: string
   phone: string
   avatarUrl?: string | null
@@ -251,7 +287,6 @@ export interface UserUpdateRequest {
   password?: string
   firstName?: string
   lastName?: string
-  displayName?: string
   email?: string
   phone?: string
   avatarUrl?: string | null

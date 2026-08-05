@@ -24,7 +24,7 @@ export const businessesApi = {
     apiClient.delete(`/businesses/${id}`),
 
   updateStatus: (id: string, data: BusinessStatusUpdateRequest) =>
-    apiClient.put(`/businesses/${id}/status`, data),
+    apiClient.put<Business>(`/businesses/${id}/status`, data),
 
   review: (id: string, data: BusinessReviewRequest) =>
     apiClient.post<Business>(`/businesses/${id}/review`, data),

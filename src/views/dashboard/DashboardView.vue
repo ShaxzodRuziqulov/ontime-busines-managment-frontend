@@ -7,19 +7,37 @@
       </div>
       <div v-if="!loading" class="flex items-center gap-2">
         <RouterLink
+            v-if="!businessStore.isReadOnly"
             to="/staff"
             class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
         >
           <UserPlus class="w-4 h-4" />
           Xodim
         </RouterLink>
+        <span
+            v-else
+            title="Muddat tugagan — obuna sotib oling"
+            class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-400 text-sm font-medium opacity-60 cursor-not-allowed select-none"
+        >
+          <UserPlus class="w-4 h-4" />
+          Xodim
+        </span>
         <RouterLink
+            v-if="!businessStore.isReadOnly"
             to="/bookings"
             class="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors"
         >
           <Plus class="w-4 h-4" />
           Yangi navbat
         </RouterLink>
+        <span
+            v-else
+            title="Muddat tugagan — obuna sotib oling"
+            class="flex items-center gap-1.5 bg-slate-300 text-white px-3.5 py-2 rounded-xl text-sm font-semibold opacity-60 cursor-not-allowed select-none"
+        >
+          <Plus class="w-4 h-4" />
+          Yangi navbat
+        </span>
       </div>
     </div>
     <template v-if="loading">
@@ -32,8 +50,9 @@
       <SkeletonCard :lines="4" />
     </template>
     <template v-else>
+      <!-- Trial banner: faqat hali funksional (muddat o'tmagan) trial uchun -->
       <div
-          v-if="businessStore.isTrial"
+          v-if="businessStore.isTrial && !businessStore.isReadOnly"
           class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-5 text-white flex items-center justify-between"
       >
         <div class="flex items-center gap-3">
@@ -50,15 +69,16 @@
           <div class="text-xs text-amber-100">kun</div>
         </div>
       </div>
+      <!-- Read-only paywall: muddat o'tishi bilan (status hali TRIAL bo'lsa ham) ko'rinadi -->
       <div
-          v-else-if="businessStore.isExpired"
+          v-else-if="businessStore.isReadOnly"
           class="bg-red-50 border border-red-200 rounded-2xl p-5 flex items-center justify-between gap-4"
       >
         <div class="flex items-center gap-3">
           <AlertCircle class="w-6 h-6 text-red-500 flex-shrink-0" />
           <div>
-            <p class="font-semibold text-red-700">Biznes sinov muddati tugagan yoki to'xtatilgan</p>
-            <p class="text-sm text-red-500 mt-0.5">Navbat yaratish uchun obuna faollashtiring</p>
+            <p class="font-semibold text-red-700">Sinov/obuna muddati tugagan</p>
+            <p class="text-sm text-red-500 mt-0.5">Faqat ko'rish mumkin — navbat va boshqa amallar uchun obuna faollashtiring</p>
           </div>
         </div>
         <RouterLink to="/business" class="flex-shrink-0 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors">

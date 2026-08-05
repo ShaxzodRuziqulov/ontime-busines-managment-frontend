@@ -1,9 +1,12 @@
 import apiClient from './client'
-import type { OfferedService, ServiceCreateRequest } from '@/types'
+import type { OfferedService, ServiceCreateRequest, StaffMember } from '@/types'
 
 export const servicesApi = {
   getAll: (businessId: string) =>
     apiClient.get<OfferedService[]>(`/businesses/${businessId}/services`),
+
+  getStaff: (businessId: string, serviceId: string) =>
+    apiClient.get<StaffMember[]>(`/businesses/${businessId}/services/${serviceId}/staff`),
 
   create: (businessId: string, data: ServiceCreateRequest) =>
     apiClient.post<OfferedService>(`/businesses/${businessId}/services`, data),

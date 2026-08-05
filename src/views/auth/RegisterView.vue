@@ -10,17 +10,18 @@ const authStore = useAuthStore()
 const form = reactive({
   login: '',
   password: '',
-  displayName: '',
+  firstName: '',
+  lastName: '',
   email: '',
   phone: '',
 })
 const showPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
-const fieldErrors = reactive({ displayName: '', login: '', password: '' })
+const fieldErrors = reactive({ firstName: '', login: '', password: '' })
 
-function validateDisplayName() {
-  fieldErrors.displayName = form.displayName.length < 2 ? 'Ism kamida 2 ta belgi bo\'lishi kerak' : ''
+function validateFirstName() {
+  fieldErrors.firstName = form.firstName.length < 2 ? 'Ism kamida 2 ta belgi bo\'lishi kerak' : ''
 }
 function validateLogin() {
   fieldErrors.login = form.login.length < 3 ? 'Login kamida 3 ta belgi bo\'lishi kerak' : ''
@@ -30,7 +31,7 @@ function validatePassword() {
 }
 
 async function handleRegister() {
-  if (!form.login || !form.displayName) {
+  if (!form.login || !form.firstName) {
     error.value = 'Login va ism kiritilishi shart'
     return
   }
@@ -126,22 +127,32 @@ async function handleRegister() {
           </div>
 
           <form @submit.prevent="handleRegister" class="space-y-4">
-            <!-- Display name -->
+            <!-- Name -->
             <div>
-              <label for="reg-displayname" class="block text-sm font-medium text-slate-700 mb-1.5">To'liq ism *</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Ism *</label>
               <input
-                id="reg-displayname"
-                v-model="form.displayName"
+                v-model="form.firstName"
                 type="text"
-                placeholder="Ism Familiya"
-                autocomplete="name"
-                @blur="validateDisplayName"
+                placeholder="Ism"
+                autocomplete="given-name"
+                @blur="validateFirstName"
                 :class="[
                   'w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white',
-                  fieldErrors.displayName ? 'border-red-300 focus:ring-red-400' : 'border-slate-200 focus:ring-primary-500',
+                  fieldErrors.firstName ? 'border-red-300 focus:ring-red-400' : 'border-slate-200 focus:ring-primary-500',
                 ]"
               />
-              <p v-if="fieldErrors.displayName" class="text-xs text-red-500 mt-1">{{ fieldErrors.displayName }}</p>
+              <p v-if="fieldErrors.firstName" class="text-xs text-red-500 mt-1">{{ fieldErrors.firstName }}</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Familiya</label>
+              <input
+                v-model="form.lastName"
+                type="text"
+                placeholder="Familiya"
+                autocomplete="family-name"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white"
+              />
             </div>
 
             <!-- Login -->

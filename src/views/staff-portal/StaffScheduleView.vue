@@ -6,6 +6,7 @@ import { businessHoursApi } from '@/api/businessHours'
 import { useToast } from '@/composables/useToast'
 import { bookingStatusLabels, bookingStatusBadgeColors } from '@/utils/bookingStatus'
 import { todayIso, weekdayFromDate, toMinutes, minutesOfDay } from '@/utils/scheduling'
+import { personName } from '@/utils/names'
 import NewBookingModal from './NewBookingModal.vue'
 import type { StaffMember, Booking, BusinessHours } from '@/types'
 
@@ -163,7 +164,7 @@ onUnmounted(() => {
         <h2 class="text-2xl font-bold text-slate-800">Jadval</h2>
         <p class="text-slate-500 text-sm flex items-center gap-1.5">
           <User class="w-3.5 h-3.5" />
-          {{ profile?.displayName ?? '...' }}
+          {{ personName(profile, '...') }}
         </p>
       </div>
       <button

@@ -40,6 +40,8 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = data
     localStorage.setItem('token', data.accessToken)
     localStorage.setItem('user', JSON.stringify(data))
+    const { useBusinessStore } = await import('./business')
+    useBusinessStore().clear()
     return data
   }
 
@@ -64,7 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('user', JSON.stringify(user.value))
   }
 
-  function updateProfile(partial: { displayName?: string; avatarUrl?: string | null }) {
+  function updateProfile(partial: { firstName?: string | null; lastName?: string | null; avatarUrl?: string | null }) {
     if (!user.value) return
     user.value = { ...user.value, ...partial }
     localStorage.setItem('user', JSON.stringify(user.value))
@@ -75,6 +77,9 @@ export const useAuthStore = defineStore('auth', () => {
     pendingCredentials.value = null
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    import('./business').then(({ useBusinessStore }) => {
+      useBusinessStore().clear()
+    })
   }
 
   return {

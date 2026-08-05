@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { Search, Building2, Users, ArrowRight, X, Loader2 } from 'lucide-vue-next'
 import { usersApi } from '@/api/users'
 import { businessesApi } from '@/api/businesses'
+import { personName } from '@/utils/names'
 import type { User, Business } from '@/types'
 
 const emit = defineEmits<{ close: [] }>()
@@ -38,14 +39,14 @@ const results = computed<Result[]>(() => {
   const users: Result[] = allUsers.value
     .filter(u =>
       u.login.toLowerCase().includes(q) ||
-      u.displayName?.toLowerCase().includes(q) ||
+      personName(u, '').toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q)
     )
     .slice(0, 5)
     .map(u => ({
       type: 'user',
       id: u.id,
-      title: u.displayName || u.login,
+      title: personName(u, u.login),
       subtitle: u.email ? `${u.login} · ${u.email}` : u.login,
       to: '/admin/users',
     }))

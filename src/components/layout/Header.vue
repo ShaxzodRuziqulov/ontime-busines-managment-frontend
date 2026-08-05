@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useBusinessStore } from '@/stores/business'
 import GlobalSearch from '@/components/common/GlobalSearch.vue'
 import { mediaUrl } from '@/utils/media'
+import { personName } from '@/utils/names'
 import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import type { BusinessStatus } from '@/types'
 
@@ -103,7 +104,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
             </div>
           </div>
           <span class="text-sm font-medium text-slate-700 hidden sm:block">
-            {{ authStore.user?.displayName || authStore.user?.login }}
+            {{ personName(authStore.user, authStore.user?.login) }}
           </span>
           <ChevronDown class="w-4 h-4 text-slate-400" />
         </button>

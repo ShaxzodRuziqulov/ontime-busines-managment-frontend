@@ -5,6 +5,7 @@ import { usersApi } from '@/api/users'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { mediaUrl } from '@/utils/media'
+import { personName } from '@/utils/names'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import type { User } from '@/types'
 
@@ -17,7 +18,8 @@ const uploadingAvatar = ref(false)
 const profile = ref<User | null>(null)
 
 const form = reactive({
-  displayName: '',
+  firstName: '',
+  lastName: '',
   email: '',
   phone: '',
   password: '',
@@ -28,7 +30,8 @@ const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 function applyProfile(data: User) {
   profile.value = data
-  form.displayName = data.displayName ?? ''
+  form.firstName = data.firstName ?? ''
+  form.lastName = data.lastName ?? ''
   form.email = data.email ?? ''
   form.phone = data.phone ?? ''
   form.password = ''
@@ -80,8 +83,8 @@ async function onAvatarChange(e: Event) {
 
 async function save() {
   if (!profile.value) return
-  if (!form.displayName.trim()) {
-    toast.error('Ism familiya kiritilishi shart')
+  if (!form.firstName.trim()) {
+    toast.error('Ism kiritilishi shart')
     return
   }
   if (form.password && form.password.length < 4) {
@@ -91,13 +94,14 @@ async function save() {
   saving.value = true
   try {
     const { data } = await usersApi.update(profile.value.id, {
-      displayName: form.displayName.trim(),
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim() || undefined,
       email: form.email.trim() || undefined,
       phone: form.phone.trim() || undefined,
       password: form.password || undefined,
     })
     applyProfile(data)
-    authStore.updateProfile({ displayName: data.displayName })
+    authStore.updateProfile({ firstName: data.firstName, lastName: data.lastName })
     toast.success('Profil yangilandi')
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -134,21 +138,29 @@ async function save() {
           </label>
         </div>
         <div>
-          <p class="font-semibold text-slate-800">{{ profile.displayName || profile.login }}</p>
+          <p class="font-semibold text-slate-800">{{ personName(profile, profile.login) }}</p>
           <p class="text-sm text-slate-400">@{{ profile.login }}</p>
         </div>
       </div>
 
       <form @submit.prevent="save" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Ism Familiya *</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Ism *</label>
           <input
-            v-model="form.displayName"
+            v-model="form.firstName"
             type="text"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Familiya</label>
+            <input
+              v-model="form.lastName"
+              type="text"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
             <input

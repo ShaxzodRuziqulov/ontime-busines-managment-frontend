@@ -15,6 +15,7 @@ import {
   generatePossibleStarts,
   minutesToLabel,
 } from '@/utils/scheduling'
+import { personName } from '@/utils/names'
 import type { OfferedService, Booking, BusinessHours } from '@/types'
 
 const props = defineProps<{
@@ -68,7 +69,7 @@ async function searchPhone() {
 function selectCustomer(u: UserLookup) {
   matched.value = u
   candidates.value = []
-  guestName.value = u.displayName
+  guestName.value = personName(u, u.login)
 }
 
 function resetCustomer() {
@@ -228,7 +229,7 @@ onMounted(async () => {
           class="mt-2 flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2"
         >
           <CheckCircle2 class="w-4 h-4 flex-shrink-0" />
-          <span>Ro'yxatdagi mijoz: <b>{{ matched.displayName }}</b></span>
+          <span>Ro'yxatdagi mijoz: <b>{{ personName(matched, matched.login) }}</b></span>
         </div>
 
         <div v-else-if="candidates.length" class="mt-2 space-y-1.5">
@@ -240,7 +241,7 @@ onMounted(async () => {
             class="w-full text-left px-3 py-2 rounded-xl border border-slate-200 hover:border-primary-400 hover:bg-primary-50/40 transition-colors text-sm"
             @click="selectCustomer(c)"
           >
-            <span class="font-medium text-slate-700">{{ c.displayName }}</span>
+            <span class="font-medium text-slate-700">{{ personName(c, c.login) }}</span>
             <span class="text-slate-400"> · {{ c.phone || c.login }}</span>
           </button>
         </div>

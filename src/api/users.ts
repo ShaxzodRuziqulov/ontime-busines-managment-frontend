@@ -4,7 +4,8 @@ import type { User, UserCreateRequest, UserUpdateRequest } from '@/types'
 export interface UserLookup {
   id: string
   login: string
-  displayName: string
+  firstName: string | null
+  lastName: string | null
   email?: string
   phone?: string
 }

@@ -7,13 +7,12 @@ import {
 import { servicesApi } from '@/api/services'
 import { useBusinessStore } from '@/stores/business'
 import { useToast } from '@/composables/useToast'
+import { mediaUrl } from '@/utils/media'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import type { OfferedService, ServiceCreateRequest } from '@/types'
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') ?? ''
 
 const businessStore = useBusinessStore()
 const toast = useToast()
@@ -30,6 +29,7 @@ const imageFile = ref<File | null>(null)
 const imagePreview = ref<string | null>(null)
 const imageUploading = ref(false)
 const imageInput = ref<HTMLInputElement | null>(null)
+const brokenImageUrls = ref<string[]>([])
 
 const defaultForm = (): ServiceCreateRequest => ({
   name: '',
@@ -59,7 +59,7 @@ function openEdit(service: OfferedService) {
     active: service.active,
   }
   imageFile.value = null
-  imagePreview.value = service.imageUrl ? `${BASE_URL}${service.imageUrl}` : null
+  imagePreview.value = mediaUrl(service.imageUrl)
   showModal.value = true
 }
 
@@ -165,9 +165,17 @@ function formatPrice(price: number) {
   return new Intl.NumberFormat('uz-UZ').format(price) + " so'm"
 }
 
-function imgUrl(url: string | null) {
-  if (!url) return null
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`
+function imgUrl(url: string | null | undefined) {
+  return mediaUrl(url)
+}
+
+function showServiceImage(url: string | null | undefined) {
+  return !!url && !brokenImageUrls.value.includes(url)
+}
+
+function onServiceImageError(url: string | null | undefined) {
+  if (!url || brokenImageUrls.value.includes(url)) return
+  brokenImageUrls.value = [...brokenImageUrls.value, url]
 }
 
 onMounted(async () => {
@@ -191,7 +199,7 @@ onMounted(async () => {
         <p class="text-slate-500 text-sm mt-1">{{ services.length }} ta xizmat</p>
       </div>
       <button
-        v-if="!businessStore.isExpired"
+        v-if="!businessStore.isReadOnly"
         @click="openAdd"
         class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
       >
@@ -215,7 +223,7 @@ onMounted(async () => {
         </template>
         <template #action>
           <button
-            v-if="!businessStore.isExpired"
+            v-if="!businessStore.isReadOnly"
             @click="openAdd"
             class="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700"
           >
@@ -234,11 +242,12 @@ onMounted(async () => {
           ]"
         >
           <!-- Service image banner -->
-          <div v-if="service.imageUrl" class="relative h-36 overflow-hidden">
+          <div v-if="showServiceImage(service.imageUrl)" class="relative h-36 overflow-hidden">
             <img
               :src="imgUrl(service.imageUrl)!"
               :alt="service.name"
               class="w-full h-full object-cover"
+              @error="onServiceImageError(service.imageUrl)"
             />
             <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           </div>
