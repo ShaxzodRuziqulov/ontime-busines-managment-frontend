@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeft, Building2, Phone, MapPin, Star, Users, Scissors, Clock, Settings,
   CheckCircle2, XCircle, AlertCircle, Loader2, ThumbsUp, ThumbsDown, ShieldCheck,
+  Tag,
 } from 'lucide-vue-next'
 import { businessesApi, type BusinessReviewRequest } from '@/api/businesses'
 import { servicesApi } from '@/api/services'
@@ -15,7 +16,7 @@ import AppModal from '@/components/common/AppModal.vue'
 import { useToast } from '@/composables/useToast'
 import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import { personName } from '@/utils/names'
-import type { Business, BusinessStatus, BusinessStatusUpdateRequest, OfferedService, StaffMember, BusinessHours, Review } from '@/types'
+import type { Business, BusinessCategory, BusinessStatus, BusinessStatusUpdateRequest, OfferedService, StaffMember, BusinessHours, Review } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -39,6 +40,18 @@ const reviewModal = ref(false)
 const reviewForm = ref<BusinessReviewRequest>({ action: 'APPROVE', note: '', subscriptionEndDate: '' })
 
 const allStatuses: BusinessStatus[] = ['TRIAL', 'ACTIVE', 'EXPIRED', 'SUSPENDED', 'DRAFT', 'PENDING_REVIEW']
+const categoryOptions: { value: BusinessCategory; label: string }[] = [
+  { value: 'BARBER', label: 'Sartarosh' },
+  { value: 'BEAUTY', label: "Go'zallik" },
+  { value: 'MEDICAL', label: 'Tibbiyot' },
+  { value: 'REPAIR', label: "Ta'mirlash" },
+  { value: 'CONSULTING', label: 'Konsultatsiya' },
+  { value: 'EDUCATION', label: "Ta'lim" },
+  { value: 'FITNESS', label: 'Sport' },
+  { value: 'AUTO', label: 'Avto xizmat' },
+  { value: 'LEGAL', label: 'Yuridik xizmat' },
+  { value: 'OTHER', label: 'Boshqa' },
+]
 const statusLabels = businessStatusLabels
 
 const statusForm = ref<BusinessStatusUpdateRequest>({ status: 'ACTIVE', subscriptionEndDate: '' })
@@ -71,6 +84,10 @@ function statusIcon(status: BusinessStatus) {
   if (status === 'ACTIVE') return CheckCircle2
   if (status === 'TRIAL' || status === 'PENDING_REVIEW') return AlertCircle
   return XCircle
+}
+
+function categoryLabel(category?: BusinessCategory) {
+  return categoryOptions.find((item) => item.value === category)?.label ?? 'Boshqa'
 }
 
 function openStatusModal() {
@@ -222,6 +239,10 @@ onMounted(async () => {
                 <span :class="['inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold', statusColor(business.status)]">
                   <component :is="statusIcon(business.status)" class="w-3.5 h-3.5" />
                   {{ statusLabels[business.status] }}
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+                  <Tag class="w-3.5 h-3.5" />
+                  {{ categoryLabel(business.category) }}
                 </span>
               </div>
               <p v-if="business.description" class="text-slate-500 text-sm mb-3">{{ business.description }}</p>

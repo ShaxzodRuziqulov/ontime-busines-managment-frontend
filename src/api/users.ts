@@ -1,5 +1,5 @@
 import apiClient from './client'
-import type { User, UserCreateRequest, UserUpdateRequest } from '@/types'
+import type { ChangePasswordRequest, User, UserCreateRequest, UserUpdateRequest } from '@/types'
 
 export interface UserLookup {
   id: string
@@ -29,6 +29,9 @@ export const usersApi = {
 
   update: (id: string, data: UserUpdateRequest) =>
     apiClient.put<User>(`/users/${id}`, data),
+
+  changePassword: (data: ChangePasswordRequest) =>
+    apiClient.put('/users/me/password', data),
 
   uploadAvatar: (id: string, file: File) => {
     const form = new FormData()

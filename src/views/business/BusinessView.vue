@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { Building2, Save, Phone, MapPin, FileText, Clock, Calendar } from 'lucide-vue-next'
+import { Building2, Save, Phone, MapPin, FileText, Clock, Tag } from 'lucide-vue-next'
 import { businessesApi } from '@/api/businesses'
 import { useBusinessStore } from '@/stores/business'
 import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import type { BusinessCategory } from '@/types'
 
 const toast = useToast()
 
@@ -15,17 +16,36 @@ const saved = ref(false)
 
 const form = ref({
   name: '',
+  category: 'OTHER' as BusinessCategory,
   description: '',
   addressLine: '',
   city: '',
   contactPhone: '',
 })
 
+const categoryOptions: { value: BusinessCategory; label: string }[] = [
+  { value: 'BARBER', label: 'Sartarosh' },
+  { value: 'BEAUTY', label: "Go'zallik" },
+  { value: 'MEDICAL', label: 'Tibbiyot' },
+  { value: 'REPAIR', label: "Ta'mirlash" },
+  { value: 'CONSULTING', label: 'Konsultatsiya' },
+  { value: 'EDUCATION', label: "Ta'lim" },
+  { value: 'FITNESS', label: 'Sport' },
+  { value: 'AUTO', label: 'Avto xizmat' },
+  { value: 'LEGAL', label: 'Yuridik xizmat' },
+  { value: 'OTHER', label: 'Boshqa' },
+]
+
+function categoryLabel(category?: BusinessCategory) {
+  return categoryOptions.find((item) => item.value === category)?.label ?? 'Boshqa'
+}
+
 watch(
   () => businessStore.business,
   (biz) => {
     if (biz) {
       form.value.name = biz.name
+      form.value.category = biz.category ?? 'OTHER'
       form.value.description = biz.description
       form.value.contactPhone = biz.contactPhone || ''
       form.value.addressLine = biz.addressLine || ''
@@ -88,6 +108,10 @@ const formatDate = (iso: string) => {
               <span class="text-sm text-slate-600">Status</span>
               <StatusBadge :status="businessStore.business.status" />
             </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-600">Xizmat turi</span>
+              <span class="text-sm font-medium text-slate-800">{{ categoryLabel(businessStore.business.category) }}</span>
+            </div>
             <div v-if="businessStore.business.trialEndDate" class="flex items-center justify-between">
               <span class="text-sm text-slate-600">Trial tugashi</span>
               <span class="text-sm font-medium text-slate-800">{{ formatDate(businessStore.business.trialEndDate) }}</span>
@@ -144,6 +168,21 @@ const formatDate = (iso: string) => {
                 type="text"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                <Tag class="w-4 h-4 inline mr-1.5" />
+                Xizmat turi
+              </label>
+              <select
+                v-model="form.category"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+              >
+                <option v-for="category in categoryOptions" :key="category.value" :value="category.value">
+                  {{ category.label }}
+                </option>
+              </select>
             </div>
 
             <div>

@@ -167,7 +167,7 @@ onMounted(async () => {
               Ko'rish <ArrowRight class="w-3 h-3" />
             </RouterLink>
           </div>
-          <MiniBarChart :data="registrationChart" color="#6366f1" :height="80" />
+          <MiniBarChart :data="registrationChart" color="#2563eb" :height="80" />
         </div>
 
         <!-- Business registrations chart -->

@@ -1,20 +1,35 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { Building2, Clock, Loader2, AlertCircle, CheckCircle2, MapPin, Phone, FileText, Info } from 'lucide-vue-next'
+import { Building2, Clock, Loader2, AlertCircle, CheckCircle2, MapPin, Phone, FileText, Info, Tag } from 'lucide-vue-next'
 import { businessesApi } from '@/api/businesses'
 import { useAuthStore } from '@/stores/auth'
+import type { BusinessCategory } from '@/types'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const form = reactive({
   name: '',
+  category: 'OTHER' as BusinessCategory,
   description: '',
   phone: '',
   address: '',
   city: '',
 })
+
+const categoryOptions: { value: BusinessCategory; label: string }[] = [
+  { value: 'BARBER', label: 'Sartarosh' },
+  { value: 'BEAUTY', label: "Go'zallik" },
+  { value: 'MEDICAL', label: 'Tibbiyot' },
+  { value: 'REPAIR', label: "Ta'mirlash" },
+  { value: 'CONSULTING', label: 'Konsultatsiya' },
+  { value: 'EDUCATION', label: "Ta'lim" },
+  { value: 'FITNESS', label: 'Sport' },
+  { value: 'AUTO', label: 'Avto xizmat' },
+  { value: 'LEGAL', label: 'Yuridik xizmat' },
+  { value: 'OTHER', label: 'Boshqa' },
+]
 
 const loading = ref(false)
 const error = ref('')
@@ -38,6 +53,7 @@ async function handleCreate() {
     await businessesApi.create({
       ownerId: authStore.user?.userId,
       name: form.name,
+      category: form.category,
       description: form.description || undefined,
       contactPhone: form.phone || undefined,
       addressLine: form.address || undefined,
@@ -160,10 +176,28 @@ async function handleCreate() {
               <input
                 v-model="form.name"
                 type="text"
-                placeholder="Masalan: Salim Sartaroshxonasi"
+                placeholder="Masalan: Baraka Servis"
                 autofocus
                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white"
               />
+            </div>
+          </div>
+
+          <!-- Business category -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">
+              Xizmat turi *
+            </label>
+            <div class="relative">
+              <Tag class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <select
+                v-model="form.category"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white text-sm appearance-none"
+              >
+                <option v-for="category in categoryOptions" :key="category.value" :value="category.value">
+                  {{ category.label }}
+                </option>
+              </select>
             </div>
           </div>
 

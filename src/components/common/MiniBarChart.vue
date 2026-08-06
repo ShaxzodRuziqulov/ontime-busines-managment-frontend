@@ -26,7 +26,7 @@ const bars = computed(() =>
   })
 )
 
-const fill = computed(() => props.color ?? '#6366f1')
+const fill = computed(() => props.color ?? '#2563eb')
 </script>
 
 <template>

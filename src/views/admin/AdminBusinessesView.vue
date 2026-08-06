@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { Search, Building2, Trash2, Settings, CheckCircle2, XCircle, Clock, AlertCircle, Download, ExternalLink, ChevronDown } from 'lucide-vue-next'
+import { ref, onMounted, computed, watch } from 'vue'
+import { Search, Building2, Trash2, Settings, CheckCircle2, XCircle, Clock, AlertCircle, Download, ExternalLink, ChevronDown, ChevronLeft, ChevronRight, Tag } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { businessesApi } from '@/api/businesses'
 import { useAdminStore } from '@/stores/admin'
@@ -11,7 +11,7 @@ import AppModal from '@/components/common/AppModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useToast } from '@/composables/useToast'
 import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
-import type { Business, BusinessStatus, BusinessStatusUpdateRequest } from '@/types'
+import type { Business, BusinessCategory, BusinessStatus, BusinessStatusUpdateRequest } from '@/types'
 
 const toast = useToast()
 const router = useRouter()
@@ -22,6 +22,12 @@ const loading = ref(true)
 const saving = ref(false)
 const search = ref('')
 const statusFilter = ref<BusinessStatus | 'all'>('all')
+const categoryFilter = ref<BusinessCategory | 'all'>('all')
+const sortFilter = ref('createdAt,desc')
+const page = ref(0)
+const pageSize = 20
+const totalElements = ref(0)
+const totalPages = ref(1)
 const deleteConfirm = ref<string | null>(null)
 const statusModal = ref<Business | null>(null)
 
@@ -30,27 +36,49 @@ const selected = ref<Set<string>>(new Set())
 const bulkStatusOpen = ref(false)
 
 const allStatuses: BusinessStatus[] = ['TRIAL', 'ACTIVE', 'EXPIRED', 'SUSPENDED', 'DRAFT', 'PENDING_REVIEW']
+const categoryOptions: { value: BusinessCategory; label: string }[] = [
+  { value: 'BARBER', label: 'Sartarosh' },
+  { value: 'BEAUTY', label: "Go'zallik" },
+  { value: 'MEDICAL', label: 'Tibbiyot' },
+  { value: 'REPAIR', label: "Ta'mirlash" },
+  { value: 'CONSULTING', label: 'Konsultatsiya' },
+  { value: 'EDUCATION', label: "Ta'lim" },
+  { value: 'FITNESS', label: 'Sport' },
+  { value: 'AUTO', label: 'Avto xizmat' },
+  { value: 'LEGAL', label: 'Yuridik xizmat' },
+  { value: 'OTHER', label: 'Boshqa' },
+]
+const sortOptions = [
+  { value: 'createdAt,desc', label: 'Eng yangilar' },
+  { value: 'createdAt,asc', label: 'Eng eskilar' },
+  { value: 'name,asc', label: 'Nomi A-Z' },
+  { value: 'name,desc', label: 'Nomi Z-A' },
+  { value: 'rating,desc', label: 'Reyting yuqori' },
+  { value: 'reviews,desc', label: "Sharhlar ko'p" },
+]
 
 const statusLabels = businessStatusLabels
 
 const statusForm = ref<BusinessStatusUpdateRequest>({ status: 'ACTIVE', subscriptionEndDate: '' })
 
-const statusCounts = computed(() => {
-  const map: Record<string, number> = { all: businesses.value.length }
-  for (const b of businesses.value) map[b.status] = (map[b.status] ?? 0) + 1
-  return map
+const filtered = computed(() => businesses.value)
+
+const statusCounts = computed<Record<BusinessStatus | 'all', number>>(() => {
+  const counts = Object.fromEntries(allStatuses.map((status) => [status, 0])) as Record<BusinessStatus | 'all', number>
+  counts.all = totalElements.value
+  for (const business of businesses.value) {
+    counts[business.status] += 1
+  }
+  return counts
 })
 
-const filtered = computed(() => {
-  let list = businesses.value
-  if (statusFilter.value !== 'all') list = list.filter(b => b.status === statusFilter.value)
-  const q = search.value.trim().toLowerCase()
-  if (!q) return list
-  return list.filter(b =>
-    b.name.toLowerCase().includes(q) ||
-    b.addressLine?.toLowerCase().includes(q) ||
-    b.city?.toLowerCase().includes(q)
-  )
+const pageNumbers = computed(() => {
+  const maxButtons = 7
+  const total = totalPages.value
+  if (total <= maxButtons) return Array.from({ length: total }, (_, index) => index)
+  const half = Math.floor(maxButtons / 2)
+  const start = Math.min(Math.max(page.value - half, 0), total - maxButtons)
+  return Array.from({ length: maxButtons }, (_, index) => start + index)
 })
 
 const allSelected = computed(() =>
@@ -84,6 +112,7 @@ async function bulkUpdateStatus(status: BusinessStatus) {
     }
     adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
     clearSelection()
+    await loadBusinesses()
     toast.success(`${ids.length} ta biznes holati yangilandi`)
   } catch {
     toast.error('Xatolik yuz berdi')
@@ -97,9 +126,8 @@ async function bulkDelete() {
   const ids = [...selected.value]
   try {
     await Promise.all(ids.map(id => businessesApi.delete(id)))
-    businesses.value = businesses.value.filter(b => !ids.includes(b.id))
-    adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
     clearSelection()
+    await loadBusinesses()
     toast.success(`${ids.length} ta biznes o'chirildi`)
   } catch {
     toast.error('Xatolik yuz berdi')
@@ -147,9 +175,8 @@ async function updateStatus() {
       ? toEndOfDayInstant(statusForm.value.subscriptionEndDate)
       : null
     const { data } = await businessesApi.updateStatus(statusModal.value.id, payload)
-    const idx = businesses.value.findIndex(b => b.id === statusModal.value!.id)
-    if (idx !== -1) businesses.value[idx] = data
-    adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
+    adminStore.upsertOne({ id: data.id, status: data.status })
+    await loadBusinesses()
     statusModal.value = null
     toast.success('Holat yangilandi')
   } catch (e) {
@@ -163,8 +190,7 @@ async function updateStatus() {
 async function confirmDelete(id: string) {
   try {
     await businessesApi.delete(id)
-    businesses.value = businesses.value.filter(b => b.id !== id)
-    adminStore.setAll(businesses.value.map(b => ({ id: b.id, status: b.status })))
+    await loadBusinesses()
     deleteConfirm.value = null
     toast.success("O'chirildi")
   } catch {
@@ -181,6 +207,10 @@ function statusIcon(status: BusinessStatus) {
   return AlertCircle
 }
 
+function categoryLabel(category?: BusinessCategory) {
+  return categoryOptions.find((item) => item.value === category)?.label ?? 'Boshqa'
+}
+
 function formatDate(iso: string | null) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('uz-UZ')
@@ -188,9 +218,9 @@ function formatDate(iso: string | null) {
 
 function exportCsv() {
   const rows = [
-    ['ID', 'Nomi', 'Manzil', 'Shahar', 'Telefon', 'Holat', 'Trial tugash', 'Obuna tugash', 'Yaratilgan'],
+    ['ID', 'Nomi', 'Xizmat turi', 'Manzil', 'Shahar', 'Telefon', 'Holat', 'Trial tugash', 'Obuna tugash', 'Yaratilgan'],
     ...filtered.value.map(b => [
-      b.id, b.name, b.addressLine ?? '', b.city ?? '', b.contactPhone ?? '',
+      b.id, b.name, categoryLabel(b.category), b.addressLine ?? '', b.city ?? '', b.contactPhone ?? '',
       statusLabels[b.status], formatDate(b.trialEndDate), formatDate(b.subscriptionEndDate),
       new Date(b.createdAt).toLocaleDateString('uz-UZ'),
     ]),
@@ -205,14 +235,48 @@ function exportCsv() {
   URL.revokeObjectURL(url)
 }
 
-onMounted(async () => {
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+
+async function loadBusinesses() {
+  loading.value = true
   try {
-    const { data } = await businessesApi.getAll({ size: 1000 })
+    const { data } = await businessesApi.getAll({
+      page: page.value,
+      size: pageSize,
+      sort: sortFilter.value,
+      q: search.value.trim() || undefined,
+      category: categoryFilter.value === 'all' ? undefined : categoryFilter.value,
+      status: statusFilter.value === 'all' ? undefined : statusFilter.value,
+    })
     businesses.value = data.content
+    totalElements.value = data.totalElements
+    totalPages.value = data.totalPages || 1
     adminStore.setAll(data.content.map(b => ({ id: b.id, status: b.status })))
   } finally {
     loading.value = false
   }
+}
+
+function reloadFirstPage() {
+  selected.value = new Set()
+  if (page.value === 0) loadBusinesses()
+  else page.value = 0
+}
+
+function goToPage(nextPage: number) {
+  if (nextPage < 0 || nextPage >= totalPages.value || nextPage === page.value) return
+  page.value = nextPage
+}
+
+watch([statusFilter, categoryFilter, sortFilter], reloadFirstPage)
+watch(page, loadBusinesses)
+watch(search, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(reloadFirstPage, 350)
+})
+
+onMounted(async () => {
+  await loadBusinesses()
 })
 </script>
 
@@ -222,7 +286,7 @@ onMounted(async () => {
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Bizneslar</h1>
-        <p class="text-slate-500 text-sm mt-1">{{ businesses.length }} ta biznes ro'yxatda</p>
+        <p class="text-slate-500 text-sm mt-1">{{ totalElements }} ta biznes ro'yxatda</p>
       </div>
       <button
         @click="exportCsv"
@@ -258,13 +322,32 @@ onMounted(async () => {
     </div>
 
     <!-- Search -->
-    <div class="relative mb-5">
-      <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-      <input
-        v-model="search" type="text"
-        placeholder="Biznes nomi, manzil yoki shahar bo'yicha qidirish..."
-        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-      />
+    <div class="grid grid-cols-1 md:grid-cols-[1fr_220px_180px] gap-3 mb-5">
+      <div class="relative">
+        <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          v-model="search" type="text"
+          placeholder="Biznes nomi, xizmat turi, manzil yoki shahar bo'yicha qidirish..."
+          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+        />
+      </div>
+      <select
+        v-model="categoryFilter"
+        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+      >
+        <option value="all">Barcha xizmat turlari</option>
+        <option v-for="category in categoryOptions" :key="category.value" :value="category.value">
+          {{ category.label }}
+        </option>
+      </select>
+      <select
+        v-model="sortFilter"
+        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+      >
+        <option v-for="option in sortOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
     </div>
 
     <!-- Bulk action bar -->
@@ -319,7 +402,7 @@ onMounted(async () => {
       </div>
     </Transition>
 
-    <SkeletonTable v-if="loading" :rows="7" :cols="6" />
+    <SkeletonTable v-if="loading" :rows="7" :cols="8" />
 
     <template v-else>
       <EmptyState
@@ -332,7 +415,7 @@ onMounted(async () => {
 
       <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-5 py-3 border-b border-slate-100 text-xs text-slate-500 flex items-center gap-2">
-          {{ filtered.length }} ta natija
+          {{ totalElements }} ta natija
           <span v-if="statusFilter !== 'all'">
             — <button @click="statusFilter = 'all'" class="text-primary-600 hover:underline">Filterni tozalash</button>
           </span>
@@ -351,6 +434,7 @@ onMounted(async () => {
                 </th>
                 <th class="px-3 py-3 text-left font-medium">Biznes</th>
                 <th class="px-3 py-3 text-left font-medium">Telefon</th>
+                <th class="px-3 py-3 text-left font-medium">Xizmat turi</th>
                 <th class="px-3 py-3 text-left font-medium">Holat</th>
                 <th class="px-3 py-3 text-left font-medium">Trial</th>
                 <th class="px-3 py-3 text-left font-medium">Obuna</th>
@@ -382,6 +466,12 @@ onMounted(async () => {
                   </div>
                 </td>
                 <td class="px-3 py-3.5 text-slate-500">{{ biz.contactPhone || '—' }}</td>
+                <td class="px-3 py-3.5">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                    <Tag class="w-3 h-3" />
+                    {{ categoryLabel(biz.category) }}
+                  </span>
+                </td>
                 <td class="px-3 py-3.5">
                   <span :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium', statusColor(biz.status)]">
                     <component :is="statusIcon(biz.status)" class="w-3 h-3" />
@@ -418,6 +508,40 @@ onMounted(async () => {
               </tr>
             </tbody>
           </table>
+        </div>
+        <div v-if="totalPages > 1" class="px-5 py-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span class="text-xs text-slate-500">
+            {{ page * pageSize + 1 }}â€“{{ Math.min((page + 1) * pageSize, totalElements) }} / {{ totalElements }}
+          </span>
+          <div class="flex items-center gap-1">
+            <button
+              :disabled="page === 0"
+              @click="goToPage(page - 1)"
+              class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="Oldingi sahifa"
+            >
+              <ChevronLeft class="w-4 h-4" />
+            </button>
+            <button
+              v-for="p in pageNumbers"
+              :key="p"
+              @click="goToPage(p)"
+              :class="[
+                'min-w-9 h-9 px-3 rounded-lg text-xs font-medium transition-colors',
+                page === p ? 'bg-primary-600 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50',
+              ]"
+            >
+              {{ p + 1 }}
+            </button>
+            <button
+              :disabled="page >= totalPages - 1"
+              @click="goToPage(page + 1)"
+              class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="Keyingi sahifa"
+            >
+              <ChevronRight class="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </template>
