@@ -18,7 +18,7 @@ const router = useRouter()
 const adminStore = useAdminStore()
 
 const businesses = ref<Business[]>([])
-const loading = ref(true)
+const loading = ref(false)
 const saving = ref(false)
 const search = ref('')
 const statusFilter = ref<BusinessStatus | 'all'>('all')
@@ -101,6 +101,7 @@ function clearSelection() {
 }
 
 async function bulkUpdateStatus(status: BusinessStatus) {
+  loading.value = true
   saving.value = true
   bulkStatusOpen.value = false
   const ids = [...selected.value]
@@ -114,6 +115,7 @@ async function bulkUpdateStatus(status: BusinessStatus) {
     clearSelection()
     await loadBusinesses()
     toast.success(`${ids.length} ta biznes holati yangilandi`)
+    loading.value = false
   } catch {
     toast.error('Xatolik yuz berdi')
   } finally {
@@ -123,12 +125,14 @@ async function bulkUpdateStatus(status: BusinessStatus) {
 
 async function bulkDelete() {
   saving.value = true
+  loading.value = true
   const ids = [...selected.value]
   try {
     await Promise.all(ids.map(id => businessesApi.delete(id)))
     clearSelection()
     await loadBusinesses()
     toast.success(`${ids.length} ta biznes o'chirildi`)
+    loading.value = false
   } catch {
     toast.error('Xatolik yuz berdi')
   } finally {
@@ -168,6 +172,7 @@ function selectStatus(status: BusinessStatus) {
 
 async function updateStatus() {
   if (!statusModal.value) return
+  loading.value = true
   saving.value = true
   try {
     const payload: BusinessStatusUpdateRequest = { status: statusForm.value.status }
@@ -179,6 +184,7 @@ async function updateStatus() {
     await loadBusinesses()
     statusModal.value = null
     toast.success('Holat yangilandi')
+    loading.value = false
   } catch (e) {
     const message = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
     toast.error(message || 'Xatolik yuz berdi')
@@ -281,12 +287,13 @@ onMounted(async () => {
 </script>
 
 <template>
+  <LoadingSpinner v-if="loading"/>
   <div>
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div class="flex items-center flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Bizneslar</h1>
-        <p class="text-slate-500 text-sm mt-1">{{ totalElements }} ta biznes ro'yxatda</p>
+        <h2 class="text-2xl font-bold text-slate-800">Bizneslar</h2>
+        <p class="text-slate-500 font-semibold text-sm mt-1">{{ totalElements }} ta biznes ro'yxatda</p>
       </div>
       <button
         @click="exportCsv"
@@ -333,7 +340,7 @@ onMounted(async () => {
       </div>
       <select
         v-model="categoryFilter"
-        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+        class="w-full px-4 py-2.5 cursor-pointer rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
       >
         <option value="all">Barcha xizmat turlari</option>
         <option v-for="category in categoryOptions" :key="category.value" :value="category.value">
@@ -342,7 +349,7 @@ onMounted(async () => {
       </select>
       <select
         v-model="sortFilter"
-        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+        class="w-full px-4 py-2.5 cursor-pointer rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
       >
         <option v-for="option in sortOptions" :key="option.value" :value="option.value">
           {{ option.label }}
@@ -429,7 +436,7 @@ onMounted(async () => {
                     type="checkbox"
                     :checked="allSelected"
                     @change="toggleAll"
-                    class="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                    class="rounded cursor-pointer border-slate-300 text-primary-600 focus:ring-primary-500"
                   />
                 </th>
                 <th class="px-3 py-3 text-left font-medium">Biznes</th>
@@ -451,7 +458,7 @@ onMounted(async () => {
                     type="checkbox"
                     :checked="selected.has(biz.id)"
                     @change="toggleOne(biz.id)"
-                    class="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                    class="rounded cursor-pointer border-slate-300 text-primary-600 focus:ring-primary-500"
                   />
                 </td>
                 <td class="px-3 py-3.5">
@@ -560,10 +567,10 @@ onMounted(async () => {
                 statusForm.status === s ? statusColor(s) + ' border-current' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
               ]"
             >
-              <div class="flex items-center gap-1.5">
+              <span class="flex items-center gap-1.5">
                 <component :is="statusIcon(s)" class="w-3.5 h-3.5" />
                 {{ statusLabels[s] }}
-              </div>
+              </span>
             </button>
           </div>
         </div>

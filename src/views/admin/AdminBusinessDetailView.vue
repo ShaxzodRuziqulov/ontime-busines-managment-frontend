@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeft, Building2, Phone, MapPin, Star, Users, Scissors, Clock, Settings,
   CheckCircle2, XCircle, AlertCircle, Loader2, ThumbsUp, ThumbsDown, ShieldCheck,
-  Tag,
+  Tag, Briefcase
 } from 'lucide-vue-next'
 import { businessesApi, type BusinessReviewRequest } from '@/api/businesses'
 import { servicesApi } from '@/api/services'
@@ -72,7 +72,7 @@ const sortedHours = computed(() =>
 )
 
 const tabs = computed(() => [
-  { key: 'services', label: 'Xizmatlar', count: services.value.length, icon: Scissors },
+  { key: 'services', label: 'Xizmatlar', count: services.value.length, icon: Briefcase },
   { key: 'staff', label: 'Xodimlar', count: staff.value.length, icon: Users },
   { key: 'hours', label: 'Ish soatlari', count: hours.value.length, icon: Clock },
   { key: 'reviews', label: 'Sharhlar', count: reviews.value.length, icon: Star },

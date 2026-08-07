@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   CalendarCheck,
   CalendarDays,
-  Scissors,
   Users,
   UserRound,
   Building2,
@@ -16,7 +15,7 @@ import {
   AlarmClock,
   ClipboardList,
     House,
-  UserCircle2,
+  Briefcase
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminStore } from '@/stores/admin'
@@ -32,7 +31,7 @@ const businessNavItems = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'Navbatlar', to: '/bookings', icon: CalendarCheck },
   { name: 'Jadval', to: '/schedule', icon: CalendarDays },
-  { name: 'Xizmatlar', to: '/services', icon: Scissors },
+  { name: 'Xizmatlar', to: '/services', icon: Briefcase },
   { name: 'Xodimlar', to: '/staff', icon: Users },
   { name: 'Mijozlar', to: '/customers', icon: UserRound },
   { name: 'Ish soatlari', to: '/hours', icon: AlarmClock },

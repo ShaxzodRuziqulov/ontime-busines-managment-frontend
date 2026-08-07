@@ -89,7 +89,7 @@
         <div
             v-for="stat in [
             { label: 'Jami navbatlar', value: totalBookings, icon: CalendarCheck, color: 'bg-blue-50 text-blue-600' },
-            { label: 'Xizmatlar', value: services.length, icon: Scissors, color: 'bg-violet-50 text-violet-600' },
+            { label: 'Xizmatlar', value: services.length, icon: Briefcase, color: 'bg-violet-50 text-violet-600' },
             { label: 'Xodimlar', value: staff.length, icon: Users, color: 'bg-emerald-50 text-emerald-600' },
             { label: 'O\'rtacha reyting', value: avgRating, icon: Star, color: 'bg-amber-50 text-amber-600' },
           ]"
@@ -202,8 +202,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import {
-  CalendarCheck, Scissors, Users, Star,
-  TrendingUp, Clock, CheckCircle2, AlertCircle, Plus, UserPlus, Sun,
+  CalendarCheck, Users, Star,
+  TrendingUp, Clock, CheckCircle2, AlertCircle, Plus, UserPlus, Sun, Briefcase
 } from 'lucide-vue-next'
 import { bookingsApi } from '@/api/bookings'
 import { servicesApi } from '@/api/services'
