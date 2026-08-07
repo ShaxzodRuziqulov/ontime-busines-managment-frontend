@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { checkToken } from "@/helpers/checkToken.ts";
+import { useToast } from "@/composables/useToast.ts";
+
+const Toast = useToast();
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -144,8 +148,19 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
-  const auth = useAuthStore()
+let sessionExpiredShown = false;
+
+router.beforeEach((to, _, next) => {
+  const auth = useAuthStore();
+
+  if (auth.isAuthenticated && !checkToken()) {
+      if (!sessionExpiredShown) {
+          Toast.info('Sessiya tugadi, tizimga qayta kiring!')
+          sessionExpiredShown = true
+      }
+      if (to.meta.guest) return next()
+      return next({ name: 'login' })
+  }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'login' }
@@ -173,8 +188,9 @@ router.beforeEach((to) => {
     to.name !== 'onboarding' &&
     to.name !== 'profile'
   ) {
-    return { name: 'onboarding' }
+    return next({ name: 'onboarding' })
   }
+  next();
 })
 
 export default router
