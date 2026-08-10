@@ -138,7 +138,12 @@ async function handleLogin() {
 
             <!-- Password -->
             <div>
-              <label for="login-password" class="block text-sm font-medium text-slate-700 mb-1.5">Parol</label>
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="login-password" class="block text-sm font-medium text-slate-700">Parol</label>
+                <RouterLink to="/forgot-password" class="text-sm font-semibold text-primary-600 hover:text-primary-700">
+                  Parolni unutdingizmi?
+                </RouterLink>
+              </div>
               <div class="relative">
                 <input
                   id="login-password"

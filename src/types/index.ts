@@ -26,6 +26,16 @@ export interface AuthResponse {
   roles: string[]
 }
 
+export interface PasswordResetRequest {
+  login: string
+}
+
+export interface PasswordResetConfirmRequest {
+  login: string
+  code: string
+  newPassword: string
+}
+
 export type BusinessStatus = 'TRIAL' | 'ACTIVE' | 'EXPIRED' | 'SUSPENDED' | 'DRAFT' | 'PENDING_REVIEW'
 export type BusinessCategory =
   | 'BARBER'
