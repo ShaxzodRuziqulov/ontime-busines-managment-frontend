@@ -4,17 +4,18 @@ import { businessesApi } from '@/api/businesses'
 
 export const useAdminStore = defineStore('admin', () => {
   const businesses = ref<{ id: string; status: string }[]>([])
+  const statusCounts = ref<Record<string, number>>({})
   const loaded = ref(false)
 
   const pendingReviewCount = computed(
-    () => businesses.value.filter(b => b.status === 'PENDING_REVIEW').length
+    () => statusCounts.value.PENDING_REVIEW ?? businesses.value.filter(b => b.status === 'PENDING_REVIEW').length
   )
 
   async function fetchBusinesses() {
     if (loaded.value) return
     try {
-      const { data } = await businessesApi.getAll({ size: 1000 })
-      businesses.value = data.content.map(b => ({ id: b.id, status: b.status }))
+      const { data } = await businessesApi.statusCounts()
+      statusCounts.value = data
       loaded.value = true
     } catch {
       // sidebar badge uchun kritik emas
@@ -27,6 +28,11 @@ export const useAdminStore = defineStore('admin', () => {
     loaded.value = true
   }
 
+  function setCounts(counts: Record<string, number>) {
+    statusCounts.value = counts
+    loaded.value = true
+  }
+
   /** Bitta biznesning holati o'zgarganda (masalan review/status update) faqat o'shani yangilaydi — qolganlarini yo'qotmaydi. */
   function upsertOne(item: { id: string; status: string }) {
     const idx = businesses.value.findIndex((b) => b.id === item.id)
@@ -34,5 +40,5 @@ export const useAdminStore = defineStore('admin', () => {
     else businesses.value.push(item)
   }
 
-  return { pendingReviewCount, fetchBusinesses, setAll, upsertOne }
+  return { pendingReviewCount, fetchBusinesses, setAll, setCounts, upsertOne }
 })

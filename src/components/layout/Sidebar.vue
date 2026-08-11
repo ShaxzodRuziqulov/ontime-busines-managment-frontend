@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   AlarmClock,
   ClipboardList,
-    House,
+  House,
   Briefcase
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
@@ -45,7 +45,7 @@ const staffNavItems = [
 ]
 
 const adminNavItems = [
-  { name: 'Admin Panel', to: '/admin', icon: ShieldCheck, badge: null as null | (() => number) },
+  { name: 'Boshqaruv', to: '/admin', icon: ShieldCheck, badge: null as null | (() => number) },
   { name: 'Foydalanuvchilar', to: '/admin/users', icon: Users, badge: null },
   {
     name: 'Bizneslar',
@@ -53,7 +53,7 @@ const adminNavItems = [
     icon: Building2,
     badge: () => adminStore.pendingReviewCount,
   },
-  { name: 'Audit Log', to: '/admin/audit', icon: ClipboardList, badge: null },
+  { name: 'Audit', to: '/admin/audit', icon: ClipboardList, badge: null },
 ]
 
 function isActive(path: string) {
@@ -121,7 +121,7 @@ onMounted(() => {
       </template>
 
       <!-- Staff portal navigation -->
-      <template v-else-if="authStore.isStaff && !authStore.isBusinessOwner">
+      <template v-else-if="authStore.isStaff && !authStore.canManageBusiness">
         <div class="px-3 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Xodim</div>
         <RouterLink
           v-for="item in staffNavItems"

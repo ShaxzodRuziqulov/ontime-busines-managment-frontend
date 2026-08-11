@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Menu, LogOut, ChevronDown, User, UserCog, Search } from 'lucide-vue-next'
+import { Menu, LogOut, ChevronDown, User, UserCog, Search, Moon, Sun } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useBusinessStore } from '@/stores/business'
 import GlobalSearch from '@/components/common/GlobalSearch.vue'
@@ -17,6 +17,17 @@ const authStore = useAuthStore()
 const businessStore = useBusinessStore()
 const dropdownOpen = ref(false)
 const searchOpen = ref(false)
+const darkMode = ref(false)
+
+function applyTheme(isDark: boolean) {
+  darkMode.value = isDark
+  document.documentElement.classList.toggle('dark', isDark)
+  localStorage.setItem('ontime-theme', isDark ? 'dark' : 'light')
+}
+
+function toggleTheme() {
+  applyTheme(!darkMode.value)
+}
 
 function logout() {
   authStore.logout()
@@ -38,7 +49,12 @@ function onGlobalKeydown(e: KeyboardEvent) {
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onGlobalKeydown))
+onMounted(() => {
+  const savedTheme = localStorage.getItem('ontime-theme')
+  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
+  applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark)
+  window.addEventListener('keydown', onGlobalKeydown)
+})
 onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 </script>
 
@@ -84,6 +100,17 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
         class="sm:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
       >
         <Search class="w-5 h-5" />
+      </button>
+
+      <button
+        type="button"
+        :aria-label="darkMode ? 'Kun rejimi' : 'Tun rejimi'"
+        :title="darkMode ? 'Kun rejimi' : 'Tun rejimi'"
+        class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+        @click="toggleTheme"
+      >
+        <Sun v-if="darkMode" class="w-5 h-5" />
+        <Moon v-else class="w-5 h-5" />
       </button>
 
       <!-- User dropdown -->

@@ -23,6 +23,17 @@ export const businessesApi = {
   getCities: () =>
     apiClient.get<string[]>('/businesses/cities'),
 
+  getMine: () =>
+    apiClient.get<Business>('/businesses/me'),
+
+  statusCounts: (params?: {
+    ownerId?: string
+    q?: string
+    city?: string
+    category?: BusinessCategory
+  }) =>
+    apiClient.get<Record<BusinessStatus, number>>('/businesses/status-counts', { params }),
+
   getById: (id: string) =>
     apiClient.get<Business>(`/businesses/${id}`),
 

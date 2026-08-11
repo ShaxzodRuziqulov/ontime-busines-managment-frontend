@@ -246,6 +246,7 @@ async function save() {
 }
 
 async function toggleActive(member: StaffMember) {
+  if (businessStore.isReadOnly) return
   const bid = businessStore.business?.id
   if (!bid) return
   try {
@@ -258,6 +259,7 @@ async function toggleActive(member: StaffMember) {
 }
 
 async function confirmDelete(id: string) {
+  if (businessStore.isReadOnly) return
   const bid = businessStore.business?.id
   if (!bid) return
   try {
@@ -405,7 +407,11 @@ onMounted(async () => {
                 </div>
               </div>
             </div>
-            <button @click="toggleActive(member)" class="flex-shrink-0">
+            <button
+              v-if="!businessStore.isReadOnly"
+              @click="toggleActive(member)"
+              class="flex-shrink-0"
+            >
               <ToggleRight v-if="member.active" class="w-6 h-6 text-emerald-500" />
               <ToggleLeft v-else class="w-6 h-6 text-slate-300" />
             </button>
@@ -439,7 +445,7 @@ onMounted(async () => {
             >
               {{ member.active ? 'Faol' : 'Nofaol' }}
             </span>
-            <div class="flex gap-1">
+            <div v-if="!businessStore.isReadOnly" class="flex gap-1">
               <button
                 class="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                 @click="openEdit(member)"

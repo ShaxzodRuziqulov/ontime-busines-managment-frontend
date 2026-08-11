@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { Search, Building2, Trash2, Settings, CheckCircle2, XCircle, Clock, AlertCircle, Download, ExternalLink, ChevronDown, ChevronLeft, ChevronRight, Tag } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { businessesApi } from '@/api/businesses'
 import { useAdminStore } from '@/stores/admin'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SkeletonTable from '@/components/common/SkeletonTable.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppModal from '@/components/common/AppModal.vue'
@@ -15,6 +14,7 @@ import type { Business, BusinessCategory, BusinessStatus, BusinessStatusUpdateRe
 
 const toast = useToast()
 const router = useRouter()
+const route = useRoute()
 const adminStore = useAdminStore()
 
 const businesses = ref<Business[]>([])
@@ -28,6 +28,7 @@ const page = ref(0)
 const pageSize = 20
 const totalElements = ref(0)
 const totalPages = ref(1)
+const globalStatusCounts = ref<Record<string, number>>({})
 const deleteConfirm = ref<string | null>(null)
 const statusModal = ref<Business | null>(null)
 
@@ -59,16 +60,26 @@ const sortOptions = [
 
 const statusLabels = businessStatusLabels
 
+function isBusinessStatus(value: unknown): value is BusinessStatus {
+  return typeof value === 'string' && allStatuses.includes(value as BusinessStatus)
+}
+
+function statusFromQuery(): BusinessStatus | 'all' {
+  return isBusinessStatus(route.query.status) ? route.query.status : 'all'
+}
+
+statusFilter.value = statusFromQuery()
+
 const statusForm = ref<BusinessStatusUpdateRequest>({ status: 'ACTIVE', subscriptionEndDate: '' })
 
 const filtered = computed(() => businesses.value)
 
 const statusCounts = computed<Record<BusinessStatus | 'all', number>>(() => {
   const counts = Object.fromEntries(allStatuses.map((status) => [status, 0])) as Record<BusinessStatus | 'all', number>
-  counts.all = totalElements.value
-  for (const business of businesses.value) {
-    counts[business.status] += 1
+  for (const status of allStatuses) {
+    counts[status] = globalStatusCounts.value[status] ?? 0
   }
+  counts.all = allStatuses.reduce((sum, status) => sum + counts[status], 0)
   return counts
 })
 
@@ -217,6 +228,18 @@ function categoryLabel(category?: BusinessCategory) {
   return categoryOptions.find((item) => item.value === category)?.label ?? 'Boshqa'
 }
 
+function setStatusFilter(status: BusinessStatus | 'all') {
+  statusFilter.value = status
+  router.replace({
+    name: 'admin-businesses',
+    query: status === 'all' ? {} : { ...route.query, status },
+  })
+}
+
+function openBusiness(biz: Business) {
+  router.push(`/admin/businesses/${biz.id}`)
+}
+
 function formatDate(iso: string | null) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('uz-UZ')
@@ -246,18 +269,25 @@ let searchTimer: ReturnType<typeof setTimeout> | undefined
 async function loadBusinesses() {
   loading.value = true
   try {
-    const { data } = await businessesApi.getAll({
+    const [businessRes, countsRes] = await Promise.all([
+      businessesApi.getAll({
       page: page.value,
       size: pageSize,
       sort: sortFilter.value,
       q: search.value.trim() || undefined,
       category: categoryFilter.value === 'all' ? undefined : categoryFilter.value,
       status: statusFilter.value === 'all' ? undefined : statusFilter.value,
-    })
-    businesses.value = data.content
-    totalElements.value = data.totalElements
-    totalPages.value = data.totalPages || 1
-    adminStore.setAll(data.content.map(b => ({ id: b.id, status: b.status })))
+      }),
+      businessesApi.statusCounts({
+        q: search.value.trim() || undefined,
+        category: categoryFilter.value === 'all' ? undefined : categoryFilter.value,
+      }),
+    ])
+    businesses.value = businessRes.data.content
+    totalElements.value = businessRes.data.totalElements
+    totalPages.value = businessRes.data.totalPages || 1
+    globalStatusCounts.value = countsRes.data
+    adminStore.setCounts(countsRes.data)
   } finally {
     loading.value = false
   }
@@ -275,6 +305,15 @@ function goToPage(nextPage: number) {
 }
 
 watch([statusFilter, categoryFilter, sortFilter], reloadFirstPage)
+watch(
+  () => route.query.status,
+  () => {
+    const nextStatus = statusFromQuery()
+    if (statusFilter.value !== nextStatus) {
+      statusFilter.value = nextStatus
+    }
+  }
+)
 watch(page, loadBusinesses)
 watch(search, () => {
   if (searchTimer) clearTimeout(searchTimer)
@@ -287,13 +326,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <LoadingSpinner v-if="loading"/>
-  <div>
+  <div class="space-y-5">
     <!-- Header -->
-    <div class="flex items-center flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div class="flex items-center flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h2 class="text-2xl font-bold text-slate-800">Bizneslar</h2>
-        <p class="text-slate-500 font-semibold text-sm mt-1">{{ totalElements }} ta biznes ro'yxatda</p>
+        <p class="text-slate-500 font-semibold text-sm mt-1">
+          {{ statusFilter === 'all' ? 'Barcha bizneslar' : statusLabels[statusFilter] }} bo'yicha {{ totalElements }} ta natija
+        </p>
       </div>
       <button
         @click="exportCsv"
@@ -304,10 +344,45 @@ onMounted(async () => {
       </button>
     </div>
 
-    <!-- Status filter tabs -->
-    <div class="flex flex-wrap gap-2 mb-4">
+    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <button
-        @click="statusFilter = 'all'"
+        type="button"
+        class="rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+        @click="setStatusFilter('all')"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Jami</p>
+        <p class="mt-2 text-2xl font-bold text-slate-800">{{ statusCounts.all }}</p>
+      </button>
+      <button
+        type="button"
+        class="rounded-2xl border border-violet-100 bg-violet-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+        @click="setStatusFilter('PENDING_REVIEW')"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-violet-700">Tekshiruvda</p>
+        <p class="mt-2 text-2xl font-bold text-violet-700">{{ statusCounts.PENDING_REVIEW ?? 0 }}</p>
+      </button>
+      <button
+        type="button"
+        class="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+        @click="setStatusFilter('TRIAL')"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">Sinov</p>
+        <p class="mt-2 text-2xl font-bold text-amber-700">{{ statusCounts.TRIAL ?? 0 }}</p>
+      </button>
+      <button
+        type="button"
+        class="rounded-2xl border border-red-100 bg-red-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+        @click="setStatusFilter('EXPIRED')"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-red-700">Muddati o'tgan</p>
+        <p class="mt-2 text-2xl font-bold text-red-700">{{ statusCounts.EXPIRED ?? 0 }}</p>
+      </button>
+    </div>
+
+    <!-- Status filter tabs -->
+    <div class="flex flex-wrap gap-2">
+      <button
+        @click="setStatusFilter('all')"
         :class="[
           'px-3 py-1.5 rounded-xl text-xs font-medium border transition-all',
           statusFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
@@ -317,7 +392,7 @@ onMounted(async () => {
       </button>
       <button
         v-for="s in allStatuses" :key="s"
-        @click="statusFilter = s"
+        @click="setStatusFilter(s)"
         :class="[
           'px-3 py-1.5 rounded-xl text-xs font-medium border transition-all',
           statusFilter === s ? statusColor(s) + ' border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
@@ -329,7 +404,7 @@ onMounted(async () => {
     </div>
 
     <!-- Search -->
-    <div class="grid grid-cols-1 md:grid-cols-[1fr_220px_180px] gap-3 mb-5">
+    <div class="grid grid-cols-1 md:grid-cols-[1fr_220px_180px] gap-3">
       <div class="relative">
         <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
@@ -366,7 +441,7 @@ onMounted(async () => {
     >
       <div
         v-if="selected.size > 0"
-        class="mb-4 flex items-center gap-3 bg-primary-50 border border-primary-200 rounded-2xl px-4 py-3"
+        class="flex items-center gap-3 bg-primary-50 border border-primary-200 rounded-2xl px-4 py-3"
       >
         <span class="text-sm font-medium text-primary-700">{{ selected.size }} ta tanlandi</span>
         <div class="flex gap-2 ml-auto flex-wrap">
@@ -424,7 +499,7 @@ onMounted(async () => {
         <div class="px-5 py-3 border-b border-slate-100 text-xs text-slate-500 flex items-center gap-2">
           {{ totalElements }} ta natija
           <span v-if="statusFilter !== 'all'">
-            — <button @click="statusFilter = 'all'" class="text-primary-600 hover:underline">Filterni tozalash</button>
+            - <button @click="setStatusFilter('all')" class="text-primary-600 hover:underline">Filterni tozalash</button>
           </span>
         </div>
         <div class="overflow-x-auto">
@@ -451,9 +526,15 @@ onMounted(async () => {
             <tbody class="divide-y divide-slate-50">
               <tr
                 v-for="biz in filtered" :key="biz.id"
-                :class="['hover:bg-slate-50/50 transition-colors', selected.has(biz.id) && 'bg-primary-50/40']"
+                :class="[
+                  'cursor-pointer transition-colors hover:bg-slate-50/80 focus-within:bg-slate-50',
+                  selected.has(biz.id) && 'bg-primary-50/40',
+                ]"
+                tabindex="0"
+                @click="openBusiness(biz)"
+                @keydown.enter="openBusiness(biz)"
               >
-                <td class="pl-5 pr-2 py-3.5">
+                <td class="pl-5 pr-2 py-3.5" @click.stop>
                   <input
                     type="checkbox"
                     :checked="selected.has(biz.id)"
@@ -466,8 +547,8 @@ onMounted(async () => {
                     <div class="w-9 h-9 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
                       <Building2 class="w-4 h-4 text-primary-600" />
                     </div>
-                    <div>
-                      <p class="font-medium text-slate-800">{{ biz.name }}</p>
+                    <div class="min-w-0">
+                      <p class="truncate font-medium text-slate-800">{{ biz.name }}</p>
                       <p class="text-xs text-slate-400 mt-0.5">{{ [biz.city, biz.addressLine].filter(Boolean).join(', ') || '—' }}</p>
                     </div>
                   </div>
@@ -487,11 +568,11 @@ onMounted(async () => {
                 </td>
                 <td class="px-3 py-3.5 text-slate-500 text-xs">{{ formatDate(biz.trialEndDate) }}</td>
                 <td class="px-3 py-3.5 text-slate-500 text-xs">{{ formatDate(biz.subscriptionEndDate) }}</td>
-                <td class="px-3 pr-5 py-3.5">
+                <td class="px-3 pr-5 py-3.5" @click.stop>
                   <div class="flex items-center justify-end gap-1">
                     <button
                       class="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                      @click="router.push(`/admin/businesses/${biz.id}`)"
+                      @click="openBusiness(biz)"
                       title="Batafsil ko'rish"
                     >
                       <ExternalLink class="w-4 h-4" />
@@ -518,7 +599,7 @@ onMounted(async () => {
         </div>
         <div v-if="totalPages > 1" class="px-5 py-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <span class="text-xs text-slate-500">
-            {{ page * pageSize + 1 }}â€“{{ Math.min((page + 1) * pageSize, totalElements) }} / {{ totalElements }}
+            {{ page * pageSize + 1 }}-{{ Math.min((page + 1) * pageSize, totalElements) }} / {{ totalElements }}
           </span>
           <div class="flex items-center gap-1">
             <button

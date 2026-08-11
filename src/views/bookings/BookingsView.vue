@@ -135,15 +135,7 @@ async function loadDayBookings() {
   }
 }
 
-const filtered = computed(() =>
-  bookings.value.filter((b) => {
-    const matchStatus = !statusFilter.value || b.status === statusFilter.value
-    const matchSearch =
-      !searchQuery.value ||
-      b.customerNote?.toLowerCase().includes(searchQuery.value.toLowerCase())
-    return matchStatus && matchSearch
-  })
-)
+const filtered = computed(() => bookings.value)
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('uz-UZ', {
@@ -170,8 +162,15 @@ async function load() {
   loading.value = true
   try {
     const bid = businessStore.business?.id
+    const q = searchQuery.value.trim()
     const [b, s, st, h] = await Promise.all([
-      bookingsApi.getAll({ ...(bid ? { businessId: bid } : {}), page: page.value, size: pageSize }),
+      bookingsApi.getAll({
+        ...(bid ? { businessId: bid } : {}),
+        ...(statusFilter.value ? { status: statusFilter.value } : {}),
+        ...(q ? { q } : {}),
+        page: page.value,
+        size: pageSize,
+      }),
       bid ? servicesApi.getAll(bid) : Promise.resolve({ data: [] as OfferedService[] }),
       bid ? staffApi.getAll(bid) : Promise.resolve({ data: [] as StaffMember[] }),
       bid ? businessHoursApi.getAll(bid) : Promise.resolve({ data: [] as BusinessHours[] }),
@@ -186,6 +185,11 @@ async function load() {
     loading.value = false
   }
 }
+
+watch([statusFilter, searchQuery], () => {
+  page.value = 0
+  load()
+})
 
 function goToPage(next: number) {
   if (next < 0 || next >= totalPages.value) return
@@ -307,7 +311,7 @@ onMounted(load)
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Izoh bo'yicha qidirish..."
+          placeholder="Mijoz, telefon, xizmat yoki xodim bo'yicha qidirish..."
           class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
         />
       </div>

@@ -131,6 +131,11 @@ const router = createRouter({
           component: () => import('@/views/admin/AdminUsersView.vue'),
         },
         {
+          path: 'users/:id',
+          name: 'admin-user-detail',
+          component: () => import('@/views/admin/AdminUserDetailView.vue'),
+        },
+        {
           path: 'businesses',
           name: 'admin-businesses',
           component: () => import('@/views/admin/AdminBusinessesView.vue'),
@@ -169,26 +174,26 @@ router.beforeEach((to, _, next) => {
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'login' }
+    return next({ name: 'login' })
   }
   if (to.meta.requiresAdmin && !auth.isAdmin) {
-    return { name: auth.isStaff ? 'staff-portal' : 'dashboard' }
+    return next({ name: auth.canManageBusiness ? 'dashboard' : auth.isStaff ? 'staff-portal' : 'onboarding' })
   }
-  if (to.meta.requiresStaff && !auth.isStaff && !auth.isAdmin && !auth.isBusinessOwner) {
-    return { name: 'onboarding' }
+  if (to.meta.requiresStaff && !auth.isStaff) {
+    return next({ name: auth.canManageBusiness ? 'dashboard' : 'onboarding' })
   }
   if (to.meta.guest && auth.isAuthenticated) {
-    if (auth.isAdmin) return { name: 'admin-dashboard' }
-    if (auth.isBusinessOwner) return { name: 'dashboard' }
-    if (auth.isStaff) return { name: 'staff-portal' }
-    return { name: 'onboarding' }
+    if (auth.isAdmin) return next({ name: 'admin-dashboard' })
+    if (auth.canManageBusiness) return next({ name: 'dashboard' })
+    if (auth.isStaff) return next({ name: 'staff-portal' })
+    return next({ name: 'onboarding' })
   }
   // Autentifikatsiyadan o'tgan lekin biznes egasi bo'lmagan foydalanuvchi — biznes yaratish sahifasiga.
   // Mijoz sifatida xizmatdan foydalanish bu loyihada yo'q (alohida loyiha sifatida rejalashtirilgan).
   if (
     to.meta.requiresAuth &&
     auth.isAuthenticated &&
-    !auth.isBusinessOwner &&
+    !auth.canManageBusiness &&
     !auth.isAdmin &&
     !auth.isStaff &&
     to.name !== 'onboarding' &&

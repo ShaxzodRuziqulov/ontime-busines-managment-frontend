@@ -2,15 +2,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  Users, Building2, TrendingUp, ShieldCheck,
-  CheckCircle2, Clock, XCircle, AlertCircle, PauseCircle, FileEdit,
-  ArrowRight, UserX, TimerReset,
+  Users, Building2, ShieldCheck, CheckCircle2, Clock, XCircle, AlertCircle,
+  PauseCircle, FileEdit, ArrowRight, UserX, TimerReset, Search, ClipboardList,
 } from 'lucide-vue-next'
 import { usersApi } from '@/api/users'
 import { businessesApi } from '@/api/businesses'
 import { useAdminStore } from '@/stores/admin'
 import SkeletonTable from '@/components/common/SkeletonTable.vue'
-import MiniBarChart from '@/components/common/MiniBarChart.vue'
 import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import type { User, Business, BusinessStatus } from '@/types'
 
@@ -19,30 +17,34 @@ const router = useRouter()
 
 const users = ref<User[]>([])
 const businesses = ref<Business[]>([])
+const statusCounts = ref<Record<string, number>>({})
 const loading = ref(true)
 
 const businessOwners = computed(() => users.value.filter(u => u.businessOwner))
-const regularUsers = computed(() => users.value.filter(u => !u.businessOwner && !u.roles?.includes('ROLE_ADMIN')))
 const adminUsers = computed(() => users.value.filter(u => u.roles?.includes('ROLE_ADMIN')))
 const inactiveUsers = computed(() => users.value.filter(u => !u.active))
+const pendingReviewCount = computed(() => statusCounts.value.PENDING_REVIEW ?? 0)
 
-const byStatus = computed(() => {
-  const map: Record<string, number> = {}
-  for (const b of businesses.value) map[b.status] = (map[b.status] ?? 0) + 1
-  return map
-})
+const totalBusinesses = computed(() =>
+  Object.values(statusCounts.value).reduce((sum, count) => sum + count, 0)
+)
 
 interface StatusCard {
-  label: string; value: number; color: string; textColor: string; icon: any; status: BusinessStatus
+  label: string
+  value: number
+  color: string
+  textColor: string
+  icon: any
+  status: BusinessStatus
 }
 
 const statusCards = computed<StatusCard[]>(() => [
-  { label: 'Faol', value: byStatus.value['ACTIVE'] ?? 0, color: 'bg-emerald-50', textColor: 'text-emerald-600', icon: CheckCircle2, status: 'ACTIVE' },
-  { label: 'Sinov', value: byStatus.value['TRIAL'] ?? 0, color: 'bg-amber-50', textColor: 'text-amber-600', icon: Clock, status: 'TRIAL' },
-  { label: "Muddati o'tgan", value: byStatus.value['EXPIRED'] ?? 0, color: 'bg-red-50', textColor: 'text-red-600', icon: XCircle, status: 'EXPIRED' },
-  { label: "To'xtatilgan", value: byStatus.value['SUSPENDED'] ?? 0, color: 'bg-slate-50', textColor: 'text-slate-500', icon: PauseCircle, status: 'SUSPENDED' },
-  { label: 'Qoralama', value: byStatus.value['DRAFT'] ?? 0, color: 'bg-blue-50', textColor: 'text-blue-600', icon: FileEdit, status: 'DRAFT' },
-  { label: 'Tekshiruvda', value: byStatus.value['PENDING_REVIEW'] ?? 0, color: 'bg-violet-50', textColor: 'text-violet-600', icon: AlertCircle, status: 'PENDING_REVIEW' },
+  { label: 'Faol', value: statusCounts.value.ACTIVE ?? 0, color: 'bg-emerald-50', textColor: 'text-emerald-600', icon: CheckCircle2, status: 'ACTIVE' },
+  { label: 'Sinov', value: statusCounts.value.TRIAL ?? 0, color: 'bg-amber-50', textColor: 'text-amber-600', icon: Clock, status: 'TRIAL' },
+  { label: "Muddati o'tgan", value: statusCounts.value.EXPIRED ?? 0, color: 'bg-red-50', textColor: 'text-red-600', icon: XCircle, status: 'EXPIRED' },
+  { label: "To'xtatilgan", value: statusCounts.value.SUSPENDED ?? 0, color: 'bg-slate-50', textColor: 'text-slate-500', icon: PauseCircle, status: 'SUSPENDED' },
+  { label: 'Qoralama', value: statusCounts.value.DRAFT ?? 0, color: 'bg-blue-50', textColor: 'text-blue-600', icon: FileEdit, status: 'DRAFT' },
+  { label: 'Tekshiruvda', value: pendingReviewCount.value, color: 'bg-violet-50', textColor: 'text-violet-600', icon: AlertCircle, status: 'PENDING_REVIEW' },
 ])
 
 const pendingReviewList = computed(() =>
@@ -58,59 +60,68 @@ const trialsEndingSoon = computed(() => {
     .slice(0, 5)
 })
 
-function trialDaysLeft(dateStr: string) {
-  const diff = Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-  return Math.max(0, diff)
-}
-
 const recentBusinesses = computed(() =>
   [...businesses.value]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 6)
 )
 
-// Last 7 days registration chart
-const registrationChart = computed(() => {
-  const days: { label: string; value: number }[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    const key = d.toISOString().slice(0, 10)
-    const day = d.getDate().toString().padStart(2, '0')
-    const month = d.getMonth() + 1
-    const label = day + ', ' + month
-    const value = users.value.filter(u => u.createdAt?.slice(0, 10) === key).length
-    days.push({ label, value })
-  }
-  return days
-})
+const priorityItems = computed(() => [
+  {
+    label: 'Tekshiruv kutmoqda',
+    value: pendingReviewCount.value,
+    icon: ClipboardList,
+    to: { name: 'admin-businesses', query: { status: 'PENDING_REVIEW' } },
+    tone: 'bg-violet-50 text-violet-700 border-violet-200',
+  },
+  {
+    label: 'Trial tugayapti',
+    value: trialsEndingSoon.value.length,
+    icon: TimerReset,
+    to: { name: 'admin-businesses', query: { status: 'TRIAL' } },
+    tone: 'bg-amber-50 text-amber-700 border-amber-200',
+  },
+  {
+    label: 'Bloklangan foydalanuvchi',
+    value: inactiveUsers.value.length,
+    icon: UserX,
+    to: { name: 'admin-users' },
+    tone: 'bg-red-50 text-red-700 border-red-200',
+  },
+])
 
-const businessChart = computed(() => {
-  const days: { label: string; value: number }[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    const key = d.toISOString().slice(0, 10)
-    const day = d.getDate().toString().padStart(2, '0')
-    const month = d.getMonth() + 1
-    const label = day + ', ' + month
-    const value = businesses.value.filter(b => b.createdAt?.slice(0, 10) === key).length
-    days.push({ label, value })
-  }
-  return days
-})
+function trialDaysLeft(dateStr: string) {
+  const diff = Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+  return Math.max(0, diff)
+}
+
+function businessLocation(biz: Business) {
+  return biz.city || biz.addressLine || 'Manzil kiritilmagan'
+}
 
 const statusColor = businessStatusColor
 const statusLabels = businessStatusLabels
 
 onMounted(async () => {
   try {
-    const [u, b] = await Promise.allSettled([usersApi.getAll(), businessesApi.getAll({ size: 1000 })])
+    const [u, recent, pending, trial, counts] = await Promise.allSettled([
+      usersApi.getAll(),
+      businessesApi.getAll({ size: 6, sort: 'createdAt,desc' }),
+      businessesApi.getAll({ size: 5, status: 'PENDING_REVIEW', sort: 'createdAt,desc' }),
+      businessesApi.getAll({ size: 20, status: 'TRIAL', sort: 'trialEndDate,asc' }),
+      businessesApi.statusCounts(),
+    ])
     if (u.status === 'fulfilled') users.value = u.value.data
-    if (b.status === 'fulfilled') {
-      businesses.value = b.value.data.content
-      adminStore.setAll(b.value.data.content.map(biz => ({ id: biz.id, status: biz.status })))
+    if (counts.status === 'fulfilled') {
+      statusCounts.value = counts.value.data
+      adminStore.setCounts(counts.value.data)
     }
+
+    const map = new Map<string, Business>()
+    if (recent.status === 'fulfilled') recent.value.data.content.forEach((biz) => map.set(biz.id, biz))
+    if (pending.status === 'fulfilled') pending.value.data.content.forEach((biz) => map.set(biz.id, biz))
+    if (trial.status === 'fulfilled') trial.value.data.content.forEach((biz) => map.set(biz.id, biz))
+    businesses.value = [...map.values()]
   } finally {
     loading.value = false
   }
@@ -118,213 +129,202 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
-      <p class="text-slate-500 text-sm mt-1">Tizimning umumiy ko'rinishi</p>
+  <div class="space-y-6">
+    <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">Admin Panel</h1>
+        <p class="mt-1 text-sm text-slate-500">Tekshiruv, biznes statuslari va foydalanuvchilar nazorati.</p>
+      </div>
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+        @click="router.push('/admin/businesses')"
+      >
+        <Search class="h-4 w-4" />
+        Biznes qidirish
+      </button>
     </div>
 
-    <!-- Skeleton -->
     <template v-if="loading">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div v-for="i in 4" :key="i" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 animate-pulse">
-          <div class="h-3 bg-slate-200 rounded w-2/3 mb-4" />
-          <div class="h-7 bg-slate-200 rounded w-1/3" />
-        </div>
+      <div class="grid gap-4 md:grid-cols-3">
+        <div v-for="i in 3" :key="i" class="h-28 animate-pulse rounded-2xl border border-slate-100 bg-white" />
       </div>
       <SkeletonTable :rows="4" :cols="4" />
     </template>
 
     <template v-else>
-      <!-- User stats -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div
-          v-for="stat in [
-            { label: 'Jami foydalanuvchilar', value: users.length, icon: Users, color: 'bg-blue-50 text-blue-600' },
-            { label: 'Biznes egalari', value: businessOwners.length, icon: Building2, color: 'bg-violet-50 text-violet-600' },
-            { label: 'Oddiy foydalanuvchilar', value: regularUsers.length, icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600' },
-            { label: 'Adminlar', value: adminUsers.length, icon: ShieldCheck, color: 'bg-red-50 text-red-600' },
-          ]"
-          :key="stat.label"
-          class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100"
+      <div class="grid gap-4 md:grid-cols-3">
+        <RouterLink
+          v-for="item in priorityItems"
+          :key="item.label"
+          :to="item.to"
+          :class="['rounded-2xl border p-5 transition hover:-translate-y-0.5 hover:shadow-sm', item.tone]"
         >
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-xs font-medium text-slate-500 uppercase tracking-wide">{{ stat.label }}</span>
-            <div :class="['w-9 h-9 rounded-xl flex items-center justify-center', stat.color]">
-              <component :is="stat.icon" class="w-5 h-5" />
-            </div>
-          </div>
-          <div class="text-2xl font-bold text-slate-800">{{ stat.value }}</div>
-        </div>
-      </div>
-
-      <!-- Charts row -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <!-- User registrations chart -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex items-start justify-between gap-3">
             <div>
-              <h3 class="font-semibold text-slate-800 text-sm">Ro'yxatdan o'tish</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Oxirgi 7 kun</p>
+              <p class="text-sm font-semibold">{{ item.label }}</p>
+              <p class="mt-2 text-3xl font-bold">{{ item.value }}</p>
             </div>
-            <RouterLink to="/admin/users" class="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1">
-              Ko'rish <ArrowRight class="w-3 h-3" />
-            </RouterLink>
+            <component :is="item.icon" class="h-6 w-6" />
           </div>
-          <MiniBarChart :data="registrationChart" color="#2563eb" :height="80" />
-        </div>
-
-        <!-- Business registrations chart -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="font-semibold text-slate-800 text-sm">Yangi bizneslar</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Oxirgi 7 kun</p>
-            </div>
-            <RouterLink to="/admin/businesses" class="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1">
-              Ko'rish <ArrowRight class="w-3 h-3" />
-            </RouterLink>
-          </div>
-          <MiniBarChart :data="businessChart" color="#10b981" :height="80" />
-        </div>
-      </div>
-
-      <!-- Inactive users warning -->
-      <div
-        v-if="inactiveUsers.length > 0"
-        class="mb-6 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4"
-      >
-        <UserX class="w-5 h-5 text-amber-500 flex-shrink-0" />
-        <p class="text-sm text-amber-700">
-          <span class="font-semibold">{{ inactiveUsers.length }} ta foydalanuvchi</span> bloklangan holda.
-        </p>
-        <RouterLink to="/admin/users" class="ml-auto text-xs text-amber-600 hover:text-amber-800 font-medium flex items-center gap-1 whitespace-nowrap">
-          Ko'rish <ArrowRight class="w-3.5 h-3.5" />
         </RouterLink>
       </div>
 
-      <!-- Trials ending soon -->
-      <div v-if="trialsEndingSoon.length > 0" class="bg-white rounded-2xl border border-amber-200 shadow-sm mb-6">
-        <div class="px-6 py-4 border-b border-amber-100 flex items-center gap-2">
-          <TimerReset class="w-4 h-4 text-amber-500" />
-          <h2 class="font-semibold text-slate-800">Sinov muddati tez orada tugaydi</h2>
-          <span class="ml-auto px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
-            {{ trialsEndingSoon.length }}
-          </span>
-        </div>
-        <div class="divide-y divide-slate-50">
-          <div
-            v-for="biz in trialsEndingSoon" :key="biz.id"
-            class="px-6 py-3 flex items-center gap-3 hover:bg-slate-50/50 cursor-pointer"
-            @click="router.push(`/admin/businesses/${biz.id}`)"
-          >
-            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Building2 class="w-4 h-4 text-amber-600" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-slate-800 truncate">{{ biz.name }}</p>
-              <p class="text-xs text-slate-400 truncate">{{ biz.city || biz.addressLine || '—' }}</p>
-            </div>
-            <span class="text-xs font-semibold text-amber-600 whitespace-nowrap">
-              {{ trialDaysLeft(biz.trialEndDate!) }} kun qoldi
-            </span>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Foydalanuvchilar</span>
+            <Users class="h-5 w-5 text-blue-600" />
           </div>
+          <div class="mt-3 text-2xl font-bold text-slate-800">{{ users.length }}</div>
+        </div>
+        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Bizneslar</span>
+            <Building2 class="h-5 w-5 text-emerald-600" />
+          </div>
+          <div class="mt-3 text-2xl font-bold text-slate-800">{{ totalBusinesses }}</div>
+        </div>
+        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Biznes egalari</span>
+            <Building2 class="h-5 w-5 text-violet-600" />
+          </div>
+          <div class="mt-3 text-2xl font-bold text-slate-800">{{ businessOwners.length }}</div>
+        </div>
+        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Adminlar</span>
+            <ShieldCheck class="h-5 w-5 text-slate-600" />
+          </div>
+          <div class="mt-3 text-2xl font-bold text-slate-800">{{ adminUsers.length }}</div>
         </div>
       </div>
 
-      <!-- Business status breakdown -->
-      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm mb-6">
-        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div class="rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <div>
             <h2 class="font-semibold text-slate-800">Bizneslar holati</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Jami: {{ businesses.length }} ta biznes</p>
+            <p class="mt-0.5 text-xs text-slate-500">Kartani bosish ro'yxatni shu status bo'yicha ochadi.</p>
           </div>
-          <RouterLink to="/admin/businesses" class="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
-            Barchasi <ArrowRight class="w-3.5 h-3.5" />
+          <RouterLink to="/admin/businesses" class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700">
+            Barchasi <ArrowRight class="h-3.5 w-3.5" />
           </RouterLink>
         </div>
-        <div class="p-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-6">
           <RouterLink
-            v-for="card in statusCards" :key="card.status"
-            to="/admin/businesses"
-            class="rounded-xl p-4 text-center border border-slate-100 hover:shadow-sm transition-all hover:-translate-y-0.5"
+            v-for="card in statusCards"
+            :key="card.status"
+            :to="{ name: 'admin-businesses', query: { status: card.status } }"
+            class="rounded-xl border border-slate-100 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
             :class="card.color"
           >
-            <component :is="card.icon" :class="['w-5 h-5 mx-auto mb-2', card.textColor]" />
+            <component :is="card.icon" :class="['mb-3 h-5 w-5', card.textColor]" />
             <div class="text-2xl font-bold" :class="card.textColor">{{ card.value }}</div>
-            <div class="text-xs mt-1 text-slate-500">{{ card.label }}</div>
+            <div class="mt-1 text-xs font-medium text-slate-600">{{ card.label }}</div>
           </RouterLink>
         </div>
       </div>
 
-      <!-- Pending review alert -->
-      <div v-if="pendingReviewList.length > 0" class="bg-white rounded-2xl border border-violet-200 shadow-sm mb-6">
-        <div class="px-6 py-4 border-b border-violet-100 flex items-center gap-2">
-          <AlertCircle class="w-4 h-4 text-violet-500" />
-          <h2 class="font-semibold text-slate-800">Tekshiruvni kutayotgan bizneslar</h2>
-          <span class="ml-auto px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-xs font-bold">
-            {{ pendingReviewList.length }}
-          </span>
-        </div>
-        <div class="divide-y divide-slate-50">
-          <div
-            v-for="biz in pendingReviewList" :key="biz.id"
-            class="px-6 py-3 flex items-center gap-3 hover:bg-slate-50/50"
-          >
-            <div class="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Building2 class="w-4 h-4 text-violet-600" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-slate-800 truncate">{{ biz.name }}</p>
-              <p class="text-xs text-slate-400 truncate">{{ biz.city || biz.addressLine || '—' }}</p>
-            </div>
-            <RouterLink
-              :to="`/admin/businesses/${biz.id}`"
-              class="text-xs text-violet-600 hover:text-violet-800 font-medium flex items-center gap-1 whitespace-nowrap"
-            >
-              Batafsil <ArrowRight class="w-3 h-3" />
+      <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <div class="rounded-2xl border border-violet-100 bg-white shadow-sm">
+          <div class="flex items-center justify-between border-b border-violet-100 px-5 py-4">
+            <h2 class="font-semibold text-slate-800">Tekshiruv kutayotgan bizneslar</h2>
+            <RouterLink :to="{ name: 'admin-businesses', query: { status: 'PENDING_REVIEW' } }" class="text-sm font-semibold text-violet-600 hover:text-violet-700">
+              Ko'rish
             </RouterLink>
+          </div>
+          <div v-if="pendingReviewList.length === 0" class="px-5 py-10 text-center text-sm text-slate-500">
+            Tekshiruv kutayotgan biznes yo'q
+          </div>
+          <div v-else class="divide-y divide-slate-50">
+            <button
+              v-for="biz in pendingReviewList"
+              :key="biz.id"
+              type="button"
+              class="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-slate-50"
+              @click="router.push(`/admin/businesses/${biz.id}`)"
+            >
+              <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                <Building2 class="h-4 w-4" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold text-slate-800">{{ biz.name }}</p>
+                <p class="truncate text-xs text-slate-500">{{ businessLocation(biz) }}</p>
+              </div>
+              <ArrowRight class="h-4 w-4 flex-shrink-0 text-slate-300" />
+            </button>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-amber-100 bg-white shadow-sm">
+          <div class="flex items-center justify-between border-b border-amber-100 px-5 py-4">
+            <h2 class="font-semibold text-slate-800">Trial muddati tugayotganlar</h2>
+            <RouterLink :to="{ name: 'admin-businesses', query: { status: 'TRIAL' } }" class="text-sm font-semibold text-amber-600 hover:text-amber-700">
+              Ko'rish
+            </RouterLink>
+          </div>
+          <div v-if="trialsEndingSoon.length === 0" class="px-5 py-10 text-center text-sm text-slate-500">
+            Yaqin 3 kunda tugaydigan trial yo'q
+          </div>
+          <div v-else class="divide-y divide-slate-50">
+            <button
+              v-for="biz in trialsEndingSoon"
+              :key="biz.id"
+              type="button"
+              class="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-slate-50"
+              @click="router.push(`/admin/businesses/${biz.id}`)"
+            >
+              <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <TimerReset class="h-4 w-4" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold text-slate-800">{{ biz.name }}</p>
+                <p class="truncate text-xs text-slate-500">{{ businessLocation(biz) }}</p>
+              </div>
+              <span class="whitespace-nowrap text-xs font-semibold text-amber-600">{{ trialDaysLeft(biz.trialEndDate!) }} kun</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Recent businesses table -->
-      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm">
-        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div class="rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <h2 class="font-semibold text-slate-800">So'nggi bizneslar</h2>
-          <RouterLink to="/admin/businesses" class="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
-            Barchasini ko'rish <ArrowRight class="w-3.5 h-3.5" />
+          <RouterLink to="/admin/businesses" class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700">
+            Barchasi <ArrowRight class="h-3.5 w-3.5" />
           </RouterLink>
         </div>
 
-        <div v-if="recentBusinesses.length === 0" class="px-6 py-10 text-center text-slate-500 text-sm">
+        <div v-if="recentBusinesses.length === 0" class="px-5 py-10 text-center text-sm text-slate-500">
           Biznes yo'q
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide">
-                <th class="px-6 py-3 text-left font-medium">Biznes nomi</th>
-                <th class="px-6 py-3 text-left font-medium">Shahar</th>
-                <th class="px-6 py-3 text-left font-medium">Holat</th>
-                <th class="px-6 py-3 text-left font-medium">Yaratilgan</th>
+              <tr class="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-500">
+                <th class="px-5 py-3 text-left font-medium">Biznes</th>
+                <th class="px-5 py-3 text-left font-medium">Manzil</th>
+                <th class="px-5 py-3 text-left font-medium">Holat</th>
+                <th class="px-5 py-3 text-left font-medium">Yaratilgan</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
               <tr
-                v-for="biz in recentBusinesses" :key="biz.id"
-                class="hover:bg-slate-50/50 transition-colors cursor-pointer"
+                v-for="biz in recentBusinesses"
+                :key="biz.id"
+                class="cursor-pointer transition hover:bg-slate-50"
                 @click="router.push(`/admin/businesses/${biz.id}`)"
               >
-                <td class="px-6 py-3 font-medium text-slate-800">{{ biz.name }}</td>
-                <td class="px-6 py-3 text-slate-500">{{ biz.city || biz.addressLine || '—' }}</td>
-                <td class="px-6 py-3">
-                  <span :class="['px-2.5 py-1 rounded-full text-xs font-medium', statusColor(biz.status)]">
+                <td class="px-5 py-3 font-semibold text-slate-800">{{ biz.name }}</td>
+                <td class="px-5 py-3 text-slate-500">{{ businessLocation(biz) }}</td>
+                <td class="px-5 py-3">
+                  <span :class="['rounded-full px-2.5 py-1 text-xs font-semibold', statusColor(biz.status)]">
                     {{ statusLabels[biz.status] }}
                   </span>
                 </td>
-                <td class="px-6 py-3 text-slate-500 text-xs">
+                <td class="px-5 py-3 text-xs text-slate-500">
                   {{ new Date(biz.createdAt).toLocaleDateString('uz-UZ') }}
                 </td>
               </tr>

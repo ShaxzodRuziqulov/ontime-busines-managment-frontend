@@ -37,17 +37,18 @@ export const useBusinessStore = defineStore('business', () => {
       business.value = null
       return
     }
-    // Faqat xodim bo'lsa (biznes egasi emas), biznes yuklamaslik
-    if (authStore.isStaff && !authStore.isBusinessOwner) {
+    // Faqat xodim bo'lsa (biznesni boshqarmasa), biznes yuklamaslik
+    if (authStore.isStaff && !authStore.canManageBusiness) {
       business.value = null
       return
     }
 
     loading.value = true
     try {
-      const { data } = await businessesApi.getAll({ ownerId: authStore.user.userId })
-      business.value = data.content[0] || null
+      const { data } = await businessesApi.getMine()
+      business.value = data
     } catch (error: any) {
+      business.value = null
       console.log('Error message:', error.response?.data?.message)
     } finally {
       loading.value = false

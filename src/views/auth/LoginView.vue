@@ -34,10 +34,11 @@ async function handleLogin() {
     const data = await authStore.login(form)
     const isAdmin = data.admin || data.roles?.includes('ROLE_ADMIN')
     const isOwner = data.businessOwner || data.roles?.includes('ROLE_BUSINESS_OWNER')
+    const isManager = data.roles?.includes('ROLE_MANAGER')
     const isStaff = data.roles?.includes('ROLE_STAFF')
     if (isAdmin) {
       router.push('/admin')
-    } else if (isOwner) {
+    } else if (isOwner || isManager) {
       router.push('/')
     } else if (isStaff) {
       router.push('/staff-portal')

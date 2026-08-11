@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { Plus, Search, Trash2, Edit2, Users, ShieldCheck, Building2, ToggleLeft, ToggleRight, Download, Camera } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 import { mediaUrl } from '@/utils/media'
 import { usersApi } from '@/api/users'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -15,6 +16,7 @@ import type { User, UserCreateRequest, UserUpdateRequest } from '@/types'
 
 const toast = useToast()
 const authStore = useAuthStore()
+const router = useRouter()
 
 const users = ref<User[]>([])
 const loading = ref(true)
@@ -208,6 +210,10 @@ function roleColor(user: User) {
   return 'bg-slate-100 text-slate-600'
 }
 
+function openUser(user: User) {
+  router.push(`/admin/users/${user.id}`)
+}
+
 function exportCsv() {
   const rows = [
     ['ID', 'Login', 'Ism', 'Email', 'Telefon', 'Rol', 'Aktiv', "Ro'yxatdan o'tgan"],
@@ -326,7 +332,13 @@ onMounted(async () => {
               <tr
                 v-for="(user, index) in filtered"
                 :key="user.id"
-                :class="['hover:bg-slate-50/50 transition-colors', !user.active && 'opacity-60']"
+                :class="[
+                  'cursor-pointer transition-colors hover:bg-slate-50/80 focus-within:bg-slate-50',
+                  !user.active && 'opacity-60',
+                ]"
+                tabindex="0"
+                @click="openUser(user)"
+                @keydown.enter="openUser(user)"
               >
                 <td class="px-5 text-center py-3">{{index + 1}}</td>
                 <td class="px-5 py-3">
@@ -360,7 +372,7 @@ onMounted(async () => {
                     <button
                       v-if="!isAdmin(user)"
                       :disabled="togglingId === user.id"
-                      @click="adminConfirm = { user, wasAdmin: false }"
+                      @click.stop="adminConfirm = { user, wasAdmin: false }"
                       title="Admin qilish"
                       class="text-xs px-2 py-0.5 rounded-lg border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors disabled:opacity-40"
                     >
@@ -369,7 +381,7 @@ onMounted(async () => {
                     <button
                       v-else
                       :disabled="togglingId === user.id"
-                      @click="adminConfirm = { user, wasAdmin: true }"
+                      @click.stop="adminConfirm = { user, wasAdmin: true }"
                       title="Admin huquqini olish"
                       class="text-xs px-2 py-0.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
                     >
@@ -380,7 +392,7 @@ onMounted(async () => {
                 <td class="px-5 py-3.5 text-center">
                   <button
                     :disabled="togglingId === user.id"
-                    @click="activeConfirm = user"
+                    @click.stop="activeConfirm = user"
                     :title="user.active ? 'Bloklash' : 'Aktivlashtirish'"
                     class="inline-flex items-center justify-center transition-opacity disabled:opacity-40"
                   >
@@ -392,14 +404,14 @@ onMounted(async () => {
                   <div class="flex items-center justify-end gap-1">
                     <button
                       class="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                      @click="openEdit(user)"
+                      @click.stop="openEdit(user)"
                       title="Tahrirlash"
                     >
                       <Edit2 class="w-4 h-4" />
                     </button>
                     <button
                       class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      @click="deleteConfirm = user.id"
+                      @click.stop="deleteConfirm = user.id"
                       title="O'chirish"
                     >
                       <Trash2 class="w-4 h-4" />
