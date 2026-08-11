@@ -443,7 +443,7 @@ onMounted(async () => {
                 <th class="px-3 py-3 text-left font-medium">Telefon</th>
                 <th class="px-3 py-3 text-left font-medium">Xizmat turi</th>
                 <th class="px-3 py-3 text-left font-medium">Holat</th>
-                <th class="px-3 py-3 text-left font-medium">Trial</th>
+                <th class="px-3 py-3 text-left font-medium">Muddat</th>
                 <th class="px-3 py-3 text-left font-medium">Obuna</th>
                 <th class="px-3 py-3 text-right font-medium pr-5">Amallar</th>
               </tr>

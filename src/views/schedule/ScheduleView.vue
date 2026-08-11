@@ -396,7 +396,7 @@
               >
                 Bu kunda bo'sh vaqt yo'q
               </div>
-              <div v-else class="grid grid-cols-4 gap-1.5">
+              <div v-else class="overflow-y-auto grid grid-cols-5 max-h-60 gap-1.5">
                 <button
                     v-for="m in quickPossibleStarts"
                     :key="m"
@@ -404,7 +404,7 @@
                     :disabled="isQuickSlotDisabled(m)"
                     @click="quickForm.startMin = m"
                     :class="[
-                    'text-xs font-medium py-1.5 rounded-lg border transition-colors',
+                    'text-xs font-medium py-1.5 px-3 rounded-lg flex items-center justify-center border transition-colors',
                     quickForm.startMin === m ? 'bg-primary-600 text-white border-primary-600' :
                     isQuickSlotDisabled(m) ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' :
                     'border-slate-200 hover:border-primary-400 text-slate-600',
@@ -416,7 +416,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Mijoz ismi *</label>
+              <label class="block border-t border-gray-200 py-2 text-xs font-medium text-slate-600 mb-1">Mijoz ismi *</label>
               <input
                   v-model="quickForm.guestName"
                   type="text"

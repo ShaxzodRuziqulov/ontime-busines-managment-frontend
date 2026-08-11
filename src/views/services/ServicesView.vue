@@ -321,7 +321,7 @@ onMounted(async () => {
           <input
             v-model="form.name"
             type="text"
-            placeholder="Soch kesish"
+            placeholder="Xizmat turini kiriting"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>

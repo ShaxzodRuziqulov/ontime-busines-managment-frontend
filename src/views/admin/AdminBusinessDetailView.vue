@@ -74,7 +74,7 @@ const sortedHours = computed(() =>
 const tabs = computed(() => [
   { key: 'services', label: 'Xizmatlar', count: services.value.length, icon: Briefcase },
   { key: 'staff', label: 'Xodimlar', count: staff.value.length, icon: Users },
-  { key: 'hours', label: 'Ish soatlari', count: hours.value.length, icon: Clock },
+  { key: 'hours', label: 'Ish kunlari', count: hours.value.length, icon: Clock },
   { key: 'reviews', label: 'Sharhlar', count: reviews.value.length, icon: Star },
 ])
 

@@ -113,7 +113,7 @@ const formatDate = (iso: string) => {
               <span class="text-sm font-medium text-slate-800">{{ categoryLabel(businessStore.business.category) }}</span>
             </div>
             <div v-if="businessStore.business.trialEndDate" class="flex items-center justify-between">
-              <span class="text-sm text-slate-600">Trial tugashi</span>
+              <span class="text-sm text-slate-600">Sinov tugashi</span>
               <span class="text-sm font-medium text-slate-800">{{ formatDate(businessStore.business.trialEndDate) }}</span>
             </div>
             <div v-if="businessStore.business.subscriptionEndDate" class="flex items-center justify-between">
@@ -177,7 +177,7 @@ const formatDate = (iso: string) => {
               </label>
               <select
                 v-model="form.category"
-                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+                class="w-full px-4 py-2.5 rounded-xl text-gray-600 cursor-pointer border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
               >
                 <option v-for="category in categoryOptions" :key="category.value" :value="category.value">
                   {{ category.label }}

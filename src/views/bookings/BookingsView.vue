@@ -86,7 +86,11 @@ const possibleStarts = computed(() => {
   const service = selectedService.value
   const th = todaysHoursForBooking.value
   if (!service || !th || th.closed || !th.opensAt || !th.closesAt) return []
-  return generatePossibleStarts(toMinutes(th.opensAt), toMinutes(th.closesAt), service.durationMinutes, 30)
+  return generatePossibleStarts(toMinutes(th.opensAt),
+      toMinutes(th.closesAt),
+      service.durationMinutes,
+      15
+  )
 })
 
 function isSlotBusyForSelectedStaff(startMin: number) {
@@ -570,11 +574,11 @@ onMounted(load)
               type="button"
               @click="selectStaff(st.id)"
               :class="[
-                'px-3 py-2 rounded-xl text-xs font-medium border text-left transition-all',
+                'px-3 py-2 rounded-xl flex items-center justify-between gap-2 text-xs font-medium border text-left transition-all',
                 form.staffId === st.id ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
               ]"
             >
-              <span class="truncate">{{ personName(st) }}</span>
+              <span class="">{{ personName(st) }}</span>
               <span :class="['text-[10px] mt-0.5', form.staffId === st.id ? 'text-white/80' : 'text-slate-400']">
                 {{ slotsLoading ? '...' : (freeSlotCount(st.id) > 0 ? `${freeSlotCount(st.id)} ta bo'sh` : "To'liq band") }}
               </span>
@@ -594,7 +598,7 @@ onMounted(load)
           <p v-else-if="possibleStarts.length === 0" class="text-xs text-slate-400">
             Bu kun uchun bo'sh vaqt yo'q
           </p>
-          <div v-else class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+          <div v-else class="grid grid-cols-5 gap-1.5 shadow max-h-60 overflow-y-auto">
             <button
               v-for="start in possibleStarts"
               :key="start"

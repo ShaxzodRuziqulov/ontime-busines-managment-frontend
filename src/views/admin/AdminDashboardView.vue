@@ -76,7 +76,9 @@ const registrationChart = computed(() => {
     const d = new Date()
     d.setDate(d.getDate() - i)
     const key = d.toISOString().slice(0, 10)
-    const label = d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' })
+    const day = d.getDate().toString().padStart(2, '0')
+    const month = d.getMonth() + 1
+    const label = day + ', ' + month
     const value = users.value.filter(u => u.createdAt?.slice(0, 10) === key).length
     days.push({ label, value })
   }
@@ -89,7 +91,9 @@ const businessChart = computed(() => {
     const d = new Date()
     d.setDate(d.getDate() - i)
     const key = d.toISOString().slice(0, 10)
-    const label = d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' })
+    const day = d.getDate().toString().padStart(2, '0')
+    const month = d.getMonth() + 1
+    const label = day + ', ' + month
     const value = businesses.value.filter(b => b.createdAt?.slice(0, 10) === key).length
     days.push({ label, value })
   }

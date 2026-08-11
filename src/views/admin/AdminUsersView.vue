@@ -313,6 +313,7 @@ onMounted(async () => {
           <table class="w-full text-xs">
             <thead>
               <tr class="sticky z-30 top-0 bg-white border-b border-gray-50 shadow-sm text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
+                <th class="px-5 py-3 text-center font-medium">№</th>
                 <th class="px-5 py-3 text-left font-medium">Foydalanuvchi</th>
                 <th class="px-5 py-3 text-left font-medium">Login</th>
                 <th class="px-5 py-3 text-left font-medium">Telefon</th>
@@ -323,10 +324,11 @@ onMounted(async () => {
             </thead>
             <tbody class="divide-y">
               <tr
-                v-for="user in filtered"
+                v-for="(user, index) in filtered"
                 :key="user.id"
                 :class="['hover:bg-slate-50/50 transition-colors', !user.active && 'opacity-60']"
               >
+                <td class="px-5 text-center py-3">{{index + 1}}</td>
                 <td class="px-5 py-3">
                   <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-slate-100 flex items-center justify-center">
@@ -478,7 +480,7 @@ onMounted(async () => {
         <!-- Avatar -->
         <div class="flex items-center gap-4 pb-2 border-b border-slate-100">
           <div class="relative w-16 h-16 flex-shrink-0">
-            <img v-if="avatarPreview" :src="avatarPreview"
+            <img v-if="avatarPreview" :src="avatarPreview" alt=""
               class="w-16 h-16 rounded-full object-cover border-2 border-slate-200" />
             <div v-else class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200">
               <Users class="w-7 h-7 text-slate-400" />
@@ -551,7 +553,7 @@ onMounted(async () => {
       @close="adminConfirm = null"
     >
       <p class="text-slate-600 text-sm mb-5">
-        <template v-if="adminConfirm.wasAdmin">
+        <template v-if="adminConfirm?.wasAdmin">
           <span class="font-semibold">{{ personName(adminConfirm.user, adminConfirm.user.login) }}</span>
           foydalanuvchidan admin huquqini olmoqchisiz. Tasdiqlaysizmi?
         </template>
@@ -585,7 +587,7 @@ onMounted(async () => {
         <button class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm" @click="activeConfirm = null">Bekor</button>
         <button
           class="flex-1 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-          :class="activeConfirm.active ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'"
+          :class="activeConfirm?.active ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'"
           @click="confirmToggleActive"
         >
           {{ activeConfirm.active ? 'Bloklash' : 'Aktivlashtirish' }}

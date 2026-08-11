@@ -8,6 +8,7 @@ import { usersApi, type UserLookup } from '@/api/users'
 import { useBusinessStore } from '@/stores/business'
 import { useToast } from '@/composables/useToast'
 import { personName } from '@/utils/names'
+import { mediaUrl } from '@/utils/media'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import AppModal from '@/components/common/AppModal.vue'
@@ -502,6 +503,11 @@ onMounted(async () => {
                   : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
               ]"
             >
+              <img
+                  v-if="service.imageUrl"
+                  :src="mediaUrl(service.imageUrl) ?? ''"
+                  class="w-12 h-10 rounded-md" alt=""
+              >
               <input
                 v-model="form.serviceIds"
                 type="checkbox"

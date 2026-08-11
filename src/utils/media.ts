@@ -3,6 +3,6 @@ const BASE = (import.meta.env.VITE_API_BASE_URL as string || '')
 
 export function mediaUrl(path: string | null | undefined): string | null {
   if (!path) return null
-  if (path.startsWith('http')) return path
+  if (path.startsWith('https')) return path
   return BASE + path
 }

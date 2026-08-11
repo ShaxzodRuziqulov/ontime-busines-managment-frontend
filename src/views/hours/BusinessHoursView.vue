@@ -186,7 +186,7 @@ onMounted(async () => {
             class="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-32"
           />
         </div>
-        <span class="text-xs text-slate-400">barcha ish kunlariga birdek qo'llanadi</span>
+        <span class="text-xs text-slate-400 font-bold">barcha ish kunlariga birdek qo'llanadi !</span>
       </div>
 
       <!-- Kunlar ro'yxati -->
