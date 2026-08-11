@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Eye, EyeOff, Clock, Loader2, AlertCircle } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const form = reactive({ login: '', password: '' })
@@ -109,6 +110,13 @@ async function handleLogin() {
           </div>
 
           <!-- Error -->
+          <div
+            v-if="route.query.reset === 'success'"
+            class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 mb-6 text-sm"
+          >
+            Parol almashtirildi. Yangi parol bilan tizimga kiring.
+          </div>
+
           <div
             v-if="error"
             class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm"

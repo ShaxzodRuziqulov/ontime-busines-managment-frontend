@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { AlertCircle, CheckCircle2, Clock, Loader2, LockKeyhole, MailCheck } from 'lucide-vue-next'
+import { AlertCircle, CheckCircle2, Clock, Eye, EyeOff, Loader2, LockKeyhole, MailCheck } from 'lucide-vue-next'
 import { authApi } from '@/api/auth'
 
 const router = useRouter()
@@ -9,6 +9,8 @@ const step = ref<'request' | 'confirm'>('request')
 const loading = ref(false)
 const error = ref('')
 const message = ref('')
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
 const form = reactive({
   login: '',
   code: '',
@@ -27,7 +29,8 @@ async function sendCode() {
 
   loading.value = true
   try {
-    await authApi.requestPasswordReset({ login: form.login.trim() })
+    form.login = form.login.trim()
+    await authApi.requestPasswordReset({ login: form.login })
     message.value = 'Agar login mavjud bo\'lsa, emailga kod yuborildi.'
     step.value = 'confirm'
   } catch (e: any) {
@@ -35,6 +38,21 @@ async function sendCode() {
   } finally {
     loading.value = false
   }
+}
+
+function normalizeCode() {
+  form.code = form.code.replace(/\D/g, '').slice(0, 6)
+}
+
+function changeLogin() {
+  error.value = ''
+  message.value = ''
+  form.code = ''
+  form.newPassword = ''
+  form.confirmPassword = ''
+  showNewPassword.value = false
+  showConfirmPassword.value = false
+  step.value = 'request'
 }
 
 async function resetPassword() {
@@ -61,6 +79,9 @@ async function resetPassword() {
       code: form.code.trim(),
       newPassword: form.newPassword,
     })
+    form.code = ''
+    form.newPassword = ''
+    form.confirmPassword = ''
     router.push({ name: 'login', query: { reset: 'success' } })
   } catch (e: any) {
     error.value = e.response?.data?.message || 'Kod noto\'g\'ri yoki muddati o\'tgan'
@@ -135,6 +156,8 @@ async function resetPassword() {
                 type="text"
                 placeholder="loginni kiriting"
                 autocomplete="username"
+                required
+                :disabled="loading"
                 class="w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white border-slate-200 focus:ring-primary-500"
               />
             </div>
@@ -159,33 +182,65 @@ async function resetPassword() {
                 inputmode="numeric"
                 autocomplete="one-time-code"
                 maxlength="6"
+                pattern="[0-9]{6}"
                 placeholder="6 xonali kod"
+                required
+                :disabled="loading"
+                @input="normalizeCode"
                 class="w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white border-slate-200 focus:ring-primary-500"
               />
             </div>
 
             <div>
               <label for="new-password" class="block text-sm font-medium text-slate-700 mb-1.5">Yangi parol</label>
-              <input
-                id="new-password"
-                v-model="form.newPassword"
-                type="password"
-                autocomplete="new-password"
-                placeholder="Kamida 4 belgi"
-                class="w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white border-slate-200 focus:ring-primary-500"
-              />
+              <div class="relative">
+                <input
+                  id="new-password"
+                  v-model="form.newPassword"
+                  :type="showNewPassword ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  placeholder="Kamida 4 belgi"
+                  required
+                  minlength="4"
+                  :disabled="loading"
+                  class="w-full px-4 py-3 pr-12 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white border-slate-200 focus:ring-primary-500"
+                />
+                <button
+                  type="button"
+                  :aria-label="showNewPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish'"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                  @click="showNewPassword = !showNewPassword"
+                >
+                  <EyeOff v-if="showNewPassword" class="w-5 h-5" />
+                  <Eye v-else class="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div>
               <label for="confirm-password" class="block text-sm font-medium text-slate-700 mb-1.5">Parolni tasdiqlang</label>
-              <input
-                id="confirm-password"
-                v-model="form.confirmPassword"
-                type="password"
-                autocomplete="new-password"
-                placeholder="Yangi parolni qayta kiriting"
-                class="w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white border-slate-200 focus:ring-primary-500"
-              />
+              <div class="relative">
+                <input
+                  id="confirm-password"
+                  v-model="form.confirmPassword"
+                  :type="showConfirmPassword ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  placeholder="Yangi parolni qayta kiriting"
+                  required
+                  minlength="4"
+                  :disabled="loading"
+                  class="w-full px-4 py-3 pr-12 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white border-slate-200 focus:ring-primary-500"
+                />
+                <button
+                  type="button"
+                  :aria-label="showConfirmPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish'"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                  @click="showConfirmPassword = !showConfirmPassword"
+                >
+                  <EyeOff v-if="showConfirmPassword" class="w-5 h-5" />
+                  <Eye v-else class="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <button
@@ -197,9 +252,14 @@ async function resetPassword() {
               {{ loading ? 'Saqlanmoqda...' : 'Parolni almashtirish' }}
             </button>
 
-            <button type="button" class="w-full text-sm font-semibold text-primary-600 hover:text-primary-700" @click="step = 'request'">
-              Loginni o'zgartirish
-            </button>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <button type="button" :disabled="loading" class="text-sm font-semibold text-primary-600 hover:text-primary-700 disabled:opacity-60" @click="changeLogin">
+                Loginni o'zgartirish
+              </button>
+              <button type="button" :disabled="loading" class="text-sm font-semibold text-primary-600 hover:text-primary-700 disabled:opacity-60" @click="sendCode">
+                Kodni qayta yuborish
+              </button>
+            </div>
           </form>
 
           <p class="mt-6 text-center text-sm text-slate-500">
