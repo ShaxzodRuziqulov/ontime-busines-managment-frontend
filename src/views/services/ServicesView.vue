@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import {
   Plus, Scissors, Trash2, Edit2, Clock, Banknote,
-  ToggleLeft, ToggleRight, ImagePlus, X as XIcon,
+  ToggleLeft, ToggleRight, ImagePlus, X as XIcon, Briefcase
 } from 'lucide-vue-next'
 import { servicesApi } from '@/api/services'
 import { useBusinessStore } from '@/stores/business'
@@ -219,7 +219,7 @@ onMounted(async () => {
         description="Birinchi xizmatni qo'shing va mijozlar uni tanlashi mumkin bo'ladi"
       >
         <template #icon>
-          <Scissors class="w-8 h-8 text-slate-400" />
+          <Briefcase class="w-8 h-8 text-slate-400" />
         </template>
         <template #action>
           <button

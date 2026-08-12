@@ -4,11 +4,12 @@ import { ChevronLeft, ChevronRight, Plus, CalendarDays, CalendarX, User, XIcon }
 import { staffPortalApi } from '@/api/staffPortal'
 import { businessHoursApi } from '@/api/businessHours'
 import { useToast } from '@/composables/useToast'
-import { bookingStatusLabels, bookingStatusBadgeColors } from '@/utils/bookingStatus'
+import {bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions} from '@/utils/bookingStatus'
 import { todayIso, weekdayFromDate, toMinutes, minutesOfDay } from '@/utils/scheduling'
 import { personName } from '@/utils/names'
 import NewBookingModal from './NewBookingModal.vue'
-import type { StaffMember, Booking, BusinessHours } from '@/types'
+import type {StaffMember, Booking, BusinessHours, BookingStatus} from '@/types'
+import { bookingsApi } from "@/api/bookings.ts";
 
 const toast = useToast()
 
@@ -19,9 +20,10 @@ const hours = ref<BusinessHours[]>([])
 const loading = ref(true)
 const selectedDate = ref(todayIso())
 const showNewBooking = ref(false)
+const updatingId = ref<string | null>(null)
 
 const PX_PER_MIN = 2
-const SLOT_INTERVAL = 30
+const SLOT_INTERVAL = 15
 
 const dayHours = computed(() => {
   const wd = weekdayFromDate(selectedDate.value)
@@ -51,6 +53,73 @@ const dayBookings = computed(() =>
             // !['CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_BUSINESS'].includes(b.status)
   ),
 )
+
+// Ro'yxatni bir-biri bilan to'qnashuvchi klasterlarga bo'lish
+function clusterOverlaps(list: Booking[]): Booking[][] {
+  const sorted = list.slice().sort((a, b) => minutesOfDay(a.startAt) - minutesOfDay(b.startAt))
+  const clusters: Booking[][] = []
+  let current: Booking[] = []
+  let currentEnd = -Infinity
+  for (const b of sorted) {
+    const start = minutesOfDay(b.startAt)
+    if (current.length && start < currentEnd) {
+      current.push(b)
+      currentEnd = Math.max(currentEnd, minutesOfDay(b.endAt))
+    } else {
+      if (current.length) clusters.push(current)
+      current = [b]
+      currentEnd = minutesOfDay(b.endAt)
+    }
+  }
+  if (current.length) clusters.push(current)
+  return clusters
+}
+
+// Barcha bronlarni (statusidan qat'iy nazar) to'qnashsa yonma-yon taqsimlash
+function assignColumns(list: Booking[]) {
+  const result = new Map<string, { col: number; cols: number }>()
+  for (const cluster of clusterOverlaps(list)) {
+    const colEnds: number[] = []
+    const assigned: { b: Booking; col: number }[] = []
+    for (const b of cluster) {
+      const start = minutesOfDay(b.startAt)
+      let placed = false
+      for (let c = 0; c < colEnds.length; c++) {
+        if (colEnds[c] <= start) {
+          colEnds[c] = minutesOfDay(b.endAt)
+          assigned.push({ b, col: c })
+          placed = true
+          break
+        }
+      }
+      if (!placed) {
+        colEnds.push(minutesOfDay(b.endAt))
+        assigned.push({ b, col: colEnds.length - 1 })
+      }
+    }
+    const cols = colEnds.length
+    for (const { b, col } of assigned) result.set(b.id, { col, cols })
+  }
+  return result
+}
+
+const dayLayout = computed(() => {
+  const layout = assignColumns(dayBookings.value)
+  return dayBookings.value.map((b) => {
+    const { col, cols } = layout.get(b.id)!
+    const widthPct = 100 / cols
+    return {
+      booking: b,
+      style: {
+        ...blockStyle(b),
+        left: `calc(${col * widthPct}% + 2px)`,
+        width: `calc(${widthPct}% - 4px)`,
+        right: 'auto',
+        zIndex: '20',
+      },
+    }
+  })
+})
 
 function getInitials(name: string) {
   return name
@@ -127,6 +196,22 @@ async function reloadBookings() {
     bookings.value = data
   } catch {
     /* jim */
+  }
+}
+
+async function changeStatus(status: BookingStatus) {
+  if (!selectedBooking.value) return
+  const booking = selectedBooking.value
+  updatingId.value = booking.id
+  try {
+    await bookingsApi.update(booking.id, { status })
+    booking.status = status
+    toast.success('Holat yangilandi')
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Holatni yangilashda xatolik')
+  } finally {
+    updatingId.value = null
   }
 }
 
@@ -253,35 +338,39 @@ onUnmounted(() => {
       <p class="text-slate-500 text-sm">Bu kun biznes ishlamaydi</p>
     </div>
     <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm px-4">
-      <div class="relative" :style="{ height: gridHeight + 'px' }">
+      <div v-if="dayBookings.length === 0" class="text-center py-6 text-sm text-slate-400">
+        Bu kun uchun bron yo'q
+      </div>
+      <div v-else class="relative" :style="{ height: gridHeight + 'px' }">
         <div
           v-for="slot in timeSlots"
           :key="slot.label"
-          class="absolute border-t px-2.5 pt-5 border-slate-100 left-0 right-0 flex items-center gap-2"
+          class="absolute border-t px-2.5 border-slate-100 left-0 right-0 flex items-center gap-2"
           :style="{ top: slot.top + 'px' }"
         >
-          <span class="text-[11px] border-r border-slate-100 text-slate-400 w-10 flex-shrink-0 -mt-2">{{ slot.label }}</span>
+          <span class="text-[11px] flex border-r border-slate-100 text-slate-400 w-10 flex-shrink-0">{{ slot.label }}</span>
         </div>
         <div class="absolute left-12 right-0 top-0 bottom-0">
-          <div
-            v-for="booking in dayBookings"
-            :key="booking.id"
-            class="absolute left-0 border-t-2 border-gray-100 right-2 cursor-pointer rounded-lg border px-2.5 py-1.5 overflow-hidden shadow-sm"
-            :class="bookingStatusBadgeColors[booking.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'"
-            :style="blockStyle(booking)"
-            @click="selectedBooking = booking"
+          <button
+              v-for="item in dayLayout"
+              :key="item.booking.id"
+              type="button"
+              class="absolute border-t-2 border-gray-100 text-left cursor-pointer rounded-lg border px-2.5 py-1.5 overflow-hidden shadow-sm transition-all hover:z-30 hover:shadow-md"
+              :class="bookingStatusBadgeColors[item.booking.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'"
+              :style="item.style"
+              @click="selectedBooking = item.booking"
           >
-            <p class="text-xs font-semibold truncate leading-tight">
-              {{ booking.customerName || booking.guestName || 'Mijoz' }}
-            </p>
-            <p class="text-[10px] opacity-80 truncate leading-tight">
-              {{ timeLabel(booking.startAt) }}–{{ timeLabel(booking.endAt) }}
-              <span v-if="booking.offeredServiceName"> · {{ booking.offeredServiceName }}</span>
-            </p>
-          </div>
+            <span class="text-xs font-semibold truncate leading-tight">
+              {{ item.booking.customerName || item.booking.guestName || 'Mijoz' }}
+            </span>
+            <span class="text-[10px] opacity-80 truncate leading-tight">
+              {{ timeLabel(item.booking.startAt) }}–{{ timeLabel(item.booking.endAt) }}
+              <span v-if="item.booking.offeredServiceName"> · {{ item.booking.offeredServiceName }}</span>
+            </span>
+          </button>
           <div
             v-if="nowTop !== null"
-            class="absolute left-0 right-0 border-t-2 border-red-400 z-10 pointer-events-none"
+            class="absolute left-0 right-0 border-t-2 border-red-400 z-20 pointer-events-none"
             :style="{ top: nowTop + 'px' }"
           >
             <span class="absolute -left-1 -top-1 w-2 h-2 rounded-full bg-red-400"></span>
@@ -289,9 +378,6 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <div v-if="dayBookings.length === 0" class="text-center py-6 text-sm text-slate-400">
-        Bu kun uchun bron yo'q
-      </div>
     </div>
     <Teleport to="body" v-if="selectedBooking">
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -355,7 +441,7 @@ onUnmounted(() => {
               <span>Holat</span>
               <span
                   :class="['inline-block text-xs font-medium px-2.5 py-1 rounded-full',
-                  bookingStatusBadgeColors[selectedBooking.status]]"
+                  bookingStatusBadgeColors[selectedBooking?.status]]"
               >
               {{ bookingStatusLabels[selectedBooking.status] }}
               </span>
@@ -367,20 +453,20 @@ onUnmounted(() => {
               {{selectedBooking.customerNote}}
             </p>
           </div>
-<!--          <div v-if="nextBookingActions[selectedBooking.status]?.length"-->
-<!--               class="flex flex-wrap gap-2 px-5 pb-5"-->
-<!--          >-->
-<!--            <button-->
-<!--                v-for="action in nextBookingActions[selectedBooking.status]"-->
-<!--                :key="action.status"-->
-<!--                :disabled="updatingId === selectedBooking.id"-->
-<!--                @click="changeStatus(action.status)"-->
-<!--                :class="['px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50',-->
-<!--                 action.cls]"-->
-<!--            >-->
-<!--              {{ action.label }}-->
-<!--            </button>-->
-<!--          </div>-->
+          <div v-if="nextBookingActions[selectedBooking?.status]?.length"
+               class="flex flex-wrap gap-2 px-5 pb-5"
+          >
+            <button
+                v-for="action in nextBookingActions[selectedBooking?.status]"
+                :key="action.status"
+                :disabled="updatingId === selectedBooking?.id"
+                @click="changeStatus(action.status)"
+                :class="['px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50',
+                 action.cls]"
+            >
+              {{ action.label }}
+            </button>
+          </div>
         </div>
       </div>
     </Teleport>

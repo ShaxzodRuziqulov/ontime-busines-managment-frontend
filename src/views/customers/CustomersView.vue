@@ -162,7 +162,16 @@ function getColor(name: string) {
 
 function formatDate(iso: string | null) {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  const date = new Date(iso)
+
+  const hour = date.getHours().toString().padStart(2, '0')
+  const minute = date.getMinutes().toString().padStart(2, '0')
+  const time = `${hour}:${minute}`.padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear().toString().padStart(2, '0')
+  return `${year}-${month}-${day}. ${time}`
 }
 
 onMounted(load)
@@ -364,20 +373,20 @@ onMounted(load)
         </div>
 
         <label v-if="editing" class="flex items-center gap-3 cursor-pointer select-none">
-          <div
+          <span
             @click="form.active = !form.active"
             :class="[
               'relative w-11 h-6 rounded-full transition-colors',
               form.active ? 'bg-primary-600' : 'bg-slate-200',
             ]"
           >
-            <div
+            <span
               :class="[
                 'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
                 form.active ? 'translate-x-5' : '',
               ]"
             />
-          </div>
+          </span>
           <span class="text-sm font-medium text-slate-700">Faol holat</span>
         </label>
 

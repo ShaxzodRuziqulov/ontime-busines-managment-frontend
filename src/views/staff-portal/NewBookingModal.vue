@@ -32,7 +32,7 @@ const emit = defineEmits<{
 
 const toast = useToast()
 
-const SLOT_INTERVAL = 30
+const SLOT_INTERVAL = 15
 
 // ── Xizmatlar + ish soatlari ────────────────────────────────
 const services = ref<OfferedService[]>([])
@@ -288,7 +288,7 @@ onMounted(async () => {
           Bu kun biznes ishlamaydi
         </div>
         <p v-else-if="possibleStarts.length === 0" class="text-sm text-slate-400 py-2">Bu kun uchun vaqt yo'q</p>
-        <div v-else class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-44 overflow-y-auto pr-1">
+        <div v-else class="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto px-2">
           <button
             v-for="min in possibleStarts"
             :key="min"
@@ -296,7 +296,7 @@ onMounted(async () => {
             :disabled="slotDisabled(min)"
             @click="selectedStartMin = min"
             :class="[
-              'px-2 py-2 rounded-lg text-sm font-medium border transition-colors',
+              'px-2 py-1 rounded-lg text-xs font-medium border transition-colors',
               slotDisabled(min)
                 ? 'border-slate-100 text-slate-300 line-through cursor-not-allowed'
                 : selectedStartMin === min
