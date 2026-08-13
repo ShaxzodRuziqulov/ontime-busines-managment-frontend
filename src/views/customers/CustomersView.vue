@@ -336,7 +336,7 @@ onMounted(load)
           <input
             v-model="form.fullName"
             type="text"
-            placeholder="Ali Valiyev"
+            placeholder="Ism familiyani kiriting"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>

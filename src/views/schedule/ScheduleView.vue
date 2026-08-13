@@ -33,38 +33,39 @@
       <div
           class="flex flex-wrap items-center text-gray-600 text-xs font-semibold gap-1"
       >
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex text-slate-800  bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
           Mijoz
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-          <span class="text-gray-400">Bekor:</span> Mijoz
+          <span class="text-slate-400">Bekor:</span> <span class="text-slate-700">Mijoz</span>
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-red-400 rounded-full"></span>
-          <span class="text-gray-400">Bekor:</span> Xodim
+          <span class="text-slate-400">Bekor:</span><span class="text-slate-700">Xodim</span>
         </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
           Kelmadi
         </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
           Tasdiqlandi
         </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
           Jarayonda
         </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
           Bajarildi
         </div>
-        <div class="flex text-gray-600 text-sm font-medium ml-2 gap-1">
-          Jami: <span class="text-gray-800 border-b border-gray-400 inline-block"
-        >
-          {{ bookings.length }} ta navbat
+        <div class="flex text-slate-400 text-sm font-medium ml-2 gap-1">
+          Jami:
+          <span class="text-slate-700 border-b border-gray-400 inline-block"
+          >
+            {{ bookings.length }} ta navbat
         </span>
         </div>
       </div>
@@ -126,7 +127,7 @@
               <span
                   v-for="slot in timeSlots"
                   :key="slot.label"
-                  class="absolute border-t border-gray-100 pointer-events-none w-full text-[11px] px-5 py-0.5 text-slate-400"
+                  class="absolute border-t border-slate-200 pointer-events-none w-full text-[11px] px-5 py-0.5 text-slate-400"
                   :style="{ top: `${slot.top}px` }"
               >
                 {{ slot.label }}

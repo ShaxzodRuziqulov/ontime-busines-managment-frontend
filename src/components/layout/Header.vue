@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, onBeforeUnmount  } from 'vue'
 import { useRouter } from 'vue-router'
 import { Menu, LogOut, ChevronDown, User, UserCog, Search, Moon, Sun } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
@@ -49,6 +49,14 @@ function onGlobalKeydown(e: KeyboardEvent) {
   }
 }
 
+function handleOutsideClick(event: MouseEvent) {
+  const target = event.target as HTMLElement
+
+  if (!target.closest('.profile-dropdown')) {
+    dropdownOpen.value = false
+  }
+}
+
 onMounted(() => {
   const savedTheme = localStorage.getItem('ontime-theme')
   const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
@@ -56,6 +64,15 @@ onMounted(() => {
   window.addEventListener('keydown', onGlobalKeydown)
 })
 onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
+
+onMounted(() => {
+  document.addEventListener('click', handleOutsideClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
+
 </script>
 
 <template>
@@ -114,7 +131,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
       </button>
 
       <!-- User dropdown -->
-      <div class="relative">
+      <div class="relative profile-dropdown">
         <button
           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
           @click="dropdownOpen = !dropdownOpen"
