@@ -263,40 +263,41 @@ onUnmounted(() => {
     </div>
     <div class="flex flex-col-reverse sm:flex-col-reverse md:flex-col-reverse lg:flex-row sm:items-center justify-between flex-wrap lg:flex-nowrap gap-4 mb-6">
       <div
-          class="flex w-full flex-wrap items-center text-gray-600 text-xs font-semibold gap-1"
+          class="flex flex-wrap items-center text-gray-600 text-xs font-semibold gap-1"
       >
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex text-slate-800  bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
-          Klient
+          Mijoz
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-          Bekor(mijoz)
+          <span class="text-slate-400">Bekor:</span> <span class="text-slate-700">Mijoz</span>
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-red-400 rounded-full"></span>
-          Bekor(xodim)
+          <span class="text-slate-400">Bekor:</span><span class="text-slate-700">Xodim</span>
         </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
           Kelmadi
         </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-          Tasdiqlangan
+          Tasdiqlandi
         </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
           Jarayonda
         </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
+        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
           Bajarildi
         </div>
-        <div class="flex text-gray-600 text-sm font-medium ml-2 gap-1">
-          Jami: <span class="text-gray-800 border-b border-gray-400 inline-block"
-        >
-          {{ bookings.length }} ta navbat
+        <div class="flex text-slate-400 text-sm font-medium ml-2 gap-1">
+          Jami:
+          <span class="text-slate-700 border-b border-gray-400 inline-block"
+          >
+            {{ bookings.length }} ta navbat
         </span>
         </div>
       </div>
@@ -355,7 +356,7 @@ onUnmounted(() => {
               v-for="item in dayLayout"
               :key="item.booking.id"
               type="button"
-              class="absolute border-t-2 border-gray-100 text-left cursor-pointer rounded-lg border px-2.5 py-1.5 overflow-hidden shadow-sm transition-all hover:z-30 hover:shadow-md"
+              class="absolute flex gap-2 items-center justify-around border-t-2 border-gray-100 text-left cursor-pointer rounded-lg border px-2.5 py-1.5 overflow-hidden shadow-sm transition-all hover:z-30 hover:shadow-md"
               :class="bookingStatusBadgeColors[item.booking.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'"
               :style="item.style"
               @click="selectedBooking = item.booking"

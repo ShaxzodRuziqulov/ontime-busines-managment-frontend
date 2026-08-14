@@ -238,7 +238,7 @@
 
             <div
                 v-if="nowTop !== null"
-                class="absolute left-16 right-0 border-t-2 border-red-500 z-1 pointer-events-none"
+                class="absolute left-16 right-0 border-t-2 border-red-500 z-20 pointer-events-none"
                 :style="{ top: `${nowTop}px` }"
             >
               <span class="absolute -left-0.4 -top-1.5 w-3 h-3 rounded-full bg-red-500" />
@@ -311,7 +311,7 @@
               <span>Holat</span>
               <span
                   :class="['inline-block text-xs font-medium px-2.5 py-1 rounded-full',
-                  bookingStatusBadgeColors[selectedBooking.status]]"
+                  bookingStatusBadgeColors[selectedBooking?.status]]"
               >
               {{ bookingStatusLabels[selectedBooking.status] }}
               </span>
@@ -323,13 +323,13 @@
               {{selectedBooking.customerNote}}
             </p>
           </div>
-          <div v-if="nextBookingActions[selectedBooking.status]?.length"
+          <div v-if="nextBookingActions[selectedBooking?.status]?.length"
                class="flex flex-wrap gap-2 px-5 pb-5"
           >
             <button
-                v-for="action in nextBookingActions[selectedBooking.status]"
+                v-for="action in nextBookingActions[selectedBooking?.status]"
                 :key="action.status"
-                :disabled="updatingId === selectedBooking.id"
+                :disabled="updatingId === selectedBooking?.id"
                 @click="changeStatus(action.status)"
                 :class="['px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50',
                  action.cls]"
