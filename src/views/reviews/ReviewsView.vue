@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Star, MessageSquare } from 'lucide-vue-next'
+import { Star, MessageSquare, User, CalendarDays } from 'lucide-vue-next'
 import { reviewsApi } from '@/api/reviews'
 import { useBusinessStore } from '@/stores/business'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -35,7 +35,7 @@ function formatDate(iso?: string) {
   const day = date.getDate().toString().padStart(2, '0');
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2,'0');
-  return `${year}-${month}-${day}, ${time}`;
+  return `${year}-${month}-${day}, 🕒 ${time}`;
 }
 
 onMounted(async () => {
@@ -117,9 +117,16 @@ onMounted(async () => {
               <div class="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center text-sm font-semibold text-primary-700">
                 {{ (review.customerName || 'M').charAt(0).toUpperCase() }}
               </div>
-              <div>
-                <p class="text-xs font-semibold text-slate-700">{{ review.customerName || 'Mijoz' }}</p>
-                <p class="text-xs text-slate-400">{{ formatDate(review.createdAt) }}</p>
+              <div class="flex flex-col gap-1">
+                <p class="text-xs font-semibold pb-1 text-slate-700">{{ review.customerName || 'Mijoz' }}</p>
+                <p class="text-xs flex items-center gap-2 text-slate-400">
+                  <CalendarDays class="w-4 h-4"/>
+                  {{ formatDate(review.createdAt) }}
+                </p>
+                <p class="text-xs flex items-center gap-2 text-slate-400">
+                  <User class="w-4 h-4"/>
+                  {{review.staffName}}
+                </p>
               </div>
             </div>
 

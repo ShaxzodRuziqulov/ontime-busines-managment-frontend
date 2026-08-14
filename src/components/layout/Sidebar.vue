@@ -34,7 +34,7 @@ const businessNavItems = [
   { name: 'Xizmatlar', to: '/services', icon: Briefcase },
   { name: 'Xodimlar', to: '/staff', icon: Users },
   { name: 'Mijozlar', to: '/customers', icon: UserRound },
-  { name: 'Ish soatlari', to: '/hours', icon: AlarmClock },
+  { name: 'Ish vaqti', to: '/hours', icon: AlarmClock },
   { name: 'Biznesim', to: '/business', icon: Building2 },
   { name: 'Sharhlar', to: '/reviews', icon: Star },
 ]
