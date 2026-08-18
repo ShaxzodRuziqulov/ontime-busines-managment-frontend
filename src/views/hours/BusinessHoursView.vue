@@ -213,7 +213,7 @@ onMounted(async () => {
           :class="[
               'flex flex-col sm:flex-row sm:items-center border transition-colors gap-3 px-5 py-4',
               isInvalid(day.weekday) ? 'bg-red-50/40' : '',
-              isToday(day.weekday) ? 'border-red-300' : '',
+              isToday(day.weekday) ? 'border-red-300' : 'border-slate-200 border-transparent',
             ]"
         >
           <div class="flex items-center gap-3 sm:w-44 flex-shrink-0">
