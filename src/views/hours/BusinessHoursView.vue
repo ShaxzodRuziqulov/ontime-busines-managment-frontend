@@ -60,6 +60,22 @@ function isInvalid(weekday: Weekday) {
   return !d.closed && d.opensAt >= d.closesAt
 }
 
+const isToday = (weekday: Weekday) => {
+  const today = new Date().getDay()
+
+  const weekdayMap: Record<Weekday, number> = {
+    SUNDAY: 0,
+    MONDAY: 1,
+    TUESDAY: 2,
+    WEDNESDAY: 3,
+    THURSDAY: 4,
+    FRIDAY: 5,
+    SATURDAY: 6,
+  }
+
+  return weekdayMap[weekday] === today
+}
+
 const dirtyCount = computed(() => DAYS.filter((d) => isDirty(d.weekday)).length)
 const anyInvalid = computed(() => DAYS.some((d) => isInvalid(d.weekday)))
 
@@ -190,28 +206,32 @@ onMounted(async () => {
       </div>
 
       <!-- Kunlar ro'yxati -->
-      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-100">
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm">
         <div
           v-for="day in DAYS"
           :key="day.weekday"
-          :class="['flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4', isInvalid(day.weekday) ? 'bg-red-50/40' : '']"
+          :class="[
+              'flex flex-col sm:flex-row sm:items-center border transition-colors gap-3 px-5 py-4',
+              isInvalid(day.weekday) ? 'bg-red-50/40' : '',
+              isToday(day.weekday) ? 'border-red-300' : '',
+            ]"
         >
           <div class="flex items-center gap-3 sm:w-44 flex-shrink-0">
             <label class="flex items-center gap-2 cursor-pointer select-none">
-              <div
+              <span
                 @click="days[day.weekday].closed = !days[day.weekday].closed"
                 :class="[
                   'relative w-10 h-5 rounded-full transition-colors',
                   !days[day.weekday].closed ? 'bg-primary-600' : 'bg-slate-200',
                 ]"
               >
-                <div
+                <span
                   :class="[
                     'absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform',
                     !days[day.weekday].closed ? 'translate-x-5' : '',
                   ]"
                 />
-              </div>
+              </span>
               <span class="text-sm font-medium text-slate-700">{{ day.label }}</span>
             </label>
             <span v-if="isDirty(day.weekday)" class="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" title="Saqlanmagan o'zgarish" />
