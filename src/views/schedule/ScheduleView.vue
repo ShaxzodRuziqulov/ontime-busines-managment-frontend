@@ -33,39 +33,28 @@
       <div
           class="flex flex-wrap items-center text-gray-600 text-xs font-semibold gap-1"
       >
-        <div class="flex text-slate-800  bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
-          Mijoz
-        </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-          <span class="text-slate-400">Bekor:</span> <span class="text-slate-700">Mijoz</span>
-        </div>
-        <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2 h-2 bg-red-400 rounded-full"></span>
-          <span class="text-slate-400">Bekor:</span><span class="text-slate-700">Xodim</span>
-        </div>
-        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
-          Kelmadi
-        </div>
-        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-          Tasdiqlandi
-        </div>
-        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
-          Jarayonda
-        </div>
-        <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
-          <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-          Bajarildi
-        </div>
+        <button
+            v-for="tab in filteredButtons"
+            :key="tab.value"
+            type="button"
+            @click="setActiveTab(tab.value)"
+            :class="activeFilter === tab.value ? tab.color : 'bg-white'"
+            class="flex border border-gray-200 transition-all duration-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1"
+        >
+          <span
+              v-if="tab.activeColor"
+              :class="[
+              tab.value === 'all' ? '' : tab.activeColor
+              ]" class="w-2 h-2 rounded-full"
+          >
+          </span>
+          {{tab.label}}
+        </button>
         <div class="flex text-slate-400 text-sm font-medium ml-2 gap-1">
           Jami:
           <span class="text-slate-700 border-b border-gray-400 inline-block"
           >
-            {{ bookings.length }} ta navbat
+            {{ filteredBookings.length }} ta navbat
         </span>
         </div>
       </div>
@@ -632,7 +621,13 @@ const bookingsByStaff = computed(() => {
 })
 
 function bookingsForColumn(staffId: string | null) {
-  return bookingsByStaff.value.get(staffId) ?? []
+  const list = bookingsByStaff.value.get(staffId) ?? []
+
+  if (activeFilter.value === 'all') {
+    return list
+  }
+
+  return list.filter((booking) => booking.status === activeFilter.value )
 }
 
 // Muammoli holatlar: bekor va kelmadi — enum nomlarini o'z faylingizga moslang
@@ -701,6 +696,35 @@ function assignColumns(list: Booking[]) {
   }
   return result
 }
+
+type Tabs = 'all' | 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED_BY_BUSINESS' | 'CANCELLED_BY_CUSTOMER' | 'NO_SHOW';
+
+const activeFilter =ref<Tabs>('all')
+
+const filteredButtons: {label: string; value: Tabs; activeColor?: string; color?: string; }[] = [
+  {label: 'Hammasi', value: 'all', color: 'bg-gray-600 text-white border-gray-200'},
+  {label: 'Mijoz', value: 'PENDING', activeColor: 'bg-amber-500', color: 'bg-amber-100 text-gray-600 border-amber-200'},
+  {label: 'Bekor(Mijoz)', value: 'CANCELLED_BY_CUSTOMER', activeColor: 'bg-red-500', color: 'bg-red-200 text-gray-600 border-red-500'},
+  {label: 'Bekor(Xodim)', value: 'CANCELLED_BY_BUSINESS', activeColor: 'bg-red-400', color: 'bg-red-100 text-gray-600 border-red-400'},
+  {label: 'Kelmadi', value: 'NO_SHOW', activeColor: 'bg-gray-400', color: 'bg-gray-100 text-gray-600 border-gray-500'},
+  {label: 'Tasdiqlandi', value: 'CONFIRMED', activeColor: 'bg-blue-400', color: 'bg-gray-100 text-gray-600 border-blue-500'},
+  {label: 'Jarayonda', value: 'IN_PROGRESS', activeColor: 'bg-indigo-500', color: 'bg-indigo-100 text-gray-600 border-indigo-500'},
+  {label: 'Bajarildi', value: 'COMPLETED', activeColor: 'bg-emerald-500', color: 'bg-emerald-100 text-gray-600 border-emerald-500' },
+]
+
+const setActiveTab = (tab: Tabs) => {
+  activeFilter.value = tab
+}
+
+const filteredBookings = computed(() => {
+  if (activeFilter.value === 'all') {
+    return bookings.value;
+  }
+
+  return bookings.value.filter(
+      (booking) => booking.status === activeFilter.value
+  )
+})
 
 type LayoutItem =
     | { kind: 'single'; booking: Booking; style: Record<string, string> }
