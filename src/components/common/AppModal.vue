@@ -1,14 +1,3 @@
-<script setup lang="ts">
-import { X } from 'lucide-vue-next'
-
-defineProps<{
-  title: string
-  size?: 'sm' | 'md' | 'lg'
-}>()
-
-defineEmits<{ close: [] }>()
-</script>
-
 <template>
   <Teleport to="body">
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -39,3 +28,14 @@ defineEmits<{ close: [] }>()
     </div>
   </Teleport>
 </template>
+
+<script setup lang="ts">
+import { X } from 'lucide-vue-next'
+
+defineProps<{
+  title: string
+  size?: 'sm' | 'md' | 'lg'
+}>()
+
+defineEmits<{ close: [] }>()
+</script>

@@ -1,112 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import {
-  CalendarCheck,
-  Star,
-  CheckCircle2,
-  Clock,
-  User,
-  Briefcase,
-  TrendingUp,
-  Plus,
-} from 'lucide-vue-next'
-import { staffPortalApi } from '@/api/staffPortal'
-import { bookingsApi } from '@/api/bookings'
-import { useToast } from '@/composables/useToast'
-import { bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions } from '@/utils/bookingStatus'
-import { todayIso } from '@/utils/scheduling'
-import { personName } from '@/utils/names'
-import NewBookingModal from './NewBookingModal.vue'
-import type { StaffMember, Booking, BookingStatus, StaffStats } from '@/types'
-
-const toast = useToast()
-
-const profile = ref<StaffMember | null>(null)
-const bookings = ref<Booking[]>([])
-const stats = ref<StaffStats | null>(null)
-const loading = ref(true)
-const activeTab = ref<'overview' | 'bookings'>('overview')
-const updatingId = ref<string | null>(null)
-const showNewBooking = ref(false)
-
-const nextActions = nextBookingActions
-
-async function onBookingCreated() {
-  try {
-    const [bookingsRes, statsRes] = await Promise.all([
-      staffPortalApi.myBookings(),
-      staffPortalApi.myStats(),
-    ])
-    bookings.value = bookingsRes.data
-    stats.value = statsRes.data
-  } catch {
-    // yangilash muvaffaqiyatsiz bo'lsa — jim, bron baribir yaratilgan
-  }
-}
-
-async function changeStatus(booking: Booking, status: BookingStatus) {
-  updatingId.value = booking.id
-  try {
-    await bookingsApi.update(booking.id, { status })
-    booking.status = status
-    toast.success('Holat yangilandi')
-  } catch (e) {
-    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Holatni yangilashda xatolik')
-  } finally {
-    updatingId.value = null
-  }
-}
-
-const upcomingBookings = computed(() =>
-  bookings.value
-    .filter((b) => ['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(b.status))
-    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()),
-)
-
-function isToday(iso: string) {
-  return iso.slice(0, 10) === todayIso()
-}
-
-const recentBookings = computed(() =>
-  bookings.value
-    .filter((b) => ['COMPLETED', 'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_BUSINESS', 'NO_SHOW'].includes(b.status))
-    .slice(0, 10),
-)
-
-const formatDate = (dateString: string) => {
-
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return '';
-
-  const day = date.getDate().toString().padStart(2, '0');
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2,'0');
-  return `${year}-${month}-${day}, ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-};
-
-function renderStars(avg: number) {
-  return Math.round(avg)
-}
-
-onMounted(async () => {
-  try {
-    const [profileRes, bookingsRes, statsRes] = await Promise.allSettled([
-      staffPortalApi.myProfile(),
-      staffPortalApi.myBookings(),
-      staffPortalApi.myStats(),
-    ])
-    if (profileRes.status === 'fulfilled') profile.value = profileRes.value.data
-    if (bookingsRes.status === 'fulfilled') bookings.value = bookingsRes.value.data
-    if (statsRes.status === 'fulfilled') stats.value = statsRes.value.data
-  } catch {
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
-  } finally {
-    loading.value = false
-  }
-})
-</script>
-
 <template>
   <div class="space-y-6">
     <!-- Header -->
@@ -359,3 +250,112 @@ onMounted(async () => {
     </template>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import {
+  CalendarCheck,
+  Star,
+  CheckCircle2,
+  Clock,
+  User,
+  Briefcase,
+  TrendingUp,
+  Plus,
+} from 'lucide-vue-next'
+import { staffPortalApi } from '@/api/staffPortal'
+import { bookingsApi } from '@/api/bookings'
+import { useToast } from '@/composables/useToast'
+import { bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions } from '@/utils/bookingStatus'
+import { todayIso } from '@/utils/scheduling'
+import { personName } from '@/utils/names'
+import NewBookingModal from './NewBookingModal.vue'
+import type { StaffMember, Booking, BookingStatus, StaffStats } from '@/types'
+
+const toast = useToast()
+
+const profile = ref<StaffMember | null>(null)
+const bookings = ref<Booking[]>([])
+const stats = ref<StaffStats | null>(null)
+const loading = ref(true)
+const activeTab = ref<'overview' | 'bookings'>('overview')
+const updatingId = ref<string | null>(null)
+const showNewBooking = ref(false)
+
+const nextActions = nextBookingActions
+
+async function onBookingCreated() {
+  try {
+    const [bookingsRes, statsRes] = await Promise.all([
+      staffPortalApi.myBookings(),
+      staffPortalApi.myStats(),
+    ])
+    bookings.value = bookingsRes.data
+    stats.value = statsRes.data
+  } catch {
+    // yangilash muvaffaqiyatsiz bo'lsa — jim, bron baribir yaratilgan
+  }
+}
+
+async function changeStatus(booking: Booking, status: BookingStatus) {
+  updatingId.value = booking.id
+  try {
+    await bookingsApi.update(booking.id, { status })
+    booking.status = status
+    toast.success('Holat yangilandi')
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Holatni yangilashda xatolik')
+  } finally {
+    updatingId.value = null
+  }
+}
+
+const upcomingBookings = computed(() =>
+    bookings.value
+        .filter((b) => ['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(b.status))
+        .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()),
+)
+
+function isToday(iso: string) {
+  return iso.slice(0, 10) === todayIso()
+}
+
+const recentBookings = computed(() =>
+    bookings.value
+        .filter((b) => ['COMPLETED', 'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_BUSINESS', 'NO_SHOW'].includes(b.status))
+        .slice(0, 10),
+)
+
+const formatDate = (dateString: string) => {
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2,'0');
+  return `${year}-${month}-${day}, ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+};
+
+function renderStars(avg: number) {
+  return Math.round(avg)
+}
+
+onMounted(async () => {
+  try {
+    const [profileRes, bookingsRes, statsRes] = await Promise.allSettled([
+      staffPortalApi.myProfile(),
+      staffPortalApi.myBookings(),
+      staffPortalApi.myStats(),
+    ])
+    if (profileRes.status === 'fulfilled') profile.value = profileRes.value.data
+    if (bookingsRes.status === 'fulfilled') bookings.value = bookingsRes.value.data
+    if (statsRes.status === 'fulfilled') stats.value = statsRes.value.data
+  } catch {
+    toast.error('Ma\'lumotlarni yuklashda xatolik')
+  } finally {
+    loading.value = false
+  }
+})
+</script>

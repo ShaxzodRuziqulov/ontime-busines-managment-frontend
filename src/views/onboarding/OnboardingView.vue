@@ -1,89 +1,3 @@
-<script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { Building2, Clock, Loader2, AlertCircle, CheckCircle2, MapPin, Phone, FileText, Info, Tag } from 'lucide-vue-next'
-import { businessesApi } from '@/api/businesses'
-import { useAuthStore } from '@/stores/auth'
-import type { BusinessCategory } from '@/types'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-const form = reactive({
-  name: '',
-  category: 'OTHER' as BusinessCategory,
-  description: '',
-  phone: '',
-  address: '',
-  city: '',
-})
-
-const categoryOptions: { value: BusinessCategory; label: string }[] = [
-  { value: 'BARBER', label: 'Sartarosh' },
-  { value: 'BEAUTY', label: "Go'zallik" },
-  { value: 'MEDICAL', label: 'Tibbiyot' },
-  { value: 'REPAIR', label: "Ta'mirlash" },
-  { value: 'CONSULTING', label: 'Konsultatsiya' },
-  { value: 'EDUCATION', label: "Ta'lim" },
-  { value: 'FITNESS', label: 'Sport' },
-  { value: 'AUTO', label: 'Avto xizmat' },
-  { value: 'LEGAL', label: 'Yuridik xizmat' },
-  { value: 'OTHER', label: 'Boshqa' },
-]
-
-const loading = ref(false)
-const error = ref('')
-const step = ref<'form' | 'relogin' | 'done'>('form')
-
-function logoutAndWait() {
-  authStore.logout()
-  router.push('/login')
-}
-
-async function handleCreate() {
-  if (!form.name.trim()) {
-    error.value = 'Biznes nomi kiritilishi shart'
-    return
-  }
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    await businessesApi.create({
-      ownerId: authStore.user?.userId,
-      name: form.name,
-      category: form.category,
-      description: form.description || undefined,
-      contactPhone: form.phone || undefined,
-      addressLine: form.address || undefined,
-      city: form.city || undefined,
-    })
-
-    step.value = 'relogin'
-
-    // Yangi token olish (businessOwner: true)
-    if (authStore.hasPendingCredentials) {
-      await authStore.relogin()
-      step.value = 'done'
-      setTimeout(() => router.push('/'), 1200)
-    } else {
-      // Sahifa yangilanib kelgan bo'lsa credentials yo'q — login sahifasiga yo'naltir
-      step.value = 'done'
-      setTimeout(() => {
-        authStore.logout()
-        router.push('/login')
-      }, 2000)
-    }
-  } catch (e: any) {
-    error.value = e.response?.data?.message || 'Biznes yaratishda xatolik yuz berdi'
-    step.value = 'form'
-  } finally {
-    loading.value = false
-  }
-}
-</script>
-
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
     <div class="w-full max-w-lg">
@@ -297,3 +211,89 @@ async function handleCreate() {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { Building2, Clock, Loader2, AlertCircle, CheckCircle2, MapPin, Phone, FileText, Info, Tag } from 'lucide-vue-next'
+import { businessesApi } from '@/api/businesses'
+import { useAuthStore } from '@/stores/auth'
+import type { BusinessCategory } from '@/types'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+const form = reactive({
+  name: '',
+  category: 'OTHER' as BusinessCategory,
+  description: '',
+  phone: '',
+  address: '',
+  city: '',
+})
+
+const categoryOptions: { value: BusinessCategory; label: string }[] = [
+  { value: 'BARBER', label: 'Sartarosh' },
+  { value: 'BEAUTY', label: "Go'zallik" },
+  { value: 'MEDICAL', label: 'Tibbiyot' },
+  { value: 'REPAIR', label: "Ta'mirlash" },
+  { value: 'CONSULTING', label: 'Konsultatsiya' },
+  { value: 'EDUCATION', label: "Ta'lim" },
+  { value: 'FITNESS', label: 'Sport' },
+  { value: 'AUTO', label: 'Avto xizmat' },
+  { value: 'LEGAL', label: 'Yuridik xizmat' },
+  { value: 'OTHER', label: 'Boshqa' },
+]
+
+const loading = ref(false)
+const error = ref('')
+const step = ref<'form' | 'relogin' | 'done'>('form')
+
+function logoutAndWait() {
+  authStore.logout()
+  router.push('/login')
+}
+
+async function handleCreate() {
+  if (!form.name.trim()) {
+    error.value = 'Biznes nomi kiritilishi shart'
+    return
+  }
+
+  loading.value = true
+  error.value = ''
+
+  try {
+    await businessesApi.create({
+      ownerId: authStore.user?.userId,
+      name: form.name,
+      category: form.category,
+      description: form.description || undefined,
+      contactPhone: form.phone || undefined,
+      addressLine: form.address || undefined,
+      city: form.city || undefined,
+    })
+
+    step.value = 'relogin'
+
+    // Yangi token olish (businessOwner: true)
+    if (authStore.hasPendingCredentials) {
+      await authStore.relogin()
+      step.value = 'done'
+      setTimeout(() => router.push('/'), 1200)
+    } else {
+      // Sahifa yangilanib kelgan bo'lsa credentials yo'q — login sahifasiga yo'naltir
+      step.value = 'done'
+      setTimeout(() => {
+        authStore.logout()
+        router.push('/login')
+      }, 2000)
+    }
+  } catch (e: any) {
+    error.value = e.response?.data?.message || 'Biznes yaratishda xatolik yuz berdi'
+    step.value = 'form'
+  } finally {
+    loading.value = false
+  }
+}
+</script>

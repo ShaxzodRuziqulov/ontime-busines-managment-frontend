@@ -1,203 +1,3 @@
-<script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { Search, CheckCircle2, UserPlus, Loader2, CalendarX } from 'lucide-vue-next'
-import AppModal from '@/components/common/AppModal.vue'
-import { servicesApi } from '@/api/services'
-import { businessHoursApi } from '@/api/businessHours'
-import { usersApi, type UserLookup } from '@/api/users'
-import { bookingsApi } from '@/api/bookings'
-import { useToast } from '@/composables/useToast'
-import {
-  todayIso,
-  weekdayFromDate,
-  toMinutes,
-  isStaffBusy,
-  generatePossibleStarts,
-  minutesToLabel,
-} from '@/utils/scheduling'
-import { personName } from '@/utils/names'
-import type { OfferedService, Booking, BusinessHours } from '@/types'
-
-const props = defineProps<{
-  businessId: string
-  staffId: string
-  bookings: Booking[]
-  initialDate?: string
-}>()
-
-const emit = defineEmits<{
-  close: []
-  created: [booking: Booking]
-}>()
-
-const toast = useToast()
-
-const SLOT_INTERVAL = 15
-
-// ── Xizmatlar + ish soatlari ────────────────────────────────
-const services = ref<OfferedService[]>([])
-const hours = ref<BusinessHours[]>([])
-const serviceId = ref<string>('')
-const selectedService = computed(() => services.value.find((s) => s.id === serviceId.value) ?? null)
-
-// ── Mijoz (telefon orqali aniqlash) ─────────────────────────
-const phone = ref('')
-const guestName = ref('')
-const matched = ref<UserLookup | null>(null)
-const candidates = ref<UserLookup[]>([])
-const searching = ref(false)
-
-const phoneDigits = computed(() => phone.value.replace(/\D/g, ''))
-
-async function searchPhone() {
-  matched.value = null
-  candidates.value = []
-  if (phoneDigits.value.length < 7) return
-  searching.value = true
-  try {
-    const { data } = await usersApi.lookupByPhone(phone.value)
-    if (data.length === 1) selectCustomer(data[0])
-    else if (data.length > 1) candidates.value = data
-    // 0 ta → mehmon: guestName qo'lda kiritiladi
-  } catch {
-    // qidiruv xatosi bron qilishga to'sqinlik qilmasin
-  } finally {
-    searching.value = false
-  }
-}
-
-function selectCustomer(u: UserLookup) {
-  matched.value = u
-  candidates.value = []
-  guestName.value = personName(u, u.login)
-}
-
-function resetCustomer() {
-  matched.value = null
-  candidates.value = []
-}
-
-// ── Sana + bo'sh vaqt slotlari ──────────────────────────────
-const date = ref(props.initialDate && props.initialDate >= todayIso() ? props.initialDate : todayIso())
-const selectedStartMin = ref<number | null>(null)
-
-// Toshkent vaqti bo'yicha hozirgi sana va daqiqa (o'tib ketgan slotlarni bloklash uchun)
-function tashkentNow(): { dateIso: string; minutes: number } {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Tashkent',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  }).formatToParts(new Date())
-  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '00'
-  return { dateIso: `${get('year')}-${get('month')}-${get('day')}`, minutes: Number(get('hour')) * 60 + Number(get('minute')) }
-}
-const now = tashkentNow()
-
-// Bugungi kun uchun hozirgi vaqtdan oldingi slot o'tib ketgan
-function slotPast(startMin: number): boolean {
-  return date.value === now.dateIso && startMin <= now.minutes
-}
-
-const dayHours = computed(() => {
-  const wd = weekdayFromDate(date.value)
-  return hours.value.find((h) => h.weekday === wd) ?? null
-})
-
-const dayClosed = computed(() => dayHours.value?.closed === true)
-
-// Tanlangan sanadagi shu xodimning bronlari (band vaqtlarni aniqlash uchun)
-const bookingsOnDate = computed(() =>
-  props.bookings.filter((b) => b.staffId === props.staffId && b.startAt.slice(0, 10) === date.value),
-)
-
-const possibleStarts = computed(() => {
-  const s = selectedService.value
-  const h = dayHours.value
-  if (!s) return []
-  const openMin = h?.opensAt ? toMinutes(h.opensAt) : 9 * 60
-  const closeMin = h?.closesAt ? toMinutes(h.closesAt) : 18 * 60
-  if (dayClosed.value) return []
-  return generatePossibleStarts(openMin, closeMin, s.durationMinutes, SLOT_INTERVAL)
-})
-
-function slotBusy(startMin: number): boolean {
-  const s = selectedService.value
-  if (!s) return false
-  return isStaffBusy(bookingsOnDate.value, props.staffId, startMin, startMin + s.durationMinutes)
-}
-
-// Slot band yoki o'tib ketgan bo'lsa — tanlab bo'lmaydi
-function slotDisabled(startMin: number): boolean {
-  return slotBusy(startMin) || slotPast(startMin)
-}
-
-// Sana yoki xizmat o'zgarsa, tanlangan slot endi mos kelmasligi mumkin — tozalaymiz
-watch([date, serviceId], () => {
-  selectedStartMin.value = null
-})
-
-// ── Yuborish ────────────────────────────────────────────────
-const note = ref('')
-const saving = ref(false)
-
-// O'zbekiston UTC+5 (DST yo'q) — tanlangan mahalliy vaqtni aniq instantga aylantiramiz
-function toInstant(d: string, minutes: number): string {
-  return new Date(`${d}T${minutesToLabel(minutes)}:00+05:00`).toISOString()
-}
-
-const canSubmit = computed(() =>
-  !!serviceId.value &&
-  selectedStartMin.value !== null &&
-  (!!matched.value || guestName.value.trim().length > 0),
-)
-
-async function submit() {
-  if (!canSubmit.value || !selectedService.value || selectedStartMin.value === null) return
-  saving.value = true
-  try {
-    const startAt = toInstant(date.value, selectedStartMin.value)
-    const endAt = new Date(
-      new Date(startAt).getTime() + selectedService.value.durationMinutes * 60_000,
-    ).toISOString()
-
-    const { data } = await bookingsApi.create({
-      businessId: props.businessId,
-      offeredServiceId: serviceId.value,
-      staffId: props.staffId,
-      startAt,
-      endAt,
-      customerNote: note.value.trim() || undefined,
-      ...(matched.value
-        ? { customerId: matched.value.id }
-        : { guestName: guestName.value.trim(), guestPhone: phone.value.trim() || undefined }),
-    })
-
-    toast.success('Bron yaratildi')
-    emit('created', data)
-    emit('close')
-  } catch (e) {
-    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Bron yaratishda xatolik')
-  } finally {
-    saving.value = false
-  }
-}
-
-onMounted(async () => {
-  try {
-    const [servicesRes, hoursRes] = await Promise.all([
-      servicesApi.getAll(props.businessId),
-      businessHoursApi.getAll(props.businessId),
-    ])
-    services.value = servicesRes.data.filter((s) => s.active)
-    hours.value = hoursRes.data
-    if (services.value.length === 1) serviceId.value = services.value[0].id
-  } catch {
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
-  }
-})
-</script>
-
 <template>
   <AppModal title="Yangi bron" size="md" @close="emit('close')">
     <div class="space-y-4 text-gray-600">
@@ -338,3 +138,203 @@ onMounted(async () => {
     </div>
   </AppModal>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { Search, CheckCircle2, UserPlus, Loader2, CalendarX } from 'lucide-vue-next'
+import AppModal from '@/components/common/AppModal.vue'
+import { servicesApi } from '@/api/services'
+import { businessHoursApi } from '@/api/businessHours'
+import { usersApi, type UserLookup } from '@/api/users'
+import { bookingsApi } from '@/api/bookings'
+import { useToast } from '@/composables/useToast'
+import {
+  todayIso,
+  weekdayFromDate,
+  toMinutes,
+  isStaffBusy,
+  generatePossibleStarts,
+  minutesToLabel,
+} from '@/utils/scheduling'
+import { personName } from '@/utils/names'
+import type { OfferedService, Booking, BusinessHours } from '@/types'
+
+const props = defineProps<{
+  businessId: string
+  staffId: string
+  bookings: Booking[]
+  initialDate?: string
+}>()
+
+const emit = defineEmits<{
+  close: []
+  created: [booking: Booking]
+}>()
+
+const toast = useToast()
+
+const SLOT_INTERVAL = 15
+
+// ── Xizmatlar + ish soatlari ────────────────────────────────
+const services = ref<OfferedService[]>([])
+const hours = ref<BusinessHours[]>([])
+const serviceId = ref<string>('')
+const selectedService = computed(() => services.value.find((s) => s.id === serviceId.value) ?? null)
+
+// ── Mijoz (telefon orqali aniqlash) ─────────────────────────
+const phone = ref('')
+const guestName = ref('')
+const matched = ref<UserLookup | null>(null)
+const candidates = ref<UserLookup[]>([])
+const searching = ref(false)
+
+const phoneDigits = computed(() => phone.value.replace(/\D/g, ''))
+
+async function searchPhone() {
+  matched.value = null
+  candidates.value = []
+  if (phoneDigits.value.length < 7) return
+  searching.value = true
+  try {
+    const { data } = await usersApi.lookupByPhone(phone.value)
+    if (data.length === 1) selectCustomer(data[0])
+    else if (data.length > 1) candidates.value = data
+    // 0 ta → mehmon: guestName qo'lda kiritiladi
+  } catch {
+    // qidiruv xatosi bron qilishga to'sqinlik qilmasin
+  } finally {
+    searching.value = false
+  }
+}
+
+function selectCustomer(u: UserLookup) {
+  matched.value = u
+  candidates.value = []
+  guestName.value = personName(u, u.login)
+}
+
+function resetCustomer() {
+  matched.value = null
+  candidates.value = []
+}
+
+// ── Sana + bo'sh vaqt slotlari ──────────────────────────────
+const date = ref(props.initialDate && props.initialDate >= todayIso() ? props.initialDate : todayIso())
+const selectedStartMin = ref<number | null>(null)
+
+// Toshkent vaqti bo'yicha hozirgi sana va daqiqa (o'tib ketgan slotlarni bloklash uchun)
+function tashkentNow(): { dateIso: string; minutes: number } {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tashkent',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(new Date())
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '00'
+  return { dateIso: `${get('year')}-${get('month')}-${get('day')}`, minutes: Number(get('hour')) * 60 + Number(get('minute')) }
+}
+const now = tashkentNow()
+
+// Bugungi kun uchun hozirgi vaqtdan oldingi slot o'tib ketgan
+function slotPast(startMin: number): boolean {
+  return date.value === now.dateIso && startMin <= now.minutes
+}
+
+const dayHours = computed(() => {
+  const wd = weekdayFromDate(date.value)
+  return hours.value.find((h) => h.weekday === wd) ?? null
+})
+
+const dayClosed = computed(() => dayHours.value?.closed === true)
+
+// Tanlangan sanadagi shu xodimning bronlari (band vaqtlarni aniqlash uchun)
+const bookingsOnDate = computed(() =>
+    props.bookings.filter((b) => b.staffId === props.staffId && b.startAt.slice(0, 10) === date.value),
+)
+
+const possibleStarts = computed(() => {
+  const s = selectedService.value
+  const h = dayHours.value
+  if (!s) return []
+  const openMin = h?.opensAt ? toMinutes(h.opensAt) : 9 * 60
+  const closeMin = h?.closesAt ? toMinutes(h.closesAt) : 18 * 60
+  if (dayClosed.value) return []
+  return generatePossibleStarts(openMin, closeMin, s.durationMinutes, SLOT_INTERVAL)
+})
+
+function slotBusy(startMin: number): boolean {
+  const s = selectedService.value
+  if (!s) return false
+  return isStaffBusy(bookingsOnDate.value, props.staffId, startMin, startMin + s.durationMinutes)
+}
+
+// Slot band yoki o'tib ketgan bo'lsa — tanlab bo'lmaydi
+function slotDisabled(startMin: number): boolean {
+  return slotBusy(startMin) || slotPast(startMin)
+}
+
+// Sana yoki xizmat o'zgarsa, tanlangan slot endi mos kelmasligi mumkin — tozalaymiz
+watch([date, serviceId], () => {
+  selectedStartMin.value = null
+})
+
+// ── Yuborish ────────────────────────────────────────────────
+const note = ref('')
+const saving = ref(false)
+
+// O'zbekiston UTC+5 (DST yo'q) — tanlangan mahalliy vaqtni aniq instantga aylantiramiz
+function toInstant(d: string, minutes: number): string {
+  return new Date(`${d}T${minutesToLabel(minutes)}:00+05:00`).toISOString()
+}
+
+const canSubmit = computed(() =>
+    !!serviceId.value &&
+    selectedStartMin.value !== null &&
+    (!!matched.value || guestName.value.trim().length > 0),
+)
+
+async function submit() {
+  if (!canSubmit.value || !selectedService.value || selectedStartMin.value === null) return
+  saving.value = true
+  try {
+    const startAt = toInstant(date.value, selectedStartMin.value)
+    const endAt = new Date(
+        new Date(startAt).getTime() + selectedService.value.durationMinutes * 60_000,
+    ).toISOString()
+
+    const { data } = await bookingsApi.create({
+      businessId: props.businessId,
+      offeredServiceId: serviceId.value,
+      staffId: props.staffId,
+      startAt,
+      endAt,
+      customerNote: note.value.trim() || undefined,
+      ...(matched.value
+          ? { customerId: matched.value.id }
+          : { guestName: guestName.value.trim(), guestPhone: phone.value.trim() || undefined }),
+    })
+
+    toast.success('Bron yaratildi')
+    emit('created', data)
+    emit('close')
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Bron yaratishda xatolik')
+  } finally {
+    saving.value = false
+  }
+}
+
+onMounted(async () => {
+  try {
+    const [servicesRes, hoursRes] = await Promise.all([
+      servicesApi.getAll(props.businessId),
+      businessHoursApi.getAll(props.businessId),
+    ])
+    services.value = servicesRes.data.filter((s) => s.active)
+    hours.value = hoursRes.data
+    if (services.value.length === 1) serviceId.value = services.value[0].id
+  } catch {
+    toast.error('Ma\'lumotlarni yuklashda xatolik')
+  }
+})
+</script>

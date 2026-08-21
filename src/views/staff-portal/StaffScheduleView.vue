@@ -1,243 +1,3 @@
-<script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ChevronLeft, ChevronRight, Plus, CalendarDays, CalendarX, User, XIcon } from 'lucide-vue-next'
-import { staffPortalApi } from '@/api/staffPortal'
-import { businessHoursApi } from '@/api/businessHours'
-import { useToast } from '@/composables/useToast'
-import {bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions} from '@/utils/bookingStatus'
-import { todayIso, weekdayFromDate, toMinutes, minutesOfDay } from '@/utils/scheduling'
-import { personName } from '@/utils/names'
-import NewBookingModal from './NewBookingModal.vue'
-import type {StaffMember, Booking, BusinessHours, BookingStatus} from '@/types'
-import { bookingsApi } from "@/api/bookings.ts";
-
-const toast = useToast()
-
-const profile = ref<StaffMember | null>(null)
-const bookings = ref<Booking[]>([])
-const selectedBooking = ref<Booking | null>(null)
-const hours = ref<BusinessHours[]>([])
-const loading = ref(true)
-const selectedDate = ref(todayIso())
-const showNewBooking = ref(false)
-const updatingId = ref<string | null>(null)
-
-const PX_PER_MIN = 2
-const SLOT_INTERVAL = 15
-
-const dayHours = computed(() => {
-  const wd = weekdayFromDate(selectedDate.value)
-  return hours.value.find((h) => h.weekday === wd) ?? null
-})
-const dayClosed = computed(() => dayHours.value?.closed === true)
-
-const openMinutes = computed(() => (dayHours.value?.opensAt ? toMinutes(dayHours.value.opensAt) : 9 * 60))
-const closeMinutes = computed(() => (dayHours.value?.closesAt ? toMinutes(dayHours.value.closesAt) : 18 * 60))
-const gridHeight = computed(() => Math.max((closeMinutes.value - openMinutes.value) * PX_PER_MIN, 100))
-
-const timeSlots = computed(() => {
-  const slots: { label: string; top: number }[] = []
-  for (let m = openMinutes.value; m <= closeMinutes.value; m += SLOT_INTERVAL) {
-    const h = Math.floor(m / 60)
-    const mm = m % 60
-    slots.push({ label: `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`, top: (m - openMinutes.value) * PX_PER_MIN })
-  }
-  return slots
-})
-
-const dayBookings = computed(() =>
-  bookings.value.filter(
-    (b) =>
-      b.startAt.slice(0, 10) === selectedDate.value,
-            // &&
-            // !['CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_BUSINESS'].includes(b.status)
-  ),
-)
-
-// Ro'yxatni bir-biri bilan to'qnashuvchi klasterlarga bo'lish
-function clusterOverlaps(list: Booking[]): Booking[][] {
-  const sorted = list.slice().sort((a, b) => minutesOfDay(a.startAt) - minutesOfDay(b.startAt))
-  const clusters: Booking[][] = []
-  let current: Booking[] = []
-  let currentEnd = -Infinity
-  for (const b of sorted) {
-    const start = minutesOfDay(b.startAt)
-    if (current.length && start < currentEnd) {
-      current.push(b)
-      currentEnd = Math.max(currentEnd, minutesOfDay(b.endAt))
-    } else {
-      if (current.length) clusters.push(current)
-      current = [b]
-      currentEnd = minutesOfDay(b.endAt)
-    }
-  }
-  if (current.length) clusters.push(current)
-  return clusters
-}
-
-// Barcha bronlarni (statusidan qat'iy nazar) to'qnashsa yonma-yon taqsimlash
-function assignColumns(list: Booking[]) {
-  const result = new Map<string, { col: number; cols: number }>()
-  for (const cluster of clusterOverlaps(list)) {
-    const colEnds: number[] = []
-    const assigned: { b: Booking; col: number }[] = []
-    for (const b of cluster) {
-      const start = minutesOfDay(b.startAt)
-      let placed = false
-      for (let c = 0; c < colEnds.length; c++) {
-        if (colEnds[c] <= start) {
-          colEnds[c] = minutesOfDay(b.endAt)
-          assigned.push({ b, col: c })
-          placed = true
-          break
-        }
-      }
-      if (!placed) {
-        colEnds.push(minutesOfDay(b.endAt))
-        assigned.push({ b, col: colEnds.length - 1 })
-      }
-    }
-    const cols = colEnds.length
-    for (const { b, col } of assigned) result.set(b.id, { col, cols })
-  }
-  return result
-}
-
-const dayLayout = computed(() => {
-  const layout = assignColumns(dayBookings.value)
-  return dayBookings.value.map((b) => {
-    const { col, cols } = layout.get(b.id)!
-    const widthPct = 100 / cols
-    return {
-      booking: b,
-      style: {
-        ...blockStyle(b),
-        left: `calc(${col * widthPct}% + 2px)`,
-        width: `calc(${widthPct}% - 4px)`,
-        right: 'auto',
-        zIndex: '20',
-      },
-    }
-  })
-})
-
-function getInitials(name: string) {
-  return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-}
-
-const createdDate = (dateString: string) => {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return '';
-  const hour = date.getHours().toString().padStart(2, '0');
-  const time = `${hour}:${date.getMinutes().toString().padStart(2, '0')}`
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
-
-  return `${year}.${month}.${day}, ${time}`;
-}
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
-}
-
-function blockStyle(booking: Booking) {
-  const start = minutesOfDay(booking.startAt)
-  const end = minutesOfDay(booking.endAt)
-  const top = Math.max((start - openMinutes.value) * PX_PER_MIN, 0)
-  const height = Math.max((end - start) * PX_PER_MIN, 34)
-  return { top: `${top}px`, height: `${height}px` }
-}
-
-// ── Hozirgi vaqt chizig'i ───────────────────────────────────
-const nowTick = ref(Date.now())
-let nowTimer: ReturnType<typeof setInterval> | undefined
-const isToday = computed(() => selectedDate.value === todayIso())
-const nowTop = computed(() => {
-  if (!isToday.value) return null
-  const now = new Date(nowTick.value)
-  const nowMin = now.getHours() * 60 + now.getMinutes()
-  if (nowMin < openMinutes.value || nowMin > closeMinutes.value) return null
-  return (nowMin - openMinutes.value) * PX_PER_MIN
-})
-
-// ── Sana navigatsiyasi ──────────────────────────────────────
-function shiftDay(delta: number) {
-  const d = new Date(selectedDate.value + 'T00:00:00')
-  d.setDate(d.getDate() + delta)
-  selectedDate.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-const isPastDay = computed(() => selectedDate.value < todayIso())
-
-const dateLabel = () => {
-  if (!selectedDate.value) return '';
-
-  const date = new Date(selectedDate.value);
-  if (isNaN(date.getTime())) return '';
-
-  const day = date.getDate().toString().padStart(2, '0');
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2,'0');
-  return `${year}-${month}-${day}`;
-};
-
-function timeLabel(iso: string) {
-  return new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
-}
-
-async function reloadBookings() {
-  try {
-    const { data } = await staffPortalApi.myBookings()
-    bookings.value = data
-  } catch {
-    /* jim */
-  }
-}
-
-async function changeStatus(status: BookingStatus) {
-  if (!selectedBooking.value) return
-  const booking = selectedBooking.value
-  updatingId.value = booking.id
-  try {
-    await bookingsApi.update(booking.id, { status })
-    booking.status = status
-    toast.success('Holat yangilandi')
-  } catch (e) {
-    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Holatni yangilashda xatolik')
-  } finally {
-    updatingId.value = null
-  }
-}
-
-onMounted(async () => {
-  try {
-    const profileRes = await staffPortalApi.myProfile()
-    profile.value = profileRes.data
-    const [bookingsRes, hoursRes] = await Promise.all([
-      staffPortalApi.myBookings(),
-      businessHoursApi.getAll(profileRes.data.businessId),
-    ])
-    bookings.value = bookingsRes.data
-    hours.value = hoursRes.data
-  } catch {
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
-  } finally {
-    loading.value = false
-  }
-  nowTimer = setInterval(() => (nowTick.value = Date.now()), 60_000)
-})
-
-onUnmounted(() => {
-  if (nowTimer) clearInterval(nowTimer)
-})
-</script>
-
 <template>
   <div class="space-y-6">
     <!-- Header -->
@@ -483,3 +243,243 @@ onUnmounted(() => {
     />
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ChevronLeft, ChevronRight, Plus, CalendarDays, CalendarX, User, XIcon } from 'lucide-vue-next'
+import { staffPortalApi } from '@/api/staffPortal'
+import { businessHoursApi } from '@/api/businessHours'
+import { useToast } from '@/composables/useToast'
+import {bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions} from '@/utils/bookingStatus'
+import { todayIso, weekdayFromDate, toMinutes, minutesOfDay } from '@/utils/scheduling'
+import { personName } from '@/utils/names'
+import NewBookingModal from './NewBookingModal.vue'
+import type {StaffMember, Booking, BusinessHours, BookingStatus} from '@/types'
+import { bookingsApi } from "@/api/bookings.ts";
+
+const toast = useToast()
+
+const profile = ref<StaffMember | null>(null)
+const bookings = ref<Booking[]>([])
+const selectedBooking = ref<Booking | null>(null)
+const hours = ref<BusinessHours[]>([])
+const loading = ref(true)
+const selectedDate = ref(todayIso())
+const showNewBooking = ref(false)
+const updatingId = ref<string | null>(null)
+
+const PX_PER_MIN = 2
+const SLOT_INTERVAL = 15
+
+const dayHours = computed(() => {
+  const wd = weekdayFromDate(selectedDate.value)
+  return hours.value.find((h) => h.weekday === wd) ?? null
+})
+const dayClosed = computed(() => dayHours.value?.closed === true)
+
+const openMinutes = computed(() => (dayHours.value?.opensAt ? toMinutes(dayHours.value.opensAt) : 9 * 60))
+const closeMinutes = computed(() => (dayHours.value?.closesAt ? toMinutes(dayHours.value.closesAt) : 18 * 60))
+const gridHeight = computed(() => Math.max((closeMinutes.value - openMinutes.value) * PX_PER_MIN, 100))
+
+const timeSlots = computed(() => {
+  const slots: { label: string; top: number }[] = []
+  for (let m = openMinutes.value; m <= closeMinutes.value; m += SLOT_INTERVAL) {
+    const h = Math.floor(m / 60)
+    const mm = m % 60
+    slots.push({ label: `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`, top: (m - openMinutes.value) * PX_PER_MIN })
+  }
+  return slots
+})
+
+const dayBookings = computed(() =>
+    bookings.value.filter(
+        (b) =>
+            b.startAt.slice(0, 10) === selectedDate.value,
+        // &&
+        // !['CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_BUSINESS'].includes(b.status)
+    ),
+)
+
+// Ro'yxatni bir-biri bilan to'qnashuvchi klasterlarga bo'lish
+function clusterOverlaps(list: Booking[]): Booking[][] {
+  const sorted = list.slice().sort((a, b) => minutesOfDay(a.startAt) - minutesOfDay(b.startAt))
+  const clusters: Booking[][] = []
+  let current: Booking[] = []
+  let currentEnd = -Infinity
+  for (const b of sorted) {
+    const start = minutesOfDay(b.startAt)
+    if (current.length && start < currentEnd) {
+      current.push(b)
+      currentEnd = Math.max(currentEnd, minutesOfDay(b.endAt))
+    } else {
+      if (current.length) clusters.push(current)
+      current = [b]
+      currentEnd = minutesOfDay(b.endAt)
+    }
+  }
+  if (current.length) clusters.push(current)
+  return clusters
+}
+
+// Barcha bronlarni (statusidan qat'iy nazar) to'qnashsa yonma-yon taqsimlash
+function assignColumns(list: Booking[]) {
+  const result = new Map<string, { col: number; cols: number }>()
+  for (const cluster of clusterOverlaps(list)) {
+    const colEnds: number[] = []
+    const assigned: { b: Booking; col: number }[] = []
+    for (const b of cluster) {
+      const start = minutesOfDay(b.startAt)
+      let placed = false
+      for (let c = 0; c < colEnds.length; c++) {
+        if (colEnds[c] <= start) {
+          colEnds[c] = minutesOfDay(b.endAt)
+          assigned.push({ b, col: c })
+          placed = true
+          break
+        }
+      }
+      if (!placed) {
+        colEnds.push(minutesOfDay(b.endAt))
+        assigned.push({ b, col: colEnds.length - 1 })
+      }
+    }
+    const cols = colEnds.length
+    for (const { b, col } of assigned) result.set(b.id, { col, cols })
+  }
+  return result
+}
+
+const dayLayout = computed(() => {
+  const layout = assignColumns(dayBookings.value)
+  return dayBookings.value.map((b) => {
+    const { col, cols } = layout.get(b.id)!
+    const widthPct = 100 / cols
+    return {
+      booking: b,
+      style: {
+        ...blockStyle(b),
+        left: `calc(${col * widthPct}% + 2px)`,
+        width: `calc(${widthPct}% - 4px)`,
+        right: 'auto',
+        zIndex: '20',
+      },
+    }
+  })
+})
+
+function getInitials(name: string) {
+  return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+}
+
+const createdDate = (dateString: string) => {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  const hour = date.getHours().toString().padStart(2, '0');
+  const time = `${hour}:${date.getMinutes().toString().padStart(2, '0')}`
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${year}.${month}.${day}, ${time}`;
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+}
+
+function blockStyle(booking: Booking) {
+  const start = minutesOfDay(booking.startAt)
+  const end = minutesOfDay(booking.endAt)
+  const top = Math.max((start - openMinutes.value) * PX_PER_MIN, 0)
+  const height = Math.max((end - start) * PX_PER_MIN, 34)
+  return { top: `${top}px`, height: `${height}px` }
+}
+
+// ── Hozirgi vaqt chizig'i ───────────────────────────────────
+const nowTick = ref(Date.now())
+let nowTimer: ReturnType<typeof setInterval> | undefined
+const isToday = computed(() => selectedDate.value === todayIso())
+const nowTop = computed(() => {
+  if (!isToday.value) return null
+  const now = new Date(nowTick.value)
+  const nowMin = now.getHours() * 60 + now.getMinutes()
+  if (nowMin < openMinutes.value || nowMin > closeMinutes.value) return null
+  return (nowMin - openMinutes.value) * PX_PER_MIN
+})
+
+// ── Sana navigatsiyasi ──────────────────────────────────────
+function shiftDay(delta: number) {
+  const d = new Date(selectedDate.value + 'T00:00:00')
+  d.setDate(d.getDate() + delta)
+  selectedDate.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+const isPastDay = computed(() => selectedDate.value < todayIso())
+
+const dateLabel = () => {
+  if (!selectedDate.value) return '';
+
+  const date = new Date(selectedDate.value);
+  if (isNaN(date.getTime())) return '';
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2,'0');
+  return `${year}-${month}-${day}`;
+};
+
+function timeLabel(iso: string) {
+  return new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+}
+
+async function reloadBookings() {
+  try {
+    const { data } = await staffPortalApi.myBookings()
+    bookings.value = data
+  } catch {
+    /* jim */
+  }
+}
+
+async function changeStatus(status: BookingStatus) {
+  if (!selectedBooking.value) return
+  const booking = selectedBooking.value
+  updatingId.value = booking.id
+  try {
+    await bookingsApi.update(booking.id, { status })
+    booking.status = status
+    toast.success('Holat yangilandi')
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Holatni yangilashda xatolik')
+  } finally {
+    updatingId.value = null
+  }
+}
+
+onMounted(async () => {
+  try {
+    const profileRes = await staffPortalApi.myProfile()
+    profile.value = profileRes.data
+    const [bookingsRes, hoursRes] = await Promise.all([
+      staffPortalApi.myBookings(),
+      businessHoursApi.getAll(profileRes.data.businessId),
+    ])
+    bookings.value = bookingsRes.data
+    hours.value = hoursRes.data
+  } catch {
+    toast.error('Ma\'lumotlarni yuklashda xatolik')
+  } finally {
+    loading.value = false
+  }
+  nowTimer = setInterval(() => (nowTick.value = Date.now()), 60_000)
+})
+
+onUnmounted(() => {
+  if (nowTimer) clearInterval(nowTimer)
+})
+</script>

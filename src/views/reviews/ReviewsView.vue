@@ -1,53 +1,3 @@
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { Star, MessageSquare, User, CalendarDays } from 'lucide-vue-next'
-import { reviewsApi } from '@/api/reviews'
-import { useBusinessStore } from '@/stores/business'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
-import type { Review } from '@/types'
-
-const businessStore = useBusinessStore()
-const reviews = ref<Review[]>([])
-const loading = ref(true)
-
-const avgRating = computed(() => {
-  if (!reviews.value.length) return 0
-  return (reviews.value.reduce((s, r) => s + r.stars, 0) / reviews.value.length)
-})
-
-const ratingDistribution = computed(() => {
-  const dist = [0, 0, 0, 0, 0]
-  reviews.value.forEach((r) => {
-    if (r.stars >= 1 && r.stars <= 5) dist[r.stars - 1]++
-  })
-  return dist.reverse()
-})
-
-function formatDate(iso?: string) {
-  if (!iso) return '';
-
-  const date = new Date(iso);
-  if (isNaN(date.getTime())) return '';
-
-  const hours = date.getHours().toString().padStart(2, '0');
-  const time = hours + ':' + date.getMinutes().toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2,'0');
-  return `${year}-${month}-${day}, 🕒 ${time}`;
-}
-
-onMounted(async () => {
-  try {
-    const { data } = await reviewsApi.getAll({ businessId: businessStore.business?.id })
-    reviews.value = data
-  } finally {
-    loading.value = false
-  }
-})
-</script>
-
 <template>
   <div>
     <div class="mb-4">
@@ -148,3 +98,53 @@ onMounted(async () => {
     </template>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { Star, MessageSquare, User, CalendarDays } from 'lucide-vue-next'
+import { reviewsApi } from '@/api/reviews'
+import { useBusinessStore } from '@/stores/business'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import type { Review } from '@/types'
+
+const businessStore = useBusinessStore()
+const reviews = ref<Review[]>([])
+const loading = ref(true)
+
+const avgRating = computed(() => {
+  if (!reviews.value.length) return 0
+  return (reviews.value.reduce((s, r) => s + r.stars, 0) / reviews.value.length)
+})
+
+const ratingDistribution = computed(() => {
+  const dist = [0, 0, 0, 0, 0]
+  reviews.value.forEach((r) => {
+    if (r.stars >= 1 && r.stars <= 5) dist[r.stars - 1]++
+  })
+  return dist.reverse()
+})
+
+function formatDate(iso?: string) {
+  if (!iso) return '';
+
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return '';
+
+  const hours = date.getHours().toString().padStart(2, '0');
+  const time = hours + ':' + date.getMinutes().toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2,'0');
+  return `${year}-${month}-${day}, 🕒 ${time}`;
+}
+
+onMounted(async () => {
+  try {
+    const { data } = await reviewsApi.getAll({ businessId: businessStore.business?.id })
+    reviews.value = data
+  } finally {
+    loading.value = false
+  }
+})
+</script>

@@ -1,151 +1,3 @@
-<script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { User as UserIcon, Camera, CheckCircle, Eye, EyeOff, Shield } from 'lucide-vue-next'
-import { usersApi } from '@/api/users'
-import { useAuthStore } from '@/stores/auth'
-import { useToast } from '@/composables/useToast'
-import { mediaUrl } from '@/utils/media'
-import { personName } from '@/utils/names'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import type { User } from '@/types'
-
-const authStore = useAuthStore()
-const toast = useToast()
-
-const loading = ref(true)
-const saving = ref(false)
-const passwordSaving = ref(false)
-const uploadingAvatar = ref(false)
-const profile = ref<User | null>(null)
-const showCurrentPassword = ref(false)
-const showNewPassword = ref(false)
-const showConfirmPassword = ref(false)
-
-const form = reactive({
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-})
-
-const passwordForm = reactive({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: '',
-})
-
-const MAX_AVATAR_SIZE = 5 * 1024 * 1024
-const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-
-function applyProfile(data: User) {
-  profile.value = data
-  form.firstName = data.firstName ?? ''
-  form.lastName = data.lastName ?? ''
-  form.email = data.email ?? ''
-  form.phone = data.phone ?? ''
-}
-
-onMounted(async () => {
-  const userId = authStore.user?.userId
-  if (!userId) {
-    loading.value = false
-    return
-  }
-  try {
-    const { data } = await usersApi.getById(userId)
-    applyProfile(data)
-  } catch {
-    toast.error("Profil ma'lumotlarini yuklashda xatolik")
-  } finally {
-    loading.value = false
-  }
-})
-
-async function onAvatarChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file || !profile.value) return
-  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-    toast.error('Faqat JPEG, PNG yoki WEBP formatidagi rasm yuklang')
-    input.value = ''
-    return
-  }
-  if (file.size > MAX_AVATAR_SIZE) {
-    toast.error('Rasm hajmi 5MB dan oshmasligi kerak')
-    input.value = ''
-    return
-  }
-  uploadingAvatar.value = true
-  try {
-    const { data } = await usersApi.uploadAvatar(profile.value.id, file)
-    applyProfile(data)
-    authStore.updateProfile({ avatarUrl: data.avatarUrl })
-    toast.success('Rasm yangilandi')
-  } catch {
-    toast.error('Rasmni yuklashda xatolik')
-  } finally {
-    uploadingAvatar.value = false
-    input.value = ''
-  }
-}
-
-async function save() {
-  if (!profile.value) return
-  if (!form.firstName.trim()) {
-    toast.error('Ism kiritilishi shart')
-    return
-  }
-  saving.value = true
-  try {
-    const { data } = await usersApi.update(profile.value.id, {
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim() || undefined,
-      email: form.email.trim() || undefined,
-      phone: form.phone.trim() || undefined,
-    })
-    applyProfile(data)
-    authStore.updateProfile({ firstName: data.firstName, lastName: data.lastName })
-    toast.success('Profil yangilandi')
-  } catch (e) {
-    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Saqlashda xatolik yuz berdi')
-  } finally {
-    saving.value = false
-  }
-}
-
-async function changePassword() {
-  if (!passwordForm.currentPassword || !passwordForm.newPassword) {
-    toast.error('Joriy parol va yangi parolni kiriting')
-    return
-  }
-  if (passwordForm.newPassword.length < 4) {
-    toast.error("Yangi parol kamida 4 belgidan iborat bo'lishi kerak")
-    return
-  }
-  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    toast.error('Yangi parollar mos kelmadi')
-    return
-  }
-  passwordSaving.value = true
-  try {
-    await usersApi.changePassword({
-      currentPassword: passwordForm.currentPassword,
-      newPassword: passwordForm.newPassword,
-    })
-    passwordForm.currentPassword = ''
-    passwordForm.newPassword = ''
-    passwordForm.confirmPassword = ''
-    toast.success("Parol o'zgartirildi")
-  } catch (e) {
-    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || "Parolni o'zgartirishda xatolik yuz berdi")
-  } finally {
-    passwordSaving.value = false
-  }
-}
-</script>
-
 <template>
   <div class="max-w-5xl">
     <div class="mb-5">
@@ -344,3 +196,151 @@ async function changePassword() {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { User as UserIcon, Camera, CheckCircle, Eye, EyeOff, Shield } from 'lucide-vue-next'
+import { usersApi } from '@/api/users'
+import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
+import { mediaUrl } from '@/utils/media'
+import { personName } from '@/utils/names'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import type { User } from '@/types'
+
+const authStore = useAuthStore()
+const toast = useToast()
+
+const loading = ref(true)
+const saving = ref(false)
+const passwordSaving = ref(false)
+const uploadingAvatar = ref(false)
+const profile = ref<User | null>(null)
+const showCurrentPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+
+const form = reactive({
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+})
+
+const passwordForm = reactive({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024
+const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+function applyProfile(data: User) {
+  profile.value = data
+  form.firstName = data.firstName ?? ''
+  form.lastName = data.lastName ?? ''
+  form.email = data.email ?? ''
+  form.phone = data.phone ?? ''
+}
+
+onMounted(async () => {
+  const userId = authStore.user?.userId
+  if (!userId) {
+    loading.value = false
+    return
+  }
+  try {
+    const { data } = await usersApi.getById(userId)
+    applyProfile(data)
+  } catch {
+    toast.error("Profil ma'lumotlarini yuklashda xatolik")
+  } finally {
+    loading.value = false
+  }
+})
+
+async function onAvatarChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !profile.value) return
+  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+    toast.error('Faqat JPEG, PNG yoki WEBP formatidagi rasm yuklang')
+    input.value = ''
+    return
+  }
+  if (file.size > MAX_AVATAR_SIZE) {
+    toast.error('Rasm hajmi 5MB dan oshmasligi kerak')
+    input.value = ''
+    return
+  }
+  uploadingAvatar.value = true
+  try {
+    const { data } = await usersApi.uploadAvatar(profile.value.id, file)
+    applyProfile(data)
+    authStore.updateProfile({ avatarUrl: data.avatarUrl })
+    toast.success('Rasm yangilandi')
+  } catch {
+    toast.error('Rasmni yuklashda xatolik')
+  } finally {
+    uploadingAvatar.value = false
+    input.value = ''
+  }
+}
+
+async function save() {
+  if (!profile.value) return
+  if (!form.firstName.trim()) {
+    toast.error('Ism kiritilishi shart')
+    return
+  }
+  saving.value = true
+  try {
+    const { data } = await usersApi.update(profile.value.id, {
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim() || undefined,
+      email: form.email.trim() || undefined,
+      phone: form.phone.trim() || undefined,
+    })
+    applyProfile(data)
+    authStore.updateProfile({ firstName: data.firstName, lastName: data.lastName })
+    toast.success('Profil yangilandi')
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Saqlashda xatolik yuz berdi')
+  } finally {
+    saving.value = false
+  }
+}
+
+async function changePassword() {
+  if (!passwordForm.currentPassword || !passwordForm.newPassword) {
+    toast.error('Joriy parol va yangi parolni kiriting')
+    return
+  }
+  if (passwordForm.newPassword.length < 4) {
+    toast.error("Yangi parol kamida 4 belgidan iborat bo'lishi kerak")
+    return
+  }
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    toast.error('Yangi parollar mos kelmadi')
+    return
+  }
+  passwordSaving.value = true
+  try {
+    await usersApi.changePassword({
+      currentPassword: passwordForm.currentPassword,
+      newPassword: passwordForm.newPassword,
+    })
+    passwordForm.currentPassword = ''
+    passwordForm.newPassword = ''
+    passwordForm.confirmPassword = ''
+    toast.success("Parol o'zgartirildi")
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || "Parolni o'zgartirishda xatolik yuz berdi")
+  } finally {
+    passwordSaving.value = false
+  }
+}
+</script>

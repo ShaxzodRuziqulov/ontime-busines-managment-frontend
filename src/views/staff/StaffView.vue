@@ -1,331 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Plus, Users, Trash2, Edit2, ToggleLeft, ToggleRight, Briefcase, Star, Search, X as XIcon, CheckCircle2 } from 'lucide-vue-next'
-import { staffApi } from '@/api/staff'
-import { servicesApi } from '@/api/services'
-import { reviewsApi } from '@/api/reviews'
-import { usersApi, type UserLookup } from '@/api/users'
-import { useBusinessStore } from '@/stores/business'
-import { useToast } from '@/composables/useToast'
-import { personName } from '@/utils/names'
-import { mediaUrl } from '@/utils/media'
-import SkeletonCard from '@/components/common/SkeletonCard.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
-import AppModal from '@/components/common/AppModal.vue'
-import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import type { StaffMember, StaffCreateRequest, StaffRegisterRequest, StaffAccountUpdateRequest, OfferedService } from '@/types'
-
-const businessStore = useBusinessStore()
-const toast = useToast()
-
-const staff = ref<StaffMember[]>([])
-const services = ref<OfferedService[]>([])
-const ratings = ref<Record<string, number>>({})
-const loading = ref(true)
-const saving = ref(false)
-const showModal = ref(false)
-const deleteConfirm = ref<string | null>(null)
-const editingStaff = ref<StaffMember | null>(null)
-
-const defaultForm = (): StaffCreateRequest => ({
-  firstName: '',
-  lastName: '',
-  serviceIds: [],
-  active: true,
-  linkedUserId: null,
-})
-
-const form = ref<StaffCreateRequest>(defaultForm())
-
-// Hisob rejimi: hisobsiz / mavjud loginni bog'lash / yangi hisob yaratish
-type AccountMode = 'none' | 'link' | 'register'
-const accountMode = ref<AccountMode>('none')
-
-// "link" rejimi uchun
-const linkLogin = ref('')
-const linkLookupLoading = ref(false)
-const linkLookupError = ref('')
-const linkedUser = ref<UserLookup | null>(null)
-
-// "register" rejimi uchun
-const registerForm = ref({ login: '', password: '', email: '', phone: '' })
-
-// Allaqachon bog'langan hisobni yangilash uchun (tahrirlashda)
-const accountUpdateForm = ref({ firstName: '', lastName: '', email: '', phone: '', password: '' })
-const originalAccountUpdateForm = ref({ firstName: '', lastName: '', email: '', phone: '', password: '' })
-
-function openAdd() {
-  editingStaff.value = null
-  form.value = defaultForm()
-  accountMode.value = 'register'
-  linkLogin.value = ''
-  linkedUser.value = null
-  linkLookupError.value = ''
-  registerForm.value = { login: '', password: '', email: '', phone: '' }
-  accountUpdateForm.value = { firstName: '', lastName: '', email: '', phone: '', password: '' }
-  originalAccountUpdateForm.value = { firstName: '', lastName: '', email: '', phone: '', password: '' }
-  showModal.value = true
-}
-
-async function openEdit(member: StaffMember) {
-  editingStaff.value = member
-  form.value = {
-    firstName: member.firstName,
-    lastName: member.lastName ?? '',
-    serviceIds: [...(member.serviceIds ?? [])],
-    active: member.active,
-    linkedUserId: member.linkedUserId,
-  }
-  linkLogin.value = ''
-  linkLookupError.value = ''
-  registerForm.value = { login: '', password: '', email: '', phone: '' }
-  accountUpdateForm.value = { firstName: '', lastName: '', email: '', phone: '', password: '' }
-  originalAccountUpdateForm.value = { firstName: '', lastName: '', email: '', phone: '', password: '' }
-  if (member.linkedUserId) {
-    accountMode.value = 'link'
-    linkedUser.value = { id: member.linkedUserId, login: '', firstName: "Bog'langan foydalanuvchi", lastName: null }
-    showModal.value = true
-    const bid = businessStore.business?.id
-    try {
-      if (bid) {
-        const { data } = await staffApi.getAccount(bid, member.id)
-        linkedUser.value = data
-        accountUpdateForm.value = {
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          password: '',
-        }
-        originalAccountUpdateForm.value = { ...accountUpdateForm.value }
-      }
-    } catch {
-      toast.error("Bog'langan hisob ma'lumotlarini yuklab bo'lmadi")
-    }
-  } else {
-    accountMode.value = 'none'
-    linkedUser.value = null
-    showModal.value = true
-  }
-}
-
-async function lookupUser() {
-  if (!linkLogin.value.trim()) return
-  linkLookupLoading.value = true
-  linkLookupError.value = ''
-  try {
-    const { data } = await usersApi.lookupByLogin(linkLogin.value.trim())
-    linkedUser.value = data
-    form.value.linkedUserId = data.id
-    form.value.firstName = data.firstName || ''
-    form.value.lastName = data.lastName || ''
-  } catch {
-    linkLookupError.value = 'Bu login bilan foydalanuvchi topilmadi'
-    linkedUser.value = null
-    form.value.linkedUserId = null
-  } finally {
-    linkLookupLoading.value = false
-  }
-}
-
-function unlinkUser() {
-  linkedUser.value = null
-  linkLogin.value = ''
-  form.value.linkedUserId = null
-}
-
-function setAccountMode(mode: AccountMode) {
-  accountMode.value = mode
-  if (mode !== 'link') unlinkUser()
-}
-
-function staffPayload(): StaffCreateRequest {
-  return {
-    firstName: form.value.firstName.trim(),
-    lastName: form.value.lastName?.trim() || null,
-    active: form.value.active,
-    linkedUserId: form.value.linkedUserId ?? null,
-    serviceIds: [...(form.value.serviceIds ?? [])],
-  }
-}
-
-function staffRegisterPayload(): StaffRegisterRequest {
-  return {
-    firstName: form.value.firstName.trim(),
-    lastName: form.value.lastName?.trim() || undefined,
-    serviceIds: [...(form.value.serviceIds ?? [])],
-    login: registerForm.value.login.trim(),
-    password: registerForm.value.password,
-    email: registerForm.value.email || undefined,
-    phone: registerForm.value.phone || undefined,
-  }
-}
-
-function hasAccountUpdateChanges() {
-  const current = accountUpdateForm.value
-  const original = originalAccountUpdateForm.value
-  return (
-    current.password.length > 0 ||
-    current.firstName !== original.firstName ||
-    current.lastName !== original.lastName ||
-    current.email !== original.email ||
-    current.phone !== original.phone
-  )
-}
-
-async function save() {
-  const bid = businessStore.business?.id
-  if (!bid) return
-
-  if (accountMode.value === 'link' && !linkedUser.value) {
-    toast.error('Avval loginni tekshiring')
-    return
-  }
-  if (accountMode.value === 'register') {
-    if (!registerForm.value.login || registerForm.value.password.length < 4) {
-      toast.error('Login va kamida 4 belgili parol kiriting')
-      return
-    }
-  }
-  if (accountUpdateForm.value.password && accountUpdateForm.value.password.length < 4) {
-    toast.error('Yangi parol kamida 4 belgidan iborat bo\'lishi kerak')
-    return
-  }
-  if (!form.value.firstName.trim()) {
-    toast.error('Ism kiritilishi shart')
-    return
-  }
-
-  saving.value = true
-  try {
-    if (editingStaff.value && accountMode.value === 'register') {
-      const editingId = editingStaff.value.id
-      const payload = staffRegisterPayload()
-      const { data } = await staffApi.registerForExisting(bid, editingId, payload)
-      const idx = staff.value.findIndex((s) => s.id === editingId)
-      if (idx !== -1) staff.value[idx] = data
-      toast.success('Xodimga hisob yaratildi')
-    } else if (editingStaff.value) {
-      const editingId = editingStaff.value.id
-      const { data } = await staffApi.update(bid, editingId, staffPayload())
-      let finalData = data
-      const acc = accountUpdateForm.value
-      if (linkedUser.value && hasAccountUpdateChanges()) {
-        const payload: StaffAccountUpdateRequest = {
-          firstName: acc.firstName || undefined,
-          lastName: acc.lastName || undefined,
-          email: acc.email || undefined,
-          phone: acc.phone || undefined,
-          password: acc.password || undefined,
-        }
-        const { data: accData } = await staffApi.updateAccount(bid, editingId, payload)
-        finalData = accData
-      }
-      const idx = staff.value.findIndex((s) => s.id === editingId)
-      if (idx !== -1) staff.value[idx] = finalData
-      toast.success('Xodim yangilandi')
-    } else if (accountMode.value === 'register') {
-      const payload = staffRegisterPayload()
-      const { data } = await staffApi.register(bid, payload)
-      staff.value.unshift(data)
-      ratings.value[data.id] = 0
-      toast.success("Yangi xodim va uning hisobi yaratildi")
-    } else {
-      const { data } = await staffApi.create(bid, staffPayload())
-      staff.value.unshift(data)
-      ratings.value[data.id] = 0
-      toast.success("Yangi xodim qo'shildi")
-    }
-    showModal.value = false
-  } catch (e) {
-    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Xatolik yuz berdi')
-  } finally {
-    saving.value = false
-  }
-}
-
-async function toggleActive(member: StaffMember) {
-  if (businessStore.isReadOnly) return
-  const bid = businessStore.business?.id
-  if (!bid) return
-  try {
-    const { data } = await staffApi.update(bid, member.id, { active: !member.active })
-    const idx = staff.value.findIndex((s) => s.id === member.id)
-    if (idx !== -1) staff.value[idx] = data
-  } catch {
-    toast.error("Holatni o'zgartirishda xatolik")
-  }
-}
-
-async function confirmDelete(id: string) {
-  if (businessStore.isReadOnly) return
-  const bid = businessStore.business?.id
-  if (!bid) return
-  try {
-    await staffApi.delete(bid, id)
-    staff.value = staff.value.filter((s) => s.id !== id)
-    delete ratings.value[id]
-    toast.success("Xodim o'chirildi")
-  } catch {
-    toast.error("O'chirishda xatolik yuz berdi")
-  }
-  deleteConfirm.value = null
-}
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
-
-const avatarColors = [
-  'bg-violet-100 text-violet-700',
-  'bg-blue-100 text-blue-700',
-  'bg-emerald-100 text-emerald-700',
-  'bg-amber-100 text-amber-700',
-  'bg-rose-100 text-rose-700',
-  'bg-cyan-100 text-cyan-700',
-]
-
-function getColor(name: string) {
-  const idx = name.charCodeAt(0) % avatarColors.length
-  return avatarColors[idx]
-}
-
-function serviceName(serviceId: string) {
-  return services.value.find((service) => service.id === serviceId)?.name ?? "O'chirilgan xizmat"
-}
-
-onMounted(async () => {
-  try {
-    const bid = businessStore.business?.id
-    if (bid) {
-      const [{ data: staffData }, { data: serviceData }] = await Promise.all([
-        staffApi.getAll(bid),
-        servicesApi.getAll(bid),
-      ])
-      staff.value = staffData
-      services.value = serviceData
-      // Load avg ratings in parallel
-      const ratingResults = await Promise.allSettled(
-        staffData.map((m) => reviewsApi.staffAvgRating(m.id)),
-      )
-      ratingResults.forEach((result, i) => {
-        if (result.status === 'fulfilled') {
-          ratings.value[staffData[i].id] = result.value.data ?? 0
-        }
-      })
-    }
-  } finally {
-    loading.value = false
-  }
-})
-</script>
-
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
@@ -743,3 +415,331 @@ onMounted(async () => {
     />
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { Plus, Users, Trash2, Edit2, ToggleLeft, ToggleRight, Briefcase, Star, Search, X as XIcon, CheckCircle2 } from 'lucide-vue-next'
+import { staffApi } from '@/api/staff'
+import { servicesApi } from '@/api/services'
+import { reviewsApi } from '@/api/reviews'
+import { usersApi, type UserLookup } from '@/api/users'
+import { useBusinessStore } from '@/stores/business'
+import { useToast } from '@/composables/useToast'
+import { personName } from '@/utils/names'
+import { mediaUrl } from '@/utils/media'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import AppModal from '@/components/common/AppModal.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import type { StaffMember, StaffCreateRequest, StaffRegisterRequest, StaffAccountUpdateRequest, OfferedService } from '@/types'
+
+const businessStore = useBusinessStore()
+const toast = useToast()
+
+const staff = ref<StaffMember[]>([])
+const services = ref<OfferedService[]>([])
+const ratings = ref<Record<string, number>>({})
+const loading = ref(true)
+const saving = ref(false)
+const showModal = ref(false)
+const deleteConfirm = ref<string | null>(null)
+const editingStaff = ref<StaffMember | null>(null)
+
+const defaultForm = (): StaffCreateRequest => ({
+  firstName: '',
+  lastName: '',
+  serviceIds: [],
+  active: true,
+  linkedUserId: null,
+})
+
+const form = ref<StaffCreateRequest>(defaultForm())
+
+// Hisob rejimi: hisobsiz / mavjud loginni bog'lash / yangi hisob yaratish
+type AccountMode = 'none' | 'link' | 'register'
+const accountMode = ref<AccountMode>('none')
+
+// "link" rejimi uchun
+const linkLogin = ref('')
+const linkLookupLoading = ref(false)
+const linkLookupError = ref('')
+const linkedUser = ref<UserLookup | null>(null)
+
+// "register" rejimi uchun
+const registerForm = ref({ login: '', password: '', email: '', phone: '' })
+
+// Allaqachon bog'langan hisobni yangilash uchun (tahrirlashda)
+const accountUpdateForm = ref({ firstName: '', lastName: '', email: '', phone: '', password: '' })
+const originalAccountUpdateForm = ref({ firstName: '', lastName: '', email: '', phone: '', password: '' })
+
+function openAdd() {
+  editingStaff.value = null
+  form.value = defaultForm()
+  accountMode.value = 'register'
+  linkLogin.value = ''
+  linkedUser.value = null
+  linkLookupError.value = ''
+  registerForm.value = { login: '', password: '', email: '', phone: '' }
+  accountUpdateForm.value = { firstName: '', lastName: '', email: '', phone: '', password: '' }
+  originalAccountUpdateForm.value = { firstName: '', lastName: '', email: '', phone: '', password: '' }
+  showModal.value = true
+}
+
+async function openEdit(member: StaffMember) {
+  editingStaff.value = member
+  form.value = {
+    firstName: member.firstName,
+    lastName: member.lastName ?? '',
+    serviceIds: [...(member.serviceIds ?? [])],
+    active: member.active,
+    linkedUserId: member.linkedUserId,
+  }
+  linkLogin.value = ''
+  linkLookupError.value = ''
+  registerForm.value = { login: '', password: '', email: '', phone: '' }
+  accountUpdateForm.value = { firstName: '', lastName: '', email: '', phone: '', password: '' }
+  originalAccountUpdateForm.value = { firstName: '', lastName: '', email: '', phone: '', password: '' }
+  if (member.linkedUserId) {
+    accountMode.value = 'link'
+    linkedUser.value = { id: member.linkedUserId, login: '', firstName: "Bog'langan foydalanuvchi", lastName: null }
+    showModal.value = true
+    const bid = businessStore.business?.id
+    try {
+      if (bid) {
+        const { data } = await staffApi.getAccount(bid, member.id)
+        linkedUser.value = data
+        accountUpdateForm.value = {
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          password: '',
+        }
+        originalAccountUpdateForm.value = { ...accountUpdateForm.value }
+      }
+    } catch {
+      toast.error("Bog'langan hisob ma'lumotlarini yuklab bo'lmadi")
+    }
+  } else {
+    accountMode.value = 'none'
+    linkedUser.value = null
+    showModal.value = true
+  }
+}
+
+async function lookupUser() {
+  if (!linkLogin.value.trim()) return
+  linkLookupLoading.value = true
+  linkLookupError.value = ''
+  try {
+    const { data } = await usersApi.lookupByLogin(linkLogin.value.trim())
+    linkedUser.value = data
+    form.value.linkedUserId = data.id
+    form.value.firstName = data.firstName || ''
+    form.value.lastName = data.lastName || ''
+  } catch {
+    linkLookupError.value = 'Bu login bilan foydalanuvchi topilmadi'
+    linkedUser.value = null
+    form.value.linkedUserId = null
+  } finally {
+    linkLookupLoading.value = false
+  }
+}
+
+function unlinkUser() {
+  linkedUser.value = null
+  linkLogin.value = ''
+  form.value.linkedUserId = null
+}
+
+function setAccountMode(mode: AccountMode) {
+  accountMode.value = mode
+  if (mode !== 'link') unlinkUser()
+}
+
+function staffPayload(): StaffCreateRequest {
+  return {
+    firstName: form.value.firstName.trim(),
+    lastName: form.value.lastName?.trim() || null,
+    active: form.value.active,
+    linkedUserId: form.value.linkedUserId ?? null,
+    serviceIds: [...(form.value.serviceIds ?? [])],
+  }
+}
+
+function staffRegisterPayload(): StaffRegisterRequest {
+  return {
+    firstName: form.value.firstName.trim(),
+    lastName: form.value.lastName?.trim() || undefined,
+    serviceIds: [...(form.value.serviceIds ?? [])],
+    login: registerForm.value.login.trim(),
+    password: registerForm.value.password,
+    email: registerForm.value.email || undefined,
+    phone: registerForm.value.phone || undefined,
+  }
+}
+
+function hasAccountUpdateChanges() {
+  const current = accountUpdateForm.value
+  const original = originalAccountUpdateForm.value
+  return (
+      current.password.length > 0 ||
+      current.firstName !== original.firstName ||
+      current.lastName !== original.lastName ||
+      current.email !== original.email ||
+      current.phone !== original.phone
+  )
+}
+
+async function save() {
+  const bid = businessStore.business?.id
+  if (!bid) return
+
+  if (accountMode.value === 'link' && !linkedUser.value) {
+    toast.error('Avval loginni tekshiring')
+    return
+  }
+  if (accountMode.value === 'register') {
+    if (!registerForm.value.login || registerForm.value.password.length < 4) {
+      toast.error('Login va kamida 4 belgili parol kiriting')
+      return
+    }
+  }
+  if (accountUpdateForm.value.password && accountUpdateForm.value.password.length < 4) {
+    toast.error('Yangi parol kamida 4 belgidan iborat bo\'lishi kerak')
+    return
+  }
+  if (!form.value.firstName.trim()) {
+    toast.error('Ism kiritilishi shart')
+    return
+  }
+
+  saving.value = true
+  try {
+    if (editingStaff.value && accountMode.value === 'register') {
+      const editingId = editingStaff.value.id
+      const payload = staffRegisterPayload()
+      const { data } = await staffApi.registerForExisting(bid, editingId, payload)
+      const idx = staff.value.findIndex((s) => s.id === editingId)
+      if (idx !== -1) staff.value[idx] = data
+      toast.success('Xodimga hisob yaratildi')
+    } else if (editingStaff.value) {
+      const editingId = editingStaff.value.id
+      const { data } = await staffApi.update(bid, editingId, staffPayload())
+      let finalData = data
+      const acc = accountUpdateForm.value
+      if (linkedUser.value && hasAccountUpdateChanges()) {
+        const payload: StaffAccountUpdateRequest = {
+          firstName: acc.firstName || undefined,
+          lastName: acc.lastName || undefined,
+          email: acc.email || undefined,
+          phone: acc.phone || undefined,
+          password: acc.password || undefined,
+        }
+        const { data: accData } = await staffApi.updateAccount(bid, editingId, payload)
+        finalData = accData
+      }
+      const idx = staff.value.findIndex((s) => s.id === editingId)
+      if (idx !== -1) staff.value[idx] = finalData
+      toast.success('Xodim yangilandi')
+    } else if (accountMode.value === 'register') {
+      const payload = staffRegisterPayload()
+      const { data } = await staffApi.register(bid, payload)
+      staff.value.unshift(data)
+      ratings.value[data.id] = 0
+      toast.success("Yangi xodim va uning hisobi yaratildi")
+    } else {
+      const { data } = await staffApi.create(bid, staffPayload())
+      staff.value.unshift(data)
+      ratings.value[data.id] = 0
+      toast.success("Yangi xodim qo'shildi")
+    }
+    showModal.value = false
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Xatolik yuz berdi')
+  } finally {
+    saving.value = false
+  }
+}
+
+async function toggleActive(member: StaffMember) {
+  if (businessStore.isReadOnly) return
+  const bid = businessStore.business?.id
+  if (!bid) return
+  try {
+    const { data } = await staffApi.update(bid, member.id, { active: !member.active })
+    const idx = staff.value.findIndex((s) => s.id === member.id)
+    if (idx !== -1) staff.value[idx] = data
+  } catch {
+    toast.error("Holatni o'zgartirishda xatolik")
+  }
+}
+
+async function confirmDelete(id: string) {
+  if (businessStore.isReadOnly) return
+  const bid = businessStore.business?.id
+  if (!bid) return
+  try {
+    await staffApi.delete(bid, id)
+    staff.value = staff.value.filter((s) => s.id !== id)
+    delete ratings.value[id]
+    toast.success("Xodim o'chirildi")
+  } catch {
+    toast.error("O'chirishda xatolik yuz berdi")
+  }
+  deleteConfirm.value = null
+}
+
+function getInitials(name: string) {
+  return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+}
+
+const avatarColors = [
+  'bg-violet-100 text-violet-700',
+  'bg-blue-100 text-blue-700',
+  'bg-emerald-100 text-emerald-700',
+  'bg-amber-100 text-amber-700',
+  'bg-rose-100 text-rose-700',
+  'bg-cyan-100 text-cyan-700',
+]
+
+function getColor(name: string) {
+  const idx = name.charCodeAt(0) % avatarColors.length
+  return avatarColors[idx]
+}
+
+function serviceName(serviceId: string) {
+  return services.value.find((service) => service.id === serviceId)?.name ?? "O'chirilgan xizmat"
+}
+
+onMounted(async () => {
+  try {
+    const bid = businessStore.business?.id
+    if (bid) {
+      const [{ data: staffData }, { data: serviceData }] = await Promise.all([
+        staffApi.getAll(bid),
+        servicesApi.getAll(bid),
+      ])
+      staff.value = staffData
+      services.value = serviceData
+      // Load avg ratings in parallel
+      const ratingResults = await Promise.allSettled(
+          staffData.map((m) => reviewsApi.staffAvgRating(m.id)),
+      )
+      ratingResults.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+          ratings.value[staffData[i].id] = result.value.data ?? 0
+        }
+      })
+    }
+  } finally {
+    loading.value = false
+  }
+})
+</script>

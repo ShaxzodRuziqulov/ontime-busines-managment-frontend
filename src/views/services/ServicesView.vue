@@ -1,196 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import {
-  Plus, Scissors, Trash2, Edit2, Clock, Banknote,
-  ToggleLeft, ToggleRight, ImagePlus, X as XIcon, Briefcase
-} from 'lucide-vue-next'
-import { servicesApi } from '@/api/services'
-import { useBusinessStore } from '@/stores/business'
-import { useToast } from '@/composables/useToast'
-import { mediaUrl } from '@/utils/media'
-import SkeletonCard from '@/components/common/SkeletonCard.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
-import AppModal from '@/components/common/AppModal.vue'
-import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import type { OfferedService, ServiceCreateRequest } from '@/types'
-
-const businessStore = useBusinessStore()
-const toast = useToast()
-
-const services = ref<OfferedService[]>([])
-const loading = ref(true)
-const saving = ref(false)
-const showModal = ref(false)
-const deleteConfirm = ref<string | null>(null)
-const editingService = ref<OfferedService | null>(null)
-
-// Image upload state
-const imageFile = ref<File | null>(null)
-const imagePreview = ref<string | null>(null)
-const imageUploading = ref(false)
-const imageInput = ref<HTMLInputElement | null>(null)
-const brokenImageUrls = ref<string[]>([])
-
-const defaultForm = (): ServiceCreateRequest => ({
-  name: '',
-  description: '',
-  basePrice: 0,
-  durationMinutes: 30,
-  active: true,
-})
-
-const form = ref<ServiceCreateRequest>(defaultForm())
-
-function openAdd() {
-  editingService.value = null
-  form.value = defaultForm()
-  imageFile.value = null
-  imagePreview.value = null
-  showModal.value = true
-}
-
-function openEdit(service: OfferedService) {
-  editingService.value = service
-  form.value = {
-    name: service.name,
-    description: service.description,
-    basePrice: service.basePrice,
-    durationMinutes: service.durationMinutes,
-    active: service.active,
-  }
-  imageFile.value = null
-  imagePreview.value = mediaUrl(service.imageUrl)
-  showModal.value = true
-}
-
-function onImagePick(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    toast.error('Faqat JPEG, PNG, GIF yoki WEBP formatidagi rasm yuklang')
-    input.value = ''
-    return
-  }
-  if (file.size > MAX_IMAGE_SIZE) {
-    toast.error('Rasm hajmi 5MB dan oshmasligi kerak')
-    input.value = ''
-    return
-  }
-  imageFile.value = file
-  imagePreview.value = URL.createObjectURL(file)
-}
-
-function removeImage() {
-  imageFile.value = null
-  imagePreview.value = null
-  if (imageInput.value) imageInput.value.value = ''
-}
-
-async function save() {
-  if (!form.value.name || form.value.basePrice < 0) return
-  const bid = businessStore.business?.id
-  if (!bid) return
-  saving.value = true
-  try {
-    let saved: OfferedService
-    if (editingService.value) {
-      const editingId = editingService.value.id
-      const { data } = await servicesApi.update(bid, editingId, form.value)
-      saved = data
-      // Upload new image if chosen
-      if (imageFile.value) {
-        imageUploading.value = true
-        const { data: withImg } = await servicesApi.uploadImage(bid, editingId, imageFile.value)
-        saved = withImg
-        imageUploading.value = false
-      } else if (editingService.value.imageUrl && !imagePreview.value) {
-        // User removed image
-        const { data: noImg } = await servicesApi.deleteImage(bid, editingId)
-        saved = noImg
-      }
-      const idx = services.value.findIndex((s) => s.id === editingId)
-      if (idx !== -1) services.value[idx] = saved
-      toast.success('Xizmat yangilandi')
-    } else {
-      const { data } = await servicesApi.create(bid, form.value)
-      saved = data
-      if (imageFile.value) {
-        imageUploading.value = true
-        const { data: withImg } = await servicesApi.uploadImage(bid, saved.id, imageFile.value)
-        saved = withImg
-        imageUploading.value = false
-      }
-      services.value.unshift(saved)
-      toast.success("Yangi xizmat qo'shildi")
-    }
-    showModal.value = false
-  } catch {
-    toast.error('Xatolik yuz berdi')
-  } finally {
-    saving.value = false
-    imageUploading.value = false
-  }
-}
-
-async function toggleActive(service: OfferedService) {
-  const bid = businessStore.business?.id
-  if (!bid) return
-  try {
-    const { data } = await servicesApi.update(bid, service.id, { active: !service.active })
-    const idx = services.value.findIndex((s) => s.id === service.id)
-    if (idx !== -1) services.value[idx] = data
-  } catch {
-    toast.error('Holatni o\'zgartirishda xatolik yuz berdi')
-  }
-}
-
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-
-async function confirmDelete(id: string) {
-  const bid = businessStore.business?.id
-  if (!bid) return
-  try {
-    await servicesApi.delete(bid, id)
-    services.value = services.value.filter((s) => s.id !== id)
-    toast.success("Xizmat o'chirildi")
-  } catch {
-    toast.error("O'chirishda xatolik yuz berdi")
-  }
-  deleteConfirm.value = null
-}
-
-function formatPrice(price: number) {
-  return new Intl.NumberFormat('uz-UZ').format(price) + " so'm"
-}
-
-function imgUrl(url: string | null | undefined) {
-  return mediaUrl(url)
-}
-
-function showServiceImage(url: string | null | undefined) {
-  return !!url && !brokenImageUrls.value.includes(url)
-}
-
-function onServiceImageError(url: string | null | undefined) {
-  if (!url || brokenImageUrls.value.includes(url)) return
-  brokenImageUrls.value = [...brokenImageUrls.value, url]
-}
-
-onMounted(async () => {
-  try {
-    const bid = businessStore.business?.id
-    if (bid) {
-      const { data } = await servicesApi.getAll(bid)
-      services.value = data
-    }
-  } finally {
-    loading.value = false
-  }
-})
-</script>
-
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
@@ -428,3 +235,196 @@ onMounted(async () => {
     />
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import {
+  Plus, Scissors, Trash2, Edit2, Clock, Banknote,
+  ToggleLeft, ToggleRight, ImagePlus, X as XIcon, Briefcase
+} from 'lucide-vue-next'
+import { servicesApi } from '@/api/services'
+import { useBusinessStore } from '@/stores/business'
+import { useToast } from '@/composables/useToast'
+import { mediaUrl } from '@/utils/media'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import AppModal from '@/components/common/AppModal.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import type { OfferedService, ServiceCreateRequest } from '@/types'
+
+const businessStore = useBusinessStore()
+const toast = useToast()
+
+const services = ref<OfferedService[]>([])
+const loading = ref(true)
+const saving = ref(false)
+const showModal = ref(false)
+const deleteConfirm = ref<string | null>(null)
+const editingService = ref<OfferedService | null>(null)
+
+// Image upload state
+const imageFile = ref<File | null>(null)
+const imagePreview = ref<string | null>(null)
+const imageUploading = ref(false)
+const imageInput = ref<HTMLInputElement | null>(null)
+const brokenImageUrls = ref<string[]>([])
+
+const defaultForm = (): ServiceCreateRequest => ({
+  name: '',
+  description: '',
+  basePrice: 0,
+  durationMinutes: 30,
+  active: true,
+})
+
+const form = ref<ServiceCreateRequest>(defaultForm())
+
+function openAdd() {
+  editingService.value = null
+  form.value = defaultForm()
+  imageFile.value = null
+  imagePreview.value = null
+  showModal.value = true
+}
+
+function openEdit(service: OfferedService) {
+  editingService.value = service
+  form.value = {
+    name: service.name,
+    description: service.description,
+    basePrice: service.basePrice,
+    durationMinutes: service.durationMinutes,
+    active: service.active,
+  }
+  imageFile.value = null
+  imagePreview.value = mediaUrl(service.imageUrl)
+  showModal.value = true
+}
+
+function onImagePick(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    toast.error('Faqat JPEG, PNG, GIF yoki WEBP formatidagi rasm yuklang')
+    input.value = ''
+    return
+  }
+  if (file.size > MAX_IMAGE_SIZE) {
+    toast.error('Rasm hajmi 5MB dan oshmasligi kerak')
+    input.value = ''
+    return
+  }
+  imageFile.value = file
+  imagePreview.value = URL.createObjectURL(file)
+}
+
+function removeImage() {
+  imageFile.value = null
+  imagePreview.value = null
+  if (imageInput.value) imageInput.value.value = ''
+}
+
+async function save() {
+  if (!form.value.name || form.value.basePrice < 0) return
+  const bid = businessStore.business?.id
+  if (!bid) return
+  saving.value = true
+  try {
+    let saved: OfferedService
+    if (editingService.value) {
+      const editingId = editingService.value.id
+      const { data } = await servicesApi.update(bid, editingId, form.value)
+      saved = data
+      // Upload new image if chosen
+      if (imageFile.value) {
+        imageUploading.value = true
+        const { data: withImg } = await servicesApi.uploadImage(bid, editingId, imageFile.value)
+        saved = withImg
+        imageUploading.value = false
+      } else if (editingService.value.imageUrl && !imagePreview.value) {
+        // User removed image
+        const { data: noImg } = await servicesApi.deleteImage(bid, editingId)
+        saved = noImg
+      }
+      const idx = services.value.findIndex((s) => s.id === editingId)
+      if (idx !== -1) services.value[idx] = saved
+      toast.success('Xizmat yangilandi')
+    } else {
+      const { data } = await servicesApi.create(bid, form.value)
+      saved = data
+      if (imageFile.value) {
+        imageUploading.value = true
+        const { data: withImg } = await servicesApi.uploadImage(bid, saved.id, imageFile.value)
+        saved = withImg
+        imageUploading.value = false
+      }
+      services.value.unshift(saved)
+      toast.success("Yangi xizmat qo'shildi")
+    }
+    showModal.value = false
+  } catch {
+    toast.error('Xatolik yuz berdi')
+  } finally {
+    saving.value = false
+    imageUploading.value = false
+  }
+}
+
+async function toggleActive(service: OfferedService) {
+  const bid = businessStore.business?.id
+  if (!bid) return
+  try {
+    const { data } = await servicesApi.update(bid, service.id, { active: !service.active })
+    const idx = services.value.findIndex((s) => s.id === service.id)
+    if (idx !== -1) services.value[idx] = data
+  } catch {
+    toast.error('Holatni o\'zgartirishda xatolik yuz berdi')
+  }
+}
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
+async function confirmDelete(id: string) {
+  const bid = businessStore.business?.id
+  if (!bid) return
+  try {
+    await servicesApi.delete(bid, id)
+    services.value = services.value.filter((s) => s.id !== id)
+    toast.success("Xizmat o'chirildi")
+  } catch {
+    toast.error("O'chirishda xatolik yuz berdi")
+  }
+  deleteConfirm.value = null
+}
+
+function formatPrice(price: number) {
+  return new Intl.NumberFormat('uz-UZ').format(price) + " so'm"
+}
+
+function imgUrl(url: string | null | undefined) {
+  return mediaUrl(url)
+}
+
+function showServiceImage(url: string | null | undefined) {
+  return !!url && !brokenImageUrls.value.includes(url)
+}
+
+function onServiceImageError(url: string | null | undefined) {
+  if (!url || brokenImageUrls.value.includes(url)) return
+  brokenImageUrls.value = [...brokenImageUrls.value, url]
+}
+
+onMounted(async () => {
+  try {
+    const bid = businessStore.business?.id
+    if (bid) {
+      const { data } = await servicesApi.getAll(bid)
+      services.value = data
+    }
+  } finally {
+    loading.value = false
+  }
+})
+</script>

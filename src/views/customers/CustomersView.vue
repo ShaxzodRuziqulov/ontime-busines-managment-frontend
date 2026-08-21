@@ -1,182 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { Plus, Users, Trash2, Edit2, Search, Phone, Mail, CalendarClock, Repeat } from 'lucide-vue-next'
-import { customersApi } from '@/api/customers'
-import { useBusinessStore } from '@/stores/business'
-import { useToast } from '@/composables/useToast'
-import SkeletonCard from '@/components/common/SkeletonCard.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
-import AppModal from '@/components/common/AppModal.vue'
-import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import type { Customer, CustomerCreateRequest } from '@/types'
-
-const businessStore = useBusinessStore()
-const toast = useToast()
-
-const customers = ref<Customer[]>([])
-const loading = ref(true)
-const saving = ref(false)
-const showModal = ref(false)
-const deleteConfirm = ref<string | null>(null)
-const editing = ref<Customer | null>(null)
-
-const search = ref('')
-const page = ref(0)
-const totalPages = ref(1)
-const totalElements = ref(0)
-const PAGE_SIZE = 12
-
-const defaultForm = (): CustomerCreateRequest & { active: boolean } => ({
-  fullName: '',
-  phone: '',
-  email: '',
-  note: '',
-  active: true,
-})
-const form = ref(defaultForm())
-
-let searchTimer: ReturnType<typeof setTimeout> | null = null
-watch(search, () => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    page.value = 0
-    load()
-  }, 350)
-})
-watch(page, load)
-
-async function load() {
-  const bid = businessStore.business?.id
-  if (!bid) {
-    loading.value = false
-    return
-  }
-  loading.value = true
-  try {
-    const { data } = await customersApi.getAll(bid, {
-      search: search.value.trim() || undefined,
-      page: page.value,
-      size: PAGE_SIZE,
-    })
-    customers.value = data.content
-    totalPages.value = data.totalPages
-    totalElements.value = data.totalElements
-  } catch {
-    toast.error("Mijozlar ro'yxatini yuklab bo'lmadi")
-  } finally {
-    loading.value = false
-  }
-}
-
-function openAdd() {
-  editing.value = null
-  form.value = defaultForm()
-  showModal.value = true
-}
-
-function openEdit(c: Customer) {
-  editing.value = c
-  form.value = {
-    fullName: c.fullName,
-    phone: c.phone || '',
-    email: c.email || '',
-    note: c.note || '',
-    active: c.active,
-  }
-  showModal.value = true
-}
-
-async function save() {
-  const bid = businessStore.business?.id
-  if (!bid) return
-  if (!form.value.fullName.trim()) {
-    toast.error('Ism kiritilishi shart')
-    return
-  }
-  saving.value = true
-  try {
-    const payload = {
-      fullName: form.value.fullName.trim(),
-      phone: form.value.phone?.trim() || undefined,
-      email: form.value.email?.trim() || undefined,
-      note: form.value.note?.trim() || undefined,
-    }
-    if (editing.value) {
-      const { data } = await customersApi.update(bid, editing.value.id, {
-        ...payload,
-        active: form.value.active,
-      })
-      const idx = customers.value.findIndex((c) => c.id === data.id)
-      if (idx !== -1) customers.value[idx] = data
-      toast.success('Mijoz yangilandi')
-    } else {
-      const { data } = await customersApi.create(bid, payload)
-      customers.value.unshift(data)
-      totalElements.value++
-      toast.success("Mijoz qo'shildi")
-    }
-    showModal.value = false
-  } catch (e) {
-    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Xatolik yuz berdi')
-  } finally {
-    saving.value = false
-  }
-}
-
-async function confirmDelete(id: string) {
-  const bid = businessStore.business?.id
-  if (!bid) return
-  try {
-    await customersApi.delete(bid, id)
-    customers.value = customers.value.filter((c) => c.id !== id)
-    totalElements.value = Math.max(0, totalElements.value - 1)
-    toast.success("Mijoz o'chirildi")
-  } catch (e) {
-    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || "O'chirishda xatolik yuz berdi")
-  }
-  deleteConfirm.value = null
-}
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
-
-const avatarColors = [
-  'bg-violet-100 text-violet-700',
-  'bg-blue-100 text-blue-700',
-  'bg-emerald-100 text-emerald-700',
-  'bg-amber-100 text-amber-700',
-  'bg-rose-100 text-rose-700',
-  'bg-cyan-100 text-cyan-700',
-]
-function getColor(name: string) {
-  return avatarColors[(name.charCodeAt(0) || 0) % avatarColors.length]
-}
-
-function formatDate(iso: string | null) {
-  if (!iso) return '—'
-
-  const date = new Date(iso)
-
-  const hour = date.getHours().toString().padStart(2, '0')
-  const minute = date.getMinutes().toString().padStart(2, '0')
-  const time = `${hour}:${minute}`.padStart(2, '0')
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const year = date.getFullYear().toString().padStart(2, '0')
-  return `${year}-${month}-${day}. ${time}`
-}
-
-onMounted(load)
-</script>
-
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
@@ -421,3 +242,182 @@ onMounted(load)
     />
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import { Plus, Users, Trash2, Edit2, Search, Phone, Mail, CalendarClock, Repeat } from 'lucide-vue-next'
+import { customersApi } from '@/api/customers'
+import { useBusinessStore } from '@/stores/business'
+import { useToast } from '@/composables/useToast'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import AppModal from '@/components/common/AppModal.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import type { Customer, CustomerCreateRequest } from '@/types'
+
+const businessStore = useBusinessStore()
+const toast = useToast()
+
+const customers = ref<Customer[]>([])
+const loading = ref(true)
+const saving = ref(false)
+const showModal = ref(false)
+const deleteConfirm = ref<string | null>(null)
+const editing = ref<Customer | null>(null)
+
+const search = ref('')
+const page = ref(0)
+const totalPages = ref(1)
+const totalElements = ref(0)
+const PAGE_SIZE = 12
+
+const defaultForm = (): CustomerCreateRequest & { active: boolean } => ({
+  fullName: '',
+  phone: '',
+  email: '',
+  note: '',
+  active: true,
+})
+const form = ref(defaultForm())
+
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(search, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    page.value = 0
+    load()
+  }, 350)
+})
+watch(page, load)
+
+async function load() {
+  const bid = businessStore.business?.id
+  if (!bid) {
+    loading.value = false
+    return
+  }
+  loading.value = true
+  try {
+    const { data } = await customersApi.getAll(bid, {
+      search: search.value.trim() || undefined,
+      page: page.value,
+      size: PAGE_SIZE,
+    })
+    customers.value = data.content
+    totalPages.value = data.totalPages
+    totalElements.value = data.totalElements
+  } catch {
+    toast.error("Mijozlar ro'yxatini yuklab bo'lmadi")
+  } finally {
+    loading.value = false
+  }
+}
+
+function openAdd() {
+  editing.value = null
+  form.value = defaultForm()
+  showModal.value = true
+}
+
+function openEdit(c: Customer) {
+  editing.value = c
+  form.value = {
+    fullName: c.fullName,
+    phone: c.phone || '',
+    email: c.email || '',
+    note: c.note || '',
+    active: c.active,
+  }
+  showModal.value = true
+}
+
+async function save() {
+  const bid = businessStore.business?.id
+  if (!bid) return
+  if (!form.value.fullName.trim()) {
+    toast.error('Ism kiritilishi shart')
+    return
+  }
+  saving.value = true
+  try {
+    const payload = {
+      fullName: form.value.fullName.trim(),
+      phone: form.value.phone?.trim() || undefined,
+      email: form.value.email?.trim() || undefined,
+      note: form.value.note?.trim() || undefined,
+    }
+    if (editing.value) {
+      const { data } = await customersApi.update(bid, editing.value.id, {
+        ...payload,
+        active: form.value.active,
+      })
+      const idx = customers.value.findIndex((c) => c.id === data.id)
+      if (idx !== -1) customers.value[idx] = data
+      toast.success('Mijoz yangilandi')
+    } else {
+      const { data } = await customersApi.create(bid, payload)
+      customers.value.unshift(data)
+      totalElements.value++
+      toast.success("Mijoz qo'shildi")
+    }
+    showModal.value = false
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Xatolik yuz berdi')
+  } finally {
+    saving.value = false
+  }
+}
+
+async function confirmDelete(id: string) {
+  const bid = businessStore.business?.id
+  if (!bid) return
+  try {
+    await customersApi.delete(bid, id)
+    customers.value = customers.value.filter((c) => c.id !== id)
+    totalElements.value = Math.max(0, totalElements.value - 1)
+    toast.success("Mijoz o'chirildi")
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || "O'chirishda xatolik yuz berdi")
+  }
+  deleteConfirm.value = null
+}
+
+function getInitials(name: string) {
+  return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+}
+
+const avatarColors = [
+  'bg-violet-100 text-violet-700',
+  'bg-blue-100 text-blue-700',
+  'bg-emerald-100 text-emerald-700',
+  'bg-amber-100 text-amber-700',
+  'bg-rose-100 text-rose-700',
+  'bg-cyan-100 text-cyan-700',
+]
+function getColor(name: string) {
+  return avatarColors[(name.charCodeAt(0) || 0) % avatarColors.length]
+}
+
+function formatDate(iso: string | null) {
+  if (!iso) return '—'
+
+  const date = new Date(iso)
+
+  const hour = date.getHours().toString().padStart(2, '0')
+  const minute = date.getMinutes().toString().padStart(2, '0')
+  const time = `${hour}:${minute}`.padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear().toString().padStart(2, '0')
+  return `${year}-${month}-${day}. ${time}`
+}
+
+onMounted(load)
+</script>

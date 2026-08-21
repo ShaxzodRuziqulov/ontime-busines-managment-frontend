@@ -1,211 +1,3 @@
-<script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import {
-  AlarmClock,
-  AlertCircle,
-  Building2,
-  CalendarCheck,
-  ChevronRight,
-  Save,
-  Phone,
-  MapPin,
-  FileText,
-  Clock,
-  Star,
-  Tag,
-  UserRound,
-  Users,
-} from 'lucide-vue-next'
-import { businessesApi } from '@/api/businesses'
-import { bookingsApi } from '@/api/bookings'
-import { servicesApi } from '@/api/services'
-import { staffApi } from '@/api/staff'
-import { customersApi } from '@/api/customers'
-import { businessHoursApi } from '@/api/businessHours'
-import { reviewsApi } from '@/api/reviews'
-import { useBusinessStore } from '@/stores/business'
-import { useToast } from '@/composables/useToast'
-import StatusBadge from '@/components/common/StatusBadge.vue'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import type { BusinessCategory } from '@/types'
-
-const toast = useToast()
-const businessStore = useBusinessStore()
-const saving = ref(false)
-const saved = ref(false)
-const sectionCounts = ref({
-  bookings: 0,
-  services: 0,
-  staff: 0,
-  customers: 0,
-  openDays: 0,
-  reviews: 0,
-})
-
-const form = ref({
-  name: '',
-  category: 'OTHER' as BusinessCategory,
-  description: '',
-  addressLine: '',
-  city: '',
-  contactPhone: '',
-})
-
-const categoryOptions: { value: BusinessCategory; label: string }[] = [
-  { value: 'BARBER', label: 'Sartarosh' },
-  { value: 'BEAUTY', label: "Go'zallik" },
-  { value: 'MEDICAL', label: 'Tibbiyot' },
-  { value: 'REPAIR', label: "Ta'mirlash" },
-  { value: 'CONSULTING', label: 'Konsultatsiya' },
-  { value: 'EDUCATION', label: "Ta'lim" },
-  { value: 'FITNESS', label: 'Sport' },
-  { value: 'AUTO', label: 'Avto xizmat' },
-  { value: 'LEGAL', label: 'Yuridik xizmat' },
-  { value: 'OTHER', label: 'Boshqa' },
-]
-
-function categoryLabel(category?: BusinessCategory) {
-  return categoryOptions.find((item) => item.value === category)?.label ?? 'Boshqa'
-}
-
-function formatDate(iso: string) {
-  const date = new Date(iso)
-  if (isNaN(date.getTime())) return ''
-  const day = date.getDate().toString().padStart(2, '0')
-  const year = date.getFullYear()
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-const subscriptionLabel = computed(() => {
-  const business = businessStore.business
-  if (!business) return ''
-  if (business.subscriptionEndDate) return formatDate(business.subscriptionEndDate)
-  if (business.status === 'ACTIVE') return 'Cheksiz'
-  if (business.status === 'TRIAL') return 'Sinov rejimida'
-  if (business.status === 'EXPIRED') return 'Muddati tugagan'
-  if (business.status === 'SUSPENDED') return "To'xtatilgan"
-  return 'Belgilanmagan'
-})
-
-const readOnlyNotice = computed(() => {
-  if (!businessStore.isReadOnly) return ''
-  if (businessStore.isTrial) return "Sinov muddati tugagan. Hozir faqat ko'rish mumkin."
-  return "Obuna faol emas. Hozir faqat ko'rish mumkin."
-})
-
-const profileSections = computed(() => [
-  {
-    label: 'Navbatlar',
-    description: 'Mijoz navbatlari va statuslar',
-    value: sectionCounts.value.bookings,
-    suffix: 'ta',
-    to: '/bookings',
-    icon: CalendarCheck,
-    color: 'bg-blue-50 text-blue-600',
-  },
-  {
-    label: 'Xizmatlar',
-    description: 'Narx va davomiylik sozlamalari',
-    value: sectionCounts.value.services,
-    suffix: 'ta',
-    to: '/services',
-    icon: Building2,
-    color: 'bg-violet-50 text-violet-600',
-  },
-  {
-    label: 'Xodimlar',
-    description: 'Jamoa va ishchi profillari',
-    value: sectionCounts.value.staff,
-    suffix: 'ta',
-    to: '/staff',
-    icon: Users,
-    color: 'bg-emerald-50 text-emerald-600',
-  },
-  {
-    label: 'Mijozlar',
-    description: 'Kontaktlar va mijoz bazasi',
-    value: sectionCounts.value.customers,
-    suffix: 'ta',
-    to: '/customers',
-    icon: UserRound,
-    color: 'bg-orange-50 text-orange-600',
-  },
-  {
-    label: 'Ish soatlari',
-    description: 'Haftalik ochiq kunlar',
-    value: sectionCounts.value.openDays,
-    suffix: 'kun',
-    to: '/hours',
-    icon: AlarmClock,
-    color: 'bg-amber-50 text-amber-600',
-  },
-  {
-    label: 'Sharhlar',
-    description: 'Mijoz baholari va fikrlar',
-    value: sectionCounts.value.reviews,
-    suffix: 'ta',
-    to: '/reviews',
-    icon: Star,
-    color: 'bg-yellow-100 text-yellow-700',
-  },
-])
-
-watch(
-  () => businessStore.business,
-  (biz) => {
-    if (biz) {
-      form.value.name = biz.name
-      form.value.category = biz.category ?? 'OTHER'
-      form.value.description = biz.description
-      form.value.contactPhone = biz.contactPhone || ''
-      form.value.addressLine = biz.addressLine || ''
-      form.value.city = biz.city || ''
-    }
-  },
-  { immediate: true }
-)
-
-async function saveChanges() {
-  if (!businessStore.business || businessStore.isReadOnly) return
-  saving.value = true
-  try {
-    await businessesApi.update(businessStore.business.id, form.value)
-    await businessStore.fetchMyBusiness()
-    saved.value = true
-    setTimeout(() => (saved.value = false), 2500)
-  } catch (e) {
-    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Saqlashda xatolik yuz berdi')
-  } finally {
-    saving.value = false
-  }
-}
-
-onMounted(async () => {
-  const bid = businessStore.business?.id
-  if (!bid) return
-
-  const [bookings, services, staff, customers, hours, reviews] = await Promise.allSettled([
-    bookingsApi.getAll({ businessId: bid, size: 1 }),
-    servicesApi.getAll(bid),
-    staffApi.getAll(bid),
-    customersApi.getAll(bid, { size: 1 }),
-    businessHoursApi.getAll(bid),
-    reviewsApi.getAll({ businessId: bid }),
-  ])
-
-  if (bookings.status === 'fulfilled') sectionCounts.value.bookings = bookings.value.data.totalElements
-  if (services.status === 'fulfilled') sectionCounts.value.services = services.value.data.length
-  if (staff.status === 'fulfilled') sectionCounts.value.staff = staff.value.data.length
-  if (customers.status === 'fulfilled') sectionCounts.value.customers = customers.value.data.totalElements
-  if (hours.status === 'fulfilled') {
-    sectionCounts.value.openDays = hours.value.data.filter((item) => !item.closed && item.opensAt && item.closesAt).length
-  }
-  if (reviews.status === 'fulfilled') sectionCounts.value.reviews = reviews.value.data.length
-})
-</script>
-
 <template>
   <div>
     <div class="mb-6">
@@ -424,3 +216,211 @@ onMounted(async () => {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import {
+  AlarmClock,
+  AlertCircle,
+  Building2,
+  CalendarCheck,
+  ChevronRight,
+  Save,
+  Phone,
+  MapPin,
+  FileText,
+  Clock,
+  Star,
+  Tag,
+  UserRound,
+  Users,
+} from 'lucide-vue-next'
+import { businessesApi } from '@/api/businesses'
+import { bookingsApi } from '@/api/bookings'
+import { servicesApi } from '@/api/services'
+import { staffApi } from '@/api/staff'
+import { customersApi } from '@/api/customers'
+import { businessHoursApi } from '@/api/businessHours'
+import { reviewsApi } from '@/api/reviews'
+import { useBusinessStore } from '@/stores/business'
+import { useToast } from '@/composables/useToast'
+import StatusBadge from '@/components/common/StatusBadge.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import type { BusinessCategory } from '@/types'
+
+const toast = useToast()
+const businessStore = useBusinessStore()
+const saving = ref(false)
+const saved = ref(false)
+const sectionCounts = ref({
+  bookings: 0,
+  services: 0,
+  staff: 0,
+  customers: 0,
+  openDays: 0,
+  reviews: 0,
+})
+
+const form = ref({
+  name: '',
+  category: 'OTHER' as BusinessCategory,
+  description: '',
+  addressLine: '',
+  city: '',
+  contactPhone: '',
+})
+
+const categoryOptions: { value: BusinessCategory; label: string }[] = [
+  { value: 'BARBER', label: 'Sartarosh' },
+  { value: 'BEAUTY', label: "Go'zallik" },
+  { value: 'MEDICAL', label: 'Tibbiyot' },
+  { value: 'REPAIR', label: "Ta'mirlash" },
+  { value: 'CONSULTING', label: 'Konsultatsiya' },
+  { value: 'EDUCATION', label: "Ta'lim" },
+  { value: 'FITNESS', label: 'Sport' },
+  { value: 'AUTO', label: 'Avto xizmat' },
+  { value: 'LEGAL', label: 'Yuridik xizmat' },
+  { value: 'OTHER', label: 'Boshqa' },
+]
+
+function categoryLabel(category?: BusinessCategory) {
+  return categoryOptions.find((item) => item.value === category)?.label ?? 'Boshqa'
+}
+
+function formatDate(iso: string) {
+  const date = new Date(iso)
+  if (isNaN(date.getTime())) return ''
+  const day = date.getDate().toString().padStart(2, '0')
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const subscriptionLabel = computed(() => {
+  const business = businessStore.business
+  if (!business) return ''
+  if (business.subscriptionEndDate) return formatDate(business.subscriptionEndDate)
+  if (business.status === 'ACTIVE') return 'Cheksiz'
+  if (business.status === 'TRIAL') return 'Sinov rejimida'
+  if (business.status === 'EXPIRED') return 'Muddati tugagan'
+  if (business.status === 'SUSPENDED') return "To'xtatilgan"
+  return 'Belgilanmagan'
+})
+
+const readOnlyNotice = computed(() => {
+  if (!businessStore.isReadOnly) return ''
+  if (businessStore.isTrial) return "Sinov muddati tugagan. Hozir faqat ko'rish mumkin."
+  return "Obuna faol emas. Hozir faqat ko'rish mumkin."
+})
+
+const profileSections = computed(() => [
+  {
+    label: 'Navbatlar',
+    description: 'Mijoz navbatlari va statuslar',
+    value: sectionCounts.value.bookings,
+    suffix: 'ta',
+    to: '/bookings',
+    icon: CalendarCheck,
+    color: 'bg-blue-50 text-blue-600',
+  },
+  {
+    label: 'Xizmatlar',
+    description: 'Narx va davomiylik sozlamalari',
+    value: sectionCounts.value.services,
+    suffix: 'ta',
+    to: '/services',
+    icon: Building2,
+    color: 'bg-violet-50 text-violet-600',
+  },
+  {
+    label: 'Xodimlar',
+    description: 'Jamoa va ishchi profillari',
+    value: sectionCounts.value.staff,
+    suffix: 'ta',
+    to: '/staff',
+    icon: Users,
+    color: 'bg-emerald-50 text-emerald-600',
+  },
+  {
+    label: 'Mijozlar',
+    description: 'Kontaktlar va mijoz bazasi',
+    value: sectionCounts.value.customers,
+    suffix: 'ta',
+    to: '/customers',
+    icon: UserRound,
+    color: 'bg-orange-50 text-orange-600',
+  },
+  {
+    label: 'Ish soatlari',
+    description: 'Haftalik ochiq kunlar',
+    value: sectionCounts.value.openDays,
+    suffix: 'kun',
+    to: '/hours',
+    icon: AlarmClock,
+    color: 'bg-amber-50 text-amber-600',
+  },
+  {
+    label: 'Sharhlar',
+    description: 'Mijoz baholari va fikrlar',
+    value: sectionCounts.value.reviews,
+    suffix: 'ta',
+    to: '/reviews',
+    icon: Star,
+    color: 'bg-yellow-100 text-yellow-700',
+  },
+])
+
+watch(
+    () => businessStore.business,
+    (biz) => {
+      if (biz) {
+        form.value.name = biz.name
+        form.value.category = biz.category ?? 'OTHER'
+        form.value.description = biz.description
+        form.value.contactPhone = biz.contactPhone || ''
+        form.value.addressLine = biz.addressLine || ''
+        form.value.city = biz.city || ''
+      }
+    },
+    { immediate: true }
+)
+
+async function saveChanges() {
+  if (!businessStore.business || businessStore.isReadOnly) return
+  saving.value = true
+  try {
+    await businessesApi.update(businessStore.business.id, form.value)
+    await businessStore.fetchMyBusiness()
+    saved.value = true
+    setTimeout(() => (saved.value = false), 2500)
+  } catch (e) {
+    const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    toast.error(msg || 'Saqlashda xatolik yuz berdi')
+  } finally {
+    saving.value = false
+  }
+}
+
+onMounted(async () => {
+  const bid = businessStore.business?.id
+  if (!bid) return
+
+  const [bookings, services, staff, customers, hours, reviews] = await Promise.allSettled([
+    bookingsApi.getAll({ businessId: bid, size: 1 }),
+    servicesApi.getAll(bid),
+    staffApi.getAll(bid),
+    customersApi.getAll(bid, { size: 1 }),
+    businessHoursApi.getAll(bid),
+    reviewsApi.getAll({ businessId: bid }),
+  ])
+
+  if (bookings.status === 'fulfilled') sectionCounts.value.bookings = bookings.value.data.totalElements
+  if (services.status === 'fulfilled') sectionCounts.value.services = services.value.data.length
+  if (staff.status === 'fulfilled') sectionCounts.value.staff = staff.value.data.length
+  if (customers.status === 'fulfilled') sectionCounts.value.customers = customers.value.data.totalElements
+  if (hours.status === 'fulfilled') {
+    sectionCounts.value.openDays = hours.value.data.filter((item) => !item.closed && item.opensAt && item.closesAt).length
+  }
+  if (reviews.status === 'fulfilled') sectionCounts.value.reviews = reviews.value.data.length
+})
+</script>

@@ -1,366 +1,3 @@
-<script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { Plus, Search, CalendarCheck, Trash2, Clock, Pencil } from 'lucide-vue-next'
-import { bookingsApi } from '@/api/bookings'
-import { servicesApi } from '@/api/services'
-import { staffApi } from '@/api/staff'
-import { businessHoursApi } from '@/api/businessHours'
-import { useBusinessStore } from '@/stores/business'
-import { useToast } from '@/composables/useToast'
-import StatusBadge from '@/components/common/StatusBadge.vue'
-import SkeletonTable from '@/components/common/SkeletonTable.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
-import AppModal from '@/components/common/AppModal.vue'
-import {
-  weekdayFromDate, toMinutes, todayIso, isStaffBusy, generatePossibleStarts, minutesToLabel,
-} from '@/utils/scheduling'
-import { personName } from '@/utils/names'
-import type { Booking, BookingStatus, BookingCreateRequest, OfferedService, StaffMember, BusinessHours } from '@/types'
-
-const businessStore = useBusinessStore()
-const toast = useToast()
-
-const bookings = ref<Booking[]>([])
-const services = ref<OfferedService[]>([])
-const staffList = ref<StaffMember[]>([])
-const hours = ref<BusinessHours[]>([])
-const dayBookings = ref<Booking[]>([])
-const slotsLoading = ref(false)
-const bookingDate = ref(todayIso())
-const selectedStartMin = ref<number | null>(null)
-const loading = ref(true)
-const saving = ref(false)
-const searchQuery = ref('')
-const statusFilter = ref<BookingStatus | ''>('')
-const showCreateModal = ref(false)
-const editingBookingId = ref<string | null>(null)
-const editingServiceId = ref<string | null>(null)
-const deleteConfirm = ref<string | null>(null)
-const createError = ref('')
-
-const page = ref(0)
-const pageSize = 20
-const totalPages = ref(0)
-const totalElements = ref(0)
-
-const statuses: { label: string; value: BookingStatus | '' }[] = [
-  { label: 'Barchasi', value: '' },
-  { label: 'Kutilmoqda', value: 'PENDING' },
-  { label: 'Tasdiqlangan', value: 'CONFIRMED' },
-  { label: 'Jarayonda', value: 'IN_PROGRESS' },
-  { label: 'Bajarildi', value: 'COMPLETED' },
-  { label: 'Mijoz bekor qildi', value: 'CANCELLED_BY_CUSTOMER' },
-  { label: 'Biznes bekor qildi', value: 'CANCELLED_BY_BUSINESS' },
-  { label: 'Kelmadi', value: 'NO_SHOW' },
-]
-
-const defaultForm = (): BookingCreateRequest => ({
-  guestName: '',
-  guestPhone: '',
-  businessId: businessStore.business?.id ?? '',
-  offeredServiceId: '',
-  staffId: undefined,
-  startAt: '',
-  endAt: '',
-  customerNote: '',
-})
-
-const form = ref<BookingCreateRequest>(defaultForm())
-
-const selectedService = computed(() =>
-  services.value.find((s) => s.id === form.value.offeredServiceId)
-)
-
-const activeStaffList = computed(() =>
-  staffList.value.filter((s) => {
-    if (!s.active) return false
-    if (!form.value.offeredServiceId) return true
-    return s.serviceIds?.includes(form.value.offeredServiceId)
-  })
-)
-
-const todaysHoursForBooking = computed(() =>
-  hours.value.find((h) => h.weekday === weekdayFromDate(bookingDate.value)) ?? null
-)
-
-// Tanlangan xizmat davomiyligiga mos, ish vaqti ichidagi mumkin bo'lgan boshlanish vaqtlari (30 daqiqalik qadam bilan).
-const possibleStarts = computed(() => {
-  const service = selectedService.value
-  const th = todaysHoursForBooking.value
-  if (!service || !th || th.closed || !th.opensAt || !th.closesAt) return []
-  return generatePossibleStarts(toMinutes(th.opensAt),
-      toMinutes(th.closesAt),
-      service.durationMinutes,
-      15
-  )
-})
-
-function isSlotBusyForSelectedStaff(startMin: number) {
-  if (!form.value.staffId || !selectedService.value) return false
-  return isStaffBusy(dayBookings.value, form.value.staffId, startMin, startMin + selectedService.value.durationMinutes)
-}
-
-function freeSlotCount(staffId: string) {
-  if (!selectedService.value) return 0
-  return possibleStarts.value.filter(
-    (start) => !isStaffBusy(dayBookings.value, staffId, start, start + selectedService.value!.durationMinutes)
-  ).length
-}
-
-function selectStaff(staffId: string | undefined) {
-  form.value.staffId = staffId
-  selectedStartMin.value = null
-  form.value.startAt = ''
-  form.value.endAt = ''
-}
-
-function selectSlot(startMin: number) {
-  if (!selectedService.value) return
-  selectedStartMin.value = startMin
-  const [y, mo, d] = bookingDate.value.split('-').map(Number)
-  const start = new Date(y, mo - 1, d, Math.floor(startMin / 60), startMin % 60)
-  const end = new Date(start.getTime() + selectedService.value.durationMinutes * 60000)
-  // Backend `Instant` kutadi — zonasiz mahalliy vaqt emas, to'liq ISO instant kerak.
-  form.value.startAt = start.toISOString()
-  form.value.endAt = end.toISOString()
-}
-
-async function loadDayBookings() {
-  const bid = businessStore.business?.id
-  if (!bid) return
-  slotsLoading.value = true
-  try {
-    const { data } = await bookingsApi.getAll({ businessId: bid, date: bookingDate.value, size: 200 })
-    dayBookings.value = data.content
-  } finally {
-    slotsLoading.value = false
-  }
-}
-
-const filtered = computed(() => bookings.value)
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('uz-UZ', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
-
-function duration(start: string, end: string) {
-  const diff = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000)
-  return `${diff} daqiqa`
-}
-
-function serviceNameById(id: string) {
-  return services.value.find((s) => s.id === id)?.name ?? '—'
-}
-
-function staffNameById(id: string | null) {
-  if (!id) return '—'
-  return personName(staffList.value.find((s) => s.id === id))
-}
-
-async function load() {
-  loading.value = true
-  try {
-    const bid = businessStore.business?.id
-    const q = searchQuery.value.trim()
-    const [b, s, st, h] = await Promise.all([
-      bookingsApi.getAll({
-        ...(bid ? { businessId: bid } : {}),
-        ...(statusFilter.value ? { status: statusFilter.value } : {}),
-        ...(q ? { q } : {}),
-        page: page.value,
-        size: pageSize,
-      }),
-      bid ? servicesApi.getAll(bid) : Promise.resolve({ data: [] as OfferedService[] }),
-      bid ? staffApi.getAll(bid) : Promise.resolve({ data: [] as StaffMember[] }),
-      bid ? businessHoursApi.getAll(bid) : Promise.resolve({ data: [] as BusinessHours[] }),
-    ])
-    bookings.value = b.data.content
-    totalPages.value = b.data.totalPages
-    totalElements.value = b.data.totalElements
-    services.value = s.data
-    staffList.value = st.data
-    hours.value = h.data
-  } finally {
-    loading.value = false
-  }
-}
-
-watch([statusFilter, searchQuery], () => {
-  page.value = 0
-  load()
-})
-
-function goToPage(next: number) {
-  if (next < 0 || next >= totalPages.value) return
-  page.value = next
-  load()
-}
-
-function openCreate() {
-  editingBookingId.value = null
-  editingServiceId.value = null
-
-  form.value = defaultForm()
-  createError.value = ''
-  bookingDate.value = todayIso()
-  selectedStartMin.value = null
-  showCreateModal.value = true
-  loadDayBookings()
-}
-
-watch(bookingDate, () => {
-  selectedStartMin.value = null
-  form.value.startAt = ''
-  form.value.endAt = ''
-  if (showCreateModal.value) loadDayBookings()
-})
-
-watch(() => form.value.offeredServiceId, (newServiceId, oldServiceId) => {
-  if (newServiceId === oldServiceId) return
-
-  selectedStartMin.value = null
-  form.value.startAt = ''
-  form.value.endAt = ''
-
-  if (
-      form.value.staffId &&
-      !activeStaffList.value.some((staff) => staff.id === form.value.staffId)
-  ) {
-    form.value.staffId = undefined
-  }
-})
-
-function errorMessage(e: unknown, fallback: string) {
-  const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-  return msg || fallback
-}
-
-const disabledItems = (status: BookingStatus) => {
-  if (status === 'COMPLETED') {
-    return status === 'COMPLETED'
-  }
-  if (status === 'CANCELLED_BY_BUSINESS') {
-    return status === 'CANCELLED_BY_BUSINESS'
-  }
-  if (status === 'CANCELLED_BY_CUSTOMER') {
-    return status === 'CANCELLED_BY_CUSTOMER'
-  }
-  if (status === 'NO_SHOW') {
-    return status === 'NO_SHOW'
-  }
-  return ;
-}
-
-const editForm = (booking: Booking) => {
-  showCreateModal.value = true
-
-
-  editingBookingId.value = booking.id
-  editingServiceId.value = booking.offeredServiceId
-  createError.value = ''
-
-  form.value = {
-    businessId: businessStore.business?.id ?? '',
-    guestName: booking.guestName ?? booking.customerName ?? '',
-    guestPhone: booking.guestPhone ?? '',
-    offeredServiceId: booking.offeredServiceId ?? '',
-    staffId: booking.staffId ?? undefined,
-    startAt: booking.startAt ?? '',
-    endAt: booking.endAt ?? '',
-    customerNote: booking.customerNote ?? '',
-  }
-
-  const date = new Date(booking.startAt)
-
-  bookingDate.value =
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2, '0')}`
-
-  selectedStartMin.value = date.getHours() * 60 + date.getMinutes()
-
-  loadDayBookings()
-}
-
-async function saveBooking() {
-  createError.value = ''
-  if (!form.value.guestName?.trim()) {
-    createError.value = 'Mijoz ismini kiriting'
-    return
-  }
-  if (!form.value.offeredServiceId || !form.value.startAt || !form.value.endAt) {
-    createError.value = 'Xizmat va vaqtni tanlang'
-    return
-  }
-  if (!form.value.staffId) {
-    createError.value = 'Xodimni tanlang'
-    return
-  }
-  if (new Date(form.value.endAt) <= new Date(form.value.startAt)) {
-    createError.value = 'Tugash vaqti boshlanish vaqtidan keyin bo\'lishi kerak'
-    return
-  }
-  saving.value = true
-  try {
-    const payload: BookingCreateRequest = {
-      ...form.value,
-      startAt: new Date(form.value.startAt).toISOString(),
-      endAt: new Date(form.value.endAt).toISOString(),
-      staffId: form.value.staffId || undefined,
-    }
-
-    if (editingBookingId.value) {
-      await bookingsApi.update(editingBookingId.value, payload)
-
-      toast.success('Navbat yangilandi')
-    } else {
-      await bookingsApi.create(payload)
-      toast.success('Navbat yaratildi')
-    }
-
-    showCreateModal.value = false
-    editingBookingId.value = null
-
-    await load()
-  } catch (e) {
-    createError.value = errorMessage(
-        e,
-        editingBookingId.value
-            ? 'Navbatni yangilashda xatolik'
-            : 'Navbat yaratishda xatolik'
-    )
-  } finally {
-    saving.value = false
-  }
-}
-
-async function updateStatus(booking: Booking, status: BookingStatus) {
-  const previous = booking.status
-  try {
-    await bookingsApi.update(booking.id, { status })
-    booking.status = status
-    toast.success('Status yangilandi')
-  } catch (e) {
-    booking.status = previous
-    toast.error(errorMessage(e, 'Statusni yangilashda xatolik'))
-  }
-}
-
-async function confirmDelete(id: string) {
-  try {
-    await bookingsApi.delete(id)
-    toast.success('Navbat o\'chirildi')
-    await load()
-  } catch (e) {
-    toast.error(errorMessage(e, 'O\'chirishda xatolik yuz berdi'))
-  }
-  deleteConfirm.value = null
-}
-
-onMounted(load)
-</script>
-
 <template>
   <div>
     <!-- Header -->
@@ -787,3 +424,365 @@ onMounted(load)
     </AppModal>
   </div>
 </template>
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { Plus, Search, CalendarCheck, Trash2, Clock, Pencil } from 'lucide-vue-next'
+import { bookingsApi } from '@/api/bookings'
+import { servicesApi } from '@/api/services'
+import { staffApi } from '@/api/staff'
+import { businessHoursApi } from '@/api/businessHours'
+import { useBusinessStore } from '@/stores/business'
+import { useToast } from '@/composables/useToast'
+import StatusBadge from '@/components/common/StatusBadge.vue'
+import SkeletonTable from '@/components/common/SkeletonTable.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import AppModal from '@/components/common/AppModal.vue'
+import {
+  weekdayFromDate, toMinutes, todayIso, isStaffBusy, generatePossibleStarts, minutesToLabel,
+} from '@/utils/scheduling'
+import { personName } from '@/utils/names'
+import type { Booking, BookingStatus, BookingCreateRequest, OfferedService, StaffMember, BusinessHours } from '@/types'
+
+const businessStore = useBusinessStore()
+const toast = useToast()
+
+const bookings = ref<Booking[]>([])
+const services = ref<OfferedService[]>([])
+const staffList = ref<StaffMember[]>([])
+const hours = ref<BusinessHours[]>([])
+const dayBookings = ref<Booking[]>([])
+const slotsLoading = ref(false)
+const bookingDate = ref(todayIso())
+const selectedStartMin = ref<number | null>(null)
+const loading = ref(true)
+const saving = ref(false)
+const searchQuery = ref('')
+const statusFilter = ref<BookingStatus | ''>('')
+const showCreateModal = ref(false)
+const editingBookingId = ref<string | null>(null)
+const editingServiceId = ref<string | null>(null)
+const deleteConfirm = ref<string | null>(null)
+const createError = ref('')
+
+const page = ref(0)
+const pageSize = 20
+const totalPages = ref(0)
+const totalElements = ref(0)
+
+const statuses: { label: string; value: BookingStatus | '' }[] = [
+  { label: 'Barchasi', value: '' },
+  { label: 'Kutilmoqda', value: 'PENDING' },
+  { label: 'Tasdiqlangan', value: 'CONFIRMED' },
+  { label: 'Jarayonda', value: 'IN_PROGRESS' },
+  { label: 'Bajarildi', value: 'COMPLETED' },
+  { label: 'Mijoz bekor qildi', value: 'CANCELLED_BY_CUSTOMER' },
+  { label: 'Biznes bekor qildi', value: 'CANCELLED_BY_BUSINESS' },
+  { label: 'Kelmadi', value: 'NO_SHOW' },
+]
+
+const defaultForm = (): BookingCreateRequest => ({
+  guestName: '',
+  guestPhone: '',
+  businessId: businessStore.business?.id ?? '',
+  offeredServiceId: '',
+  staffId: undefined,
+  startAt: '',
+  endAt: '',
+  customerNote: '',
+})
+
+const form = ref<BookingCreateRequest>(defaultForm())
+
+const selectedService = computed(() =>
+    services.value.find((s) => s.id === form.value.offeredServiceId)
+)
+
+const activeStaffList = computed(() =>
+    staffList.value.filter((s) => {
+      if (!s.active) return false
+      if (!form.value.offeredServiceId) return true
+      return s.serviceIds?.includes(form.value.offeredServiceId)
+    })
+)
+
+const todaysHoursForBooking = computed(() =>
+    hours.value.find((h) => h.weekday === weekdayFromDate(bookingDate.value)) ?? null
+)
+
+// Tanlangan xizmat davomiyligiga mos, ish vaqti ichidagi mumkin bo'lgan boshlanish vaqtlari (30 daqiqalik qadam bilan).
+const possibleStarts = computed(() => {
+  const service = selectedService.value
+  const th = todaysHoursForBooking.value
+  if (!service || !th || th.closed || !th.opensAt || !th.closesAt) return []
+  return generatePossibleStarts(toMinutes(th.opensAt),
+      toMinutes(th.closesAt),
+      service.durationMinutes,
+      15
+  )
+})
+
+function isSlotBusyForSelectedStaff(startMin: number) {
+  if (!form.value.staffId || !selectedService.value) return false
+  return isStaffBusy(dayBookings.value, form.value.staffId, startMin, startMin + selectedService.value.durationMinutes)
+}
+
+function freeSlotCount(staffId: string) {
+  if (!selectedService.value) return 0
+  return possibleStarts.value.filter(
+      (start) => !isStaffBusy(dayBookings.value, staffId, start, start + selectedService.value!.durationMinutes)
+  ).length
+}
+
+function selectStaff(staffId: string | undefined) {
+  form.value.staffId = staffId
+  selectedStartMin.value = null
+  form.value.startAt = ''
+  form.value.endAt = ''
+}
+
+function selectSlot(startMin: number) {
+  if (!selectedService.value) return
+  selectedStartMin.value = startMin
+  const [y, mo, d] = bookingDate.value.split('-').map(Number)
+  const start = new Date(y, mo - 1, d, Math.floor(startMin / 60), startMin % 60)
+  const end = new Date(start.getTime() + selectedService.value.durationMinutes * 60000)
+  // Backend `Instant` kutadi — zonasiz mahalliy vaqt emas, to'liq ISO instant kerak.
+  form.value.startAt = start.toISOString()
+  form.value.endAt = end.toISOString()
+}
+
+async function loadDayBookings() {
+  const bid = businessStore.business?.id
+  if (!bid) return
+  slotsLoading.value = true
+  try {
+    const { data } = await bookingsApi.getAll({ businessId: bid, date: bookingDate.value, size: 200 })
+    dayBookings.value = data.content
+  } finally {
+    slotsLoading.value = false
+  }
+}
+
+const filtered = computed(() => bookings.value)
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleString('uz-UZ', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
+function duration(start: string, end: string) {
+  const diff = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000)
+  return `${diff} daqiqa`
+}
+
+function serviceNameById(id: string) {
+  return services.value.find((s) => s.id === id)?.name ?? '—'
+}
+
+function staffNameById(id: string | null) {
+  if (!id) return '—'
+  return personName(staffList.value.find((s) => s.id === id))
+}
+
+async function load() {
+  loading.value = true
+  try {
+    const bid = businessStore.business?.id
+    const q = searchQuery.value.trim()
+    const [b, s, st, h] = await Promise.all([
+      bookingsApi.getAll({
+        ...(bid ? { businessId: bid } : {}),
+        ...(statusFilter.value ? { status: statusFilter.value } : {}),
+        ...(q ? { q } : {}),
+        page: page.value,
+        size: pageSize,
+      }),
+      bid ? servicesApi.getAll(bid) : Promise.resolve({ data: [] as OfferedService[] }),
+      bid ? staffApi.getAll(bid) : Promise.resolve({ data: [] as StaffMember[] }),
+      bid ? businessHoursApi.getAll(bid) : Promise.resolve({ data: [] as BusinessHours[] }),
+    ])
+    bookings.value = b.data.content
+    totalPages.value = b.data.totalPages
+    totalElements.value = b.data.totalElements
+    services.value = s.data
+    staffList.value = st.data
+    hours.value = h.data
+  } finally {
+    loading.value = false
+  }
+}
+
+watch([statusFilter, searchQuery], () => {
+  page.value = 0
+  load()
+})
+
+function goToPage(next: number) {
+  if (next < 0 || next >= totalPages.value) return
+  page.value = next
+  load()
+}
+
+function openCreate() {
+  editingBookingId.value = null
+  editingServiceId.value = null
+
+  form.value = defaultForm()
+  createError.value = ''
+  bookingDate.value = todayIso()
+  selectedStartMin.value = null
+  showCreateModal.value = true
+  loadDayBookings()
+}
+
+watch(bookingDate, () => {
+  selectedStartMin.value = null
+  form.value.startAt = ''
+  form.value.endAt = ''
+  if (showCreateModal.value) loadDayBookings()
+})
+
+watch(() => form.value.offeredServiceId, (newServiceId, oldServiceId) => {
+  if (newServiceId === oldServiceId) return
+
+  selectedStartMin.value = null
+  form.value.startAt = ''
+  form.value.endAt = ''
+
+  if (
+      form.value.staffId &&
+      !activeStaffList.value.some((staff) => staff.id === form.value.staffId)
+  ) {
+    form.value.staffId = undefined
+  }
+})
+
+function errorMessage(e: unknown, fallback: string) {
+  const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+  return msg || fallback
+}
+
+const disabledItems = (status: BookingStatus) => {
+  if (status === 'COMPLETED') {
+    return status === 'COMPLETED'
+  }
+  if (status === 'CANCELLED_BY_BUSINESS') {
+    return status === 'CANCELLED_BY_BUSINESS'
+  }
+  if (status === 'CANCELLED_BY_CUSTOMER') {
+    return status === 'CANCELLED_BY_CUSTOMER'
+  }
+  if (status === 'NO_SHOW') {
+    return status === 'NO_SHOW'
+  }
+  return ;
+}
+
+const editForm = (booking: Booking) => {
+  showCreateModal.value = true
+
+
+  editingBookingId.value = booking.id
+  editingServiceId.value = booking.offeredServiceId
+  createError.value = ''
+
+  form.value = {
+    businessId: businessStore.business?.id ?? '',
+    guestName: booking.guestName ?? booking.customerName ?? '',
+    guestPhone: booking.guestPhone ?? '',
+    offeredServiceId: booking.offeredServiceId ?? '',
+    staffId: booking.staffId ?? undefined,
+    startAt: booking.startAt ?? '',
+    endAt: booking.endAt ?? '',
+    customerNote: booking.customerNote ?? '',
+  }
+
+  const date = new Date(booking.startAt)
+
+  bookingDate.value =
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2, '0')}`
+
+  selectedStartMin.value = date.getHours() * 60 + date.getMinutes()
+
+  loadDayBookings()
+}
+
+async function saveBooking() {
+  createError.value = ''
+  if (!form.value.guestName?.trim()) {
+    createError.value = 'Mijoz ismini kiriting'
+    return
+  }
+  if (!form.value.offeredServiceId || !form.value.startAt || !form.value.endAt) {
+    createError.value = 'Xizmat va vaqtni tanlang'
+    return
+  }
+  if (!form.value.staffId) {
+    createError.value = 'Xodimni tanlang'
+    return
+  }
+  if (new Date(form.value.endAt) <= new Date(form.value.startAt)) {
+    createError.value = 'Tugash vaqti boshlanish vaqtidan keyin bo\'lishi kerak'
+    return
+  }
+  saving.value = true
+  try {
+    const payload: BookingCreateRequest = {
+      ...form.value,
+      startAt: new Date(form.value.startAt).toISOString(),
+      endAt: new Date(form.value.endAt).toISOString(),
+      staffId: form.value.staffId || undefined,
+    }
+
+    if (editingBookingId.value) {
+      await bookingsApi.update(editingBookingId.value, payload)
+
+      toast.success('Navbat yangilandi')
+    } else {
+      await bookingsApi.create(payload)
+      toast.success('Navbat yaratildi')
+    }
+
+    showCreateModal.value = false
+    editingBookingId.value = null
+
+    await load()
+  } catch (e) {
+    createError.value = errorMessage(
+        e,
+        editingBookingId.value
+            ? 'Navbatni yangilashda xatolik'
+            : 'Navbat yaratishda xatolik'
+    )
+  } finally {
+    saving.value = false
+  }
+}
+
+async function updateStatus(booking: Booking, status: BookingStatus) {
+  const previous = booking.status
+  try {
+    await bookingsApi.update(booking.id, { status })
+    booking.status = status
+    toast.success('Status yangilandi')
+  } catch (e) {
+    booking.status = previous
+    toast.error(errorMessage(e, 'Statusni yangilashda xatolik'))
+  }
+}
+
+async function confirmDelete(id: string) {
+  try {
+    await bookingsApi.delete(id)
+    toast.success('Navbat o\'chirildi')
+    await load()
+  } catch (e) {
+    toast.error(errorMessage(e, 'O\'chirishda xatolik yuz berdi'))
+  }
+  deleteConfirm.value = null
+}
+
+onMounted(load)
+</script>

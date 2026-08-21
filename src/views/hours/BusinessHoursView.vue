@@ -1,169 +1,3 @@
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { Save, Clock, AlertCircle } from 'lucide-vue-next'
-import { businessHoursApi } from '@/api/businessHours'
-import { useBusinessStore } from '@/stores/business'
-import { useToast } from '@/composables/useToast'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import type { BusinessHours, Weekday } from '@/types'
-
-const businessStore = useBusinessStore()
-const toast = useToast()
-const loading = ref(true)
-const saving = ref(false)
-
-const DAYS: { weekday: Weekday; label: string; short: string }[] = [
-  { weekday: 'MONDAY', label: 'Dushanba', short: 'D' },
-  { weekday: 'TUESDAY', label: 'Seshanba', short: 'S' },
-  { weekday: 'WEDNESDAY', label: 'Chorshanba', short: 'C' },
-  { weekday: 'THURSDAY', label: 'Payshanba', short: 'P' },
-  { weekday: 'FRIDAY', label: 'Juma', short: 'J' },
-  { weekday: 'SATURDAY', label: 'Shanba', short: 'Sh' },
-  { weekday: 'SUNDAY', label: 'Yakshanba', short: 'Y' },
-]
-
-interface DayState {
-  id: string | null
-  closed: boolean
-  opensAt: string
-  closesAt: string
-}
-
-function defaultDay(closed: boolean): DayState {
-  return { id: null, closed, opensAt: '09:00', closesAt: '18:00' }
-}
-
-const days = ref<Record<Weekday, DayState>>({
-  MONDAY: defaultDay(false),
-  TUESDAY: defaultDay(false),
-  WEDNESDAY: defaultDay(false),
-  THURSDAY: defaultDay(false),
-  FRIDAY: defaultDay(false),
-  SATURDAY: defaultDay(true),
-  SUNDAY: defaultDay(true),
-})
-
-const savedSnapshot = ref<Record<Weekday, DayState>>(
-  Object.fromEntries(DAYS.map((d) => [d.weekday, { ...days.value[d.weekday] }])) as Record<Weekday, DayState>
-)
-
-function isDirty(weekday: Weekday) {
-  const cur = days.value[weekday]
-  // Bazada bu kun uchun hali yozuv yo'q — demak hech qachon saqlanmagan, har doim "saqlash kerak" hisoblanadi
-  if (cur.id === null) return true
-  const saved = savedSnapshot.value[weekday]
-  return cur.closed !== saved.closed || cur.opensAt !== saved.opensAt || cur.closesAt !== saved.closesAt
-}
-
-function isInvalid(weekday: Weekday) {
-  const d = days.value[weekday]
-  return !d.closed && d.opensAt >= d.closesAt
-}
-
-const isToday = (weekday: Weekday) => {
-  const today = new Date().getDay()
-
-  const weekdayMap: Record<Weekday, number> = {
-    SUNDAY: 0,
-    MONDAY: 1,
-    TUESDAY: 2,
-    WEDNESDAY: 3,
-    THURSDAY: 4,
-    FRIDAY: 5,
-    SATURDAY: 6,
-  }
-
-  return weekdayMap[weekday] === today
-}
-
-const dirtyCount = computed(() => DAYS.filter((d) => isDirty(d.weekday)).length)
-const anyInvalid = computed(() => DAYS.some((d) => isInvalid(d.weekday)))
-
-// Barcha ish kunlari bir xil vaqtga egami — bo'lsa "hammasiga" ko'rinishi ko'rsatiladi
-const uniformHours = computed(() => {
-  const open = DAYS.filter((d) => !days.value[d.weekday].closed)
-  if (open.length === 0) return null
-  const first = days.value[open[0].weekday]
-  const same = open.every((d) => days.value[d.weekday].opensAt === first.opensAt && days.value[d.weekday].closesAt === first.closesAt)
-  return same ? { opensAt: first.opensAt, closesAt: first.closesAt } : null
-})
-
-function applyToWorkingDays(opensAt: string, closesAt: string) {
-  DAYS.forEach((d) => {
-    if (!days.value[d.weekday].closed) {
-      days.value[d.weekday] = { ...days.value[d.weekday], opensAt, closesAt }
-    }
-  })
-}
-
-function applyHours(list: BusinessHours[]) {
-  list.forEach((h) => {
-    const state: DayState = {
-      id: h.id,
-      closed: h.closed,
-      opensAt: h.opensAt ? h.opensAt.slice(0, 5) : '09:00',
-      closesAt: h.closesAt ? h.closesAt.slice(0, 5) : '18:00',
-    }
-    days.value[h.weekday] = state
-    savedSnapshot.value[h.weekday] = { ...state }
-  })
-}
-
-async function persistDay(weekday: Weekday): Promise<boolean> {
-  const bid = businessStore.business?.id
-  if (!bid) return false
-  const d = days.value[weekday]
-  if (isInvalid(weekday)) return false
-  try {
-    const payload = {
-      weekday,
-      closed: d.closed,
-      opensAt: d.closed ? undefined : d.opensAt + ':00',
-      closesAt: d.closed ? undefined : d.closesAt + ':00',
-    }
-    const { data } = d.id
-      ? await businessHoursApi.update(bid, d.id, { closed: payload.closed, opensAt: payload.opensAt, closesAt: payload.closesAt })
-      : await businessHoursApi.create(bid, payload)
-    days.value[weekday].id = data.id
-    savedSnapshot.value[weekday] = { ...days.value[weekday] }
-    return true
-  } catch {
-    return false
-  }
-}
-
-async function save() {
-  if (anyInvalid.value) {
-    toast.error('Yopilish vaqti ochilishdan keyin bo\'lsin')
-    return
-  }
-  const dirtyDays = DAYS.filter((d) => isDirty(d.weekday))
-  if (dirtyDays.length === 0) return
-  saving.value = true
-  try {
-    const results = await Promise.all(dirtyDays.map((d) => persistDay(d.weekday)))
-    const failed = results.filter((ok) => !ok).length
-    if (failed === 0) toast.success('Saqlandi')
-    else toast.error(`${failed} ta kunni saqlashda xatolik yuz berdi`)
-  } finally {
-    saving.value = false
-  }
-}
-
-onMounted(async () => {
-  const bid = businessStore.business?.id
-  if (bid) {
-    try {
-      const { data } = await businessHoursApi.getAll(bid)
-      applyHours(data)
-    } catch {
-      toast.error('Ish soatlarini yuklashda xatolik')
-    }
-  }
-  loading.value = false
-})
-</script>
-
 <template>
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -269,3 +103,169 @@ onMounted(async () => {
     </template>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { Save, Clock, AlertCircle } from 'lucide-vue-next'
+import { businessHoursApi } from '@/api/businessHours'
+import { useBusinessStore } from '@/stores/business'
+import { useToast } from '@/composables/useToast'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import type { BusinessHours, Weekday } from '@/types'
+
+const businessStore = useBusinessStore()
+const toast = useToast()
+const loading = ref(true)
+const saving = ref(false)
+
+const DAYS: { weekday: Weekday; label: string; short: string }[] = [
+  { weekday: 'MONDAY', label: 'Dushanba', short: 'D' },
+  { weekday: 'TUESDAY', label: 'Seshanba', short: 'S' },
+  { weekday: 'WEDNESDAY', label: 'Chorshanba', short: 'C' },
+  { weekday: 'THURSDAY', label: 'Payshanba', short: 'P' },
+  { weekday: 'FRIDAY', label: 'Juma', short: 'J' },
+  { weekday: 'SATURDAY', label: 'Shanba', short: 'Sh' },
+  { weekday: 'SUNDAY', label: 'Yakshanba', short: 'Y' },
+]
+
+interface DayState {
+  id: string | null
+  closed: boolean
+  opensAt: string
+  closesAt: string
+}
+
+function defaultDay(closed: boolean): DayState {
+  return { id: null, closed, opensAt: '09:00', closesAt: '18:00' }
+}
+
+const days = ref<Record<Weekday, DayState>>({
+  MONDAY: defaultDay(false),
+  TUESDAY: defaultDay(false),
+  WEDNESDAY: defaultDay(false),
+  THURSDAY: defaultDay(false),
+  FRIDAY: defaultDay(false),
+  SATURDAY: defaultDay(true),
+  SUNDAY: defaultDay(true),
+})
+
+const savedSnapshot = ref<Record<Weekday, DayState>>(
+    Object.fromEntries(DAYS.map((d) => [d.weekday, { ...days.value[d.weekday] }])) as Record<Weekday, DayState>
+)
+
+function isDirty(weekday: Weekday) {
+  const cur = days.value[weekday]
+  // Bazada bu kun uchun hali yozuv yo'q — demak hech qachon saqlanmagan, har doim "saqlash kerak" hisoblanadi
+  if (cur.id === null) return true
+  const saved = savedSnapshot.value[weekday]
+  return cur.closed !== saved.closed || cur.opensAt !== saved.opensAt || cur.closesAt !== saved.closesAt
+}
+
+function isInvalid(weekday: Weekday) {
+  const d = days.value[weekday]
+  return !d.closed && d.opensAt >= d.closesAt
+}
+
+const isToday = (weekday: Weekday) => {
+  const today = new Date().getDay()
+
+  const weekdayMap: Record<Weekday, number> = {
+    SUNDAY: 0,
+    MONDAY: 1,
+    TUESDAY: 2,
+    WEDNESDAY: 3,
+    THURSDAY: 4,
+    FRIDAY: 5,
+    SATURDAY: 6,
+  }
+
+  return weekdayMap[weekday] === today
+}
+
+const dirtyCount = computed(() => DAYS.filter((d) => isDirty(d.weekday)).length)
+const anyInvalid = computed(() => DAYS.some((d) => isInvalid(d.weekday)))
+
+// Barcha ish kunlari bir xil vaqtga egami — bo'lsa "hammasiga" ko'rinishi ko'rsatiladi
+const uniformHours = computed(() => {
+  const open = DAYS.filter((d) => !days.value[d.weekday].closed)
+  if (open.length === 0) return null
+  const first = days.value[open[0].weekday]
+  const same = open.every((d) => days.value[d.weekday].opensAt === first.opensAt && days.value[d.weekday].closesAt === first.closesAt)
+  return same ? { opensAt: first.opensAt, closesAt: first.closesAt } : null
+})
+
+function applyToWorkingDays(opensAt: string, closesAt: string) {
+  DAYS.forEach((d) => {
+    if (!days.value[d.weekday].closed) {
+      days.value[d.weekday] = { ...days.value[d.weekday], opensAt, closesAt }
+    }
+  })
+}
+
+function applyHours(list: BusinessHours[]) {
+  list.forEach((h) => {
+    const state: DayState = {
+      id: h.id,
+      closed: h.closed,
+      opensAt: h.opensAt ? h.opensAt.slice(0, 5) : '09:00',
+      closesAt: h.closesAt ? h.closesAt.slice(0, 5) : '18:00',
+    }
+    days.value[h.weekday] = state
+    savedSnapshot.value[h.weekday] = { ...state }
+  })
+}
+
+async function persistDay(weekday: Weekday): Promise<boolean> {
+  const bid = businessStore.business?.id
+  if (!bid) return false
+  const d = days.value[weekday]
+  if (isInvalid(weekday)) return false
+  try {
+    const payload = {
+      weekday,
+      closed: d.closed,
+      opensAt: d.closed ? undefined : d.opensAt + ':00',
+      closesAt: d.closed ? undefined : d.closesAt + ':00',
+    }
+    const { data } = d.id
+        ? await businessHoursApi.update(bid, d.id, { closed: payload.closed, opensAt: payload.opensAt, closesAt: payload.closesAt })
+        : await businessHoursApi.create(bid, payload)
+    days.value[weekday].id = data.id
+    savedSnapshot.value[weekday] = { ...days.value[weekday] }
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function save() {
+  if (anyInvalid.value) {
+    toast.error('Yopilish vaqti ochilishdan keyin bo\'lsin')
+    return
+  }
+  const dirtyDays = DAYS.filter((d) => isDirty(d.weekday))
+  if (dirtyDays.length === 0) return
+  saving.value = true
+  try {
+    const results = await Promise.all(dirtyDays.map((d) => persistDay(d.weekday)))
+    const failed = results.filter((ok) => !ok).length
+    if (failed === 0) toast.success('Saqlandi')
+    else toast.error(`${failed} ta kunni saqlashda xatolik yuz berdi`)
+  } finally {
+    saving.value = false
+  }
+}
+
+onMounted(async () => {
+  const bid = businessStore.business?.id
+  if (bid) {
+    try {
+      const { data } = await businessHoursApi.getAll(bid)
+      applyHours(data)
+    } catch {
+      toast.error('Ish soatlarini yuklashda xatolik')
+    }
+  }
+  loading.value = false
+})
+</script>
