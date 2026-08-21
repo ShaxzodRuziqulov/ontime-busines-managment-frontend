@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { Plus, Search, CalendarCheck, Trash2, Clock } from 'lucide-vue-next'
+import { Plus, Search, CalendarCheck, Trash2, Clock, Pencil } from 'lucide-vue-next'
 import { bookingsApi } from '@/api/bookings'
 import { servicesApi } from '@/api/services'
 import { staffApi } from '@/api/staff'
@@ -33,6 +33,8 @@ const saving = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref<BookingStatus | ''>('')
 const showCreateModal = ref(false)
+const editingBookingId = ref<string | null>(null)
+const editingServiceId = ref<string | null>(null)
 const deleteConfirm = ref<string | null>(null)
 const createError = ref('')
 
@@ -198,6 +200,9 @@ function goToPage(next: number) {
 }
 
 function openCreate() {
+  editingBookingId.value = null
+  editingServiceId.value = null
+
   form.value = defaultForm()
   createError.value = ''
   bookingDate.value = todayIso()
@@ -213,11 +218,17 @@ watch(bookingDate, () => {
   if (showCreateModal.value) loadDayBookings()
 })
 
-watch(() => form.value.offeredServiceId, () => {
+watch(() => form.value.offeredServiceId, (newServiceId, oldServiceId) => {
+  if (newServiceId === oldServiceId) return
+
   selectedStartMin.value = null
   form.value.startAt = ''
   form.value.endAt = ''
-  if (form.value.staffId && !activeStaffList.value.some((staff) => staff.id === form.value.staffId)) {
+
+  if (
+      form.value.staffId &&
+      !activeStaffList.value.some((staff) => staff.id === form.value.staffId)
+  ) {
     form.value.staffId = undefined
   }
 })
@@ -227,7 +238,52 @@ function errorMessage(e: unknown, fallback: string) {
   return msg || fallback
 }
 
-async function createBooking() {
+const disabledItems = (status: BookingStatus) => {
+  if (status === 'COMPLETED') {
+    return status === 'COMPLETED'
+  }
+  if (status === 'CANCELLED_BY_BUSINESS') {
+    return status === 'CANCELLED_BY_BUSINESS'
+  }
+  if (status === 'CANCELLED_BY_CUSTOMER') {
+    return status === 'CANCELLED_BY_CUSTOMER'
+  }
+  if (status === 'NO_SHOW') {
+    return status === 'NO_SHOW'
+  }
+  return ;
+}
+
+const editForm = (booking: Booking) => {
+  showCreateModal.value = true
+
+
+  editingBookingId.value = booking.id
+  editingServiceId.value = booking.offeredServiceId
+  createError.value = ''
+
+  form.value = {
+    businessId: businessStore.business?.id ?? '',
+    guestName: booking.guestName ?? booking.customerName ?? '',
+    guestPhone: booking.guestPhone ?? '',
+    offeredServiceId: booking.offeredServiceId ?? '',
+    staffId: booking.staffId ?? undefined,
+    startAt: booking.startAt ?? '',
+    endAt: booking.endAt ?? '',
+    customerNote: booking.customerNote ?? '',
+  }
+
+  const date = new Date(booking.startAt)
+
+  bookingDate.value =
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2, '0')}`
+
+  selectedStartMin.value = date.getHours() * 60 + date.getMinutes()
+
+  loadDayBookings()
+}
+
+async function saveBooking() {
   createError.value = ''
   if (!form.value.guestName?.trim()) {
     createError.value = 'Mijoz ismini kiriting'
@@ -235,6 +291,10 @@ async function createBooking() {
   }
   if (!form.value.offeredServiceId || !form.value.startAt || !form.value.endAt) {
     createError.value = 'Xizmat va vaqtni tanlang'
+    return
+  }
+  if (!form.value.staffId) {
+    createError.value = 'Xodimni tanlang'
     return
   }
   if (new Date(form.value.endAt) <= new Date(form.value.startAt)) {
@@ -249,12 +309,27 @@ async function createBooking() {
       endAt: new Date(form.value.endAt).toISOString(),
       staffId: form.value.staffId || undefined,
     }
-    await bookingsApi.create(payload)
+
+    if (editingBookingId.value) {
+      await bookingsApi.update(editingBookingId.value, payload)
+
+      toast.success('Navbat yangilandi')
+    } else {
+      await bookingsApi.create(payload)
+      toast.success('Navbat yaratildi')
+    }
+
     showCreateModal.value = false
-    toast.success('Navbat yaratildi')
+    editingBookingId.value = null
+
     await load()
   } catch (e) {
-    createError.value = errorMessage(e, 'Navbat yaratishda xatolik')
+    createError.value = errorMessage(
+        e,
+        editingBookingId.value
+            ? 'Navbatni yangilashda xatolik'
+            : 'Navbat yaratishda xatolik'
+    )
   } finally {
     saving.value = false
   }
@@ -394,12 +469,26 @@ onMounted(load)
                 <option value="CANCELLED_BY_BUSINESS">Biznes bekor qildi</option>
                 <option value="NO_SHOW">Kelmadi</option>
               </select>
-              <button
-                class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                @click="deleteConfirm = booking.id"
-              >
-                <Trash2 class="w-4 h-4" />
-              </button>
+              <div class="flex items-center gap-1">
+                <button
+                    :disabled="disabledItems(booking.status)"
+                    class="p-2 rounded-lg cursor-pointer transition-colors"
+                    :class="
+                            disabledItems(booking.status)
+                            ? 'text-slate-300 cursor-not-allowed'
+                            : 'text-slate-400 hover:text-blue-500 hover:bg-blue-100'
+                            "
+                    @click="editForm(booking)"
+                >
+                  <Pencil class="w-4 h-4"/>
+                </button>
+                <button
+                    class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    @click="deleteConfirm = booking.id"
+                >
+                  <Trash2 class="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -462,12 +551,26 @@ onMounted(load)
                         <option value="CANCELLED_BY_BUSINESS">Biznes bekor qildi</option>
                         <option value="NO_SHOW">Kelmadi</option>
                       </select>
-                      <button
-                        class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        @click="deleteConfirm = booking.id"
-                      >
-                        <Trash2 class="w-4 h-4" />
-                      </button>
+                      <div class="flex items-center gap-1">
+                        <button
+                            :disabled="disabledItems(booking.status)"
+                            class="p-2 rounded-lg cursor-pointer transition-colors"
+                            :class="
+                            disabledItems(booking.status)
+                            ? 'text-slate-300 cursor-not-allowed'
+                            : 'text-slate-400 hover:text-blue-500 hover:bg-blue-100'
+                            "
+                            @click="editForm(booking)"
+                        >
+                          <Pencil class="w-4 h-4"/>
+                        </button>
+                        <button
+                            class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            @click="deleteConfirm = booking.id"
+                        >
+                          <Trash2 class="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -502,114 +605,115 @@ onMounted(load)
     <!-- Create booking modal -->
     <AppModal
       v-if="showCreateModal"
-      title="Yangi navbat qo'shish"
+      :title="editingBookingId ? 'Navbatni yangilash' : 'Yangi navbat qo\'shish'"
       @close="showCreateModal = false"
     >
-      <form @submit.prevent="createBooking" class="space-y-4 text-gray-600">
+      <form @submit.prevent="saveBooking" class="space-y-4 text-gray-600">
         <p v-if="createError" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ createError }}</p>
 
         <!-- Guest customer info -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Mijoz ismi *</label>
-            <input
-              v-model="form.guestName"
-              type="text"
-              placeholder="Ismni kiriting"
-              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+        <div class="p-4 overflow-y-auto max-h-[68vh]">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Mijoz ismi *</label>
+              <input
+                  v-model="form.guestName"
+                  type="text"
+                  placeholder="Ismni kiriting"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Telefon (ixtiyoriy)</label>
+              <input
+                  v-model="form.guestPhone"
+                  type="tel"
+                  placeholder="+998901234567"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Telefon (ixtiyoriy)</label>
-            <input
-              v-model="form.guestPhone"
-              type="tel"
-              placeholder="+998901234567"
-              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
-        </div>
 
-        <!-- Service -->
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Xizmat *</label>
-          <select
-            v-model="form.offeredServiceId"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-          >
-            <option value="">— Xizmatni tanlang —</option>
-            <option
-              v-for="s in services.filter(s => s.active)"
-              :key="s.id"
-              :value="s.id"
+          <!-- Service -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Xizmat *</label>
+            <select
+                v-model="form.offeredServiceId"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
             >
-              {{ s.name }} ({{ s.durationMinutes }} daqiqa — {{ s.basePrice.toLocaleString() }} so'm)
-            </option>
-          </select>
-        </div>
+              <option value="">— Xizmatni tanlang —</option>
+              <option
+                  v-for="s in services.filter(s => s.active)"
+                  :key="s.id"
+                  :value="s.id"
+              >
+                {{ s.name }} ({{ s.durationMinutes }} daqiqa — {{ s.basePrice.toLocaleString() }} so'm)
+              </option>
+            </select>
+          </div>
 
-        <!-- Date -->
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Sana *</label>
-          <input
-            v-model="bookingDate"
-            type="date"
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
+          <!-- Date -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Sana *</label>
+            <input
+                v-model="bookingDate"
+                type="date"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
 
-        <!-- Staff -->
-        <div v-if="selectedService">
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Xodim (ixtiyoriy)</label>
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              @click="selectStaff(undefined)"
-              :class="[
+          <!-- Staff -->
+          <div v-if="selectedService">
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Xodim (ixtiyoriy)</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                  type="button"
+                  @click="selectStaff(undefined)"
+                  :class="[
                 'px-3 py-2 rounded-xl text-xs font-medium border text-left transition-all',
                 !form.staffId ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
               ]"
-            >
-              Xodim tanlanmagan
-            </button>
-            <button
-              v-for="st in activeStaffList"
-              :key="st.id"
-              type="button"
-              @click="selectStaff(st.id)"
-              :class="[
+              >
+                Xodim tanlanmagan
+              </button>
+              <button
+                  v-for="st in activeStaffList"
+                  :key="st.id"
+                  type="button"
+                  @click="selectStaff(st.id)"
+                  :class="[
                 'px-3 py-2 rounded-xl flex items-center justify-between gap-2 text-xs font-medium border text-left transition-all',
                 form.staffId === st.id ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
               ]"
-            >
-              <span class="">{{ personName(st) }}</span>
-              <span :class="['text-[10px] mt-0.5', form.staffId === st.id ? 'text-white/80' : 'text-slate-400']">
+              >
+                <span class="">{{ personName(st) }}</span>
+                <span :class="['text-[10px] mt-0.5', form.staffId === st.id ? 'text-white/80' : 'text-slate-400']">
                 {{ slotsLoading ? '...' : (freeSlotCount(st.id) > 0 ? `${freeSlotCount(st.id)} ta bo'sh` : "To'liq band") }}
               </span>
-            </button>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Time slots -->
-        <div v-if="selectedService">
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">
-            Boshlanish vaqti *
-            <span class="text-slate-400 font-normal ml-1">({{ selectedService.durationMinutes }} daqiqa)</span>
-          </label>
-          <p v-if="!todaysHoursForBooking || todaysHoursForBooking.closed" class="text-xs text-slate-400">
-            Bu kunda ish vaqti belgilanmagan yoki dam olish kuni
-          </p>
-          <p v-else-if="possibleStarts.length === 0" class="text-xs text-slate-400">
-            Bu kun uchun bo'sh vaqt yo'q
-          </p>
-          <div v-else class="grid grid-cols-5 gap-1.5 shadow max-h-60 overflow-y-auto">
-            <button
-              v-for="start in possibleStarts"
-              :key="start"
-              type="button"
-              :disabled="isSlotBusyForSelectedStaff(start)"
-              @click="selectSlot(start)"
-              :class="[
+          <!-- Time slots -->
+          <div v-if="selectedService">
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">
+              Boshlanish vaqti *
+              <span class="text-slate-400 font-normal ml-1">({{ selectedService.durationMinutes }} daqiqa)</span>
+            </label>
+            <p v-if="!todaysHoursForBooking || todaysHoursForBooking.closed" class="text-xs text-slate-400">
+              Bu kunda ish vaqti belgilanmagan yoki dam olish kuni
+            </p>
+            <p v-else-if="possibleStarts.length === 0" class="text-xs text-slate-400">
+              Bu kun uchun bo'sh vaqt yo'q
+            </p>
+            <div v-else class="grid grid-cols-5 gap-1.5 shadow max-h-60 overflow-y-auto">
+              <button
+                  v-for="start in possibleStarts"
+                  :key="start"
+                  type="button"
+                  :disabled="isSlotBusyForSelectedStaff(start)"
+                  @click="selectSlot(start)"
+                  :class="[
                 'px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all',
                 selectedStartMin === start
                   ? 'bg-primary-600 text-white border-primary-600'
@@ -617,21 +721,22 @@ onMounted(load)
                     ? 'bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through'
                     : 'bg-white text-slate-600 border-slate-200 hover:border-primary-300',
               ]"
-            >
-              {{ minutesToLabel(start) }}
-            </button>
+              >
+                {{ minutesToLabel(start) }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Note -->
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Izoh (ixtiyoriy)</label>
-          <textarea
-            v-model="form.customerNote"
-            rows="2"
-            placeholder="Mijoz istaklari..."
-            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-          />
+          <!-- Note -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Izoh (ixtiyoriy)</label>
+            <textarea
+                v-model="form.customerNote"
+                rows="2"
+                placeholder="Mijoz istaklari..."
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+            />
+          </div>
         </div>
 
         <div class="flex gap-3 pt-2">
@@ -647,7 +752,11 @@ onMounted(load)
             :disabled="saving"
             class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60"
           >
-            {{ saving ? 'Saqlanmoqda...' : 'Navbat qo\'shish' }}
+            {{ saving
+              ? 'Saqlanmoqda...'
+              : editingBookingId
+              ? 'Yangilash'
+              : 'Navbat qo\'shish' }}
           </button>
         </div>
       </form>
