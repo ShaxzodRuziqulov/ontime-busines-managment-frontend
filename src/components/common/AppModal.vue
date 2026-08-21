@@ -21,7 +21,7 @@
           </button>
         </div>
 
-        <div class="px-6 py-5 overflow-y-auto">
+        <div class="px-3 py-2 overflow-y-auto">
           <slot />
         </div>
       </div>

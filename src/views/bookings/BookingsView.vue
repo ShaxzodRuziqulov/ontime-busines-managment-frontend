@@ -176,6 +176,7 @@
                   <td class="px-5 py-4">
                     <div class="flex items-center justify-between gap-1">
                       <select
+                        :disabled="disabledItems(booking.status)"
                         :value="booking.status"
                         @change="updateStatus(booking, ($event.target as HTMLSelectElement).value as BookingStatus)"
                         class="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white text-slate-600 cursor-pointer"
@@ -249,7 +250,7 @@
         <p v-if="createError" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ createError }}</p>
 
         <!-- Guest customer info -->
-        <div class="p-4 overflow-y-auto max-h-[68vh]">
+        <div class="flex flex-col p-4 gap-3 overflow-y-auto max-h-[68vh]">
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">Mijoz ismi *</label>
@@ -406,7 +407,7 @@
       size="sm"
       @close="deleteConfirm = null"
     >
-      <p class="text-slate-600 text-sm mb-5">Ushbu navbatni o'chirishni tasdiqlaysizmi? Bu amalni bekor qilib bo'lmaydi.</p>
+      <p class="text-slate-600 flex items-center justify-center text-sm mb-5">Ushbu navbatni o'chirishni tasdiqlaysizmi?</p>
       <div class="flex gap-3">
         <button
           class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50"

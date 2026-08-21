@@ -116,7 +116,7 @@
               <span
                   v-for="slot in timeSlots"
                   :key="slot.label"
-                  class="absolute border-t border-slate-200 pointer-events-none w-full text-[11px] px-5 py-0.5 text-slate-400"
+                  class="absolute border-t border-slate-200 pointer-events-none w-full font-bold text-[11px] px-5 py-0.5 text-slate-400"
                   :style="{ top: `${slot.top}px` }"
               >
                 {{ slot.label }}
@@ -230,7 +230,46 @@
                 class="absolute left-16 right-0 border-t-2 border-red-500 z-20 pointer-events-none"
                 :style="{ top: `${nowTop}px` }"
             >
-              <span class="absolute -left-0.4 -top-1.5 w-3 h-3 rounded-full bg-red-500" />
+              <div class="absolute flex items-center -left-8 -top-2.5" >
+                <div
+                    class="
+                      relative flex items-center
+                      rounded
+                      border border-rose-200
+                      bg-red-200
+                      px-1 py-0.5
+                      shadow-[0_4px_14px_rgba(244,63,94,0.18)]
+                    "
+                >
+                  <!-- Clock -->
+<!--                  <div-->
+<!--                      class="-->
+<!--                        flex h-4 w-4 items-center justify-center-->
+
+<!--                      "-->
+<!--                  >-->
+<!--                    <Clock class="h-3 w-3 text-red-500" />-->
+<!--                  </div>-->
+
+                  <!-- Time -->
+                  <span class="flex flex-col text-[11px] leading-none text-rose-500">
+                    <span class="font-bold">09:45</span>
+<!--                    <span class="text-[10px]">Hozir</span>-->
+                  </span>
+
+                  <!-- small arrow -->
+                  <span
+                      class="
+                        absolute -right-1.5 top-1/2
+                        h-2.5 w-2.5
+                        -translate-y-1/2
+                        rotate-45
+                        border-r border-t border-rose-200
+                      bg-red-200
+                      "
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -456,7 +495,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { ChevronLeft, ChevronRight, CalendarDays, X as XIcon } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, CalendarDays, X as XIcon, Clock } from 'lucide-vue-next'
 import { staffApi } from '@/api/staff'
 import { businessHoursApi } from '@/api/businessHours'
 import { bookingsApi } from '@/api/bookings'
