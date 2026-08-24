@@ -233,7 +233,7 @@
     <ConfirmModal
       v-if="deleteConfirm"
       title="Mijozni o'chirish"
-      message="Bu mijozni o'chirishni tasdiqlaysizmi? Ushbu amal qaytarib bo'lmaydi."
+      message="Bu mijozni o'chirishni tasdiqlaysizmi?"
       confirm-label="O'chirish"
       icon="trash"
       variant="danger"

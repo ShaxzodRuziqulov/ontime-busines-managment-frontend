@@ -50,12 +50,12 @@
           </span>
           {{tab.label}}
         </button>
-        <div class="flex text-slate-400 text-sm font-medium ml-2 gap-1">
+        <div class="flex text-slate-400 text-sm font-medium ml-2 gap-2">
           Jami:
           <span class="text-slate-700 border-b border-gray-400 inline-block"
           >
             {{ filteredBookings.length }} ta navbat
-        </span>
+          </span>
         </div>
       </div>
     </div>
@@ -135,7 +135,7 @@
                         bg-rose-300/80 px-1.5 py-1.5 shadow-[0_2px_8px_rgba(244,63,94,0.25)]"
                   >
                   <span
-                      class="text-[11px] font-bold leading-none text-red-500 whitespace-nowrap"
+                      class="text-[11px] font-bold leading-none text-red-800 whitespace-nowrap"
                   >
                     {{ formatNowTime }}
                   </span>
@@ -739,9 +739,9 @@ const activeFilter =ref<Tabs>('all')
 const filteredButtons: {label: string; value: Tabs; activeColor?: string; color?: string; }[] = [
   {label: 'Hammasi', value: 'all', color: 'bg-gray-600 text-white border-gray-200'},
   {label: 'Mijoz', value: 'PENDING', activeColor: 'bg-amber-500', color: 'bg-amber-100 text-gray-600 border-amber-200'},
-  {label: 'Bekor(Mijoz)', value: 'CANCELLED_BY_CUSTOMER', activeColor: 'bg-red-500', color: 'bg-red-200 text-red-600 border-red-500'},
-  {label: 'Bekor(Xodim)', value: 'CANCELLED_BY_BUSINESS', activeColor: 'bg-red-400', color: 'bg-red-100 text-red-600 border-red-400'},
-  {label: 'Kelmadi', value: 'NO_SHOW', activeColor: 'bg-gray-400', color: 'bg-gray-100 text-gray-600 border-gray-500'},
+  {label: 'Bekor(Mijoz)', value: 'CANCELLED_BY_CUSTOMER', activeColor: 'bg-red-500', color: 'bg-red-100 text-red-600 border-red-500'},
+  {label: 'Bekor(Xodim)', value: 'CANCELLED_BY_BUSINESS', activeColor: 'bg-red-400', color: 'bg-red-50 text-red-600 border-red-400'},
+  {label: 'Kelmadi', value: 'NO_SHOW', activeColor: 'bg-gray-400', color: 'bg-slate-200 text-slate-500 border-slate-300'},
   {label: 'Tasdiqlandi', value: 'CONFIRMED', activeColor: 'bg-blue-400', color: 'bg-blue-100 text-blue-600 border-blue-300'},
   {label: 'Jarayonda', value: 'IN_PROGRESS', activeColor: 'bg-indigo-500', color: 'bg-indigo-400 text-indigo-500 border-indigo-300'},
   {label: 'Bajarildi', value: 'COMPLETED', activeColor: 'bg-emerald-500', color: 'bg-emerald-100 text-gray-600 border-emerald-500' },

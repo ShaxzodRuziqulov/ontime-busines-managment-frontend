@@ -535,21 +535,37 @@ function freeSlotCount(staffId: string) {
 }
 
 function selectStaff(staffId: string | undefined) {
-  form.value.staffId = staffId
-  selectedStartMin.value = null
-  form.value.startAt = ''
-  form.value.endAt = ''
+  if (form.value.staffId === staffId) {
+    form.value.staffId = ''
+    selectedStartMin.value = null
+    form.value.startAt = ''
+    form.value.endAt = ''
+  } else {
+    form.value.staffId = staffId
+    selectedStartMin.value = null
+    form.value.startAt = ''
+    form.value.endAt = ''
+  }
 }
 
 function selectSlot(startMin: number) {
   if (!selectedService.value) return
-  selectedStartMin.value = startMin
+
   const [y, mo, d] = bookingDate.value.split('-').map(Number)
   const start = new Date(y, mo - 1, d, Math.floor(startMin / 60), startMin % 60)
   const end = new Date(start.getTime() + selectedService.value.durationMinutes * 60000)
+
+  if (selectedStartMin.value === startMin) {
+    selectedStartMin.value = null
+    form.value.startAt = ''
+    form.value.endAt = ''
+  } else {
+    selectedStartMin.value = startMin
+    form.value.startAt = start.toISOString()
+    form.value.endAt = end.toISOString()
+  }
   // Backend `Instant` kutadi — zonasiz mahalliy vaqt emas, to'liq ISO instant kerak.
-  form.value.startAt = start.toISOString()
-  form.value.endAt = end.toISOString()
+
 }
 
 async function loadDayBookings() {
@@ -716,24 +732,42 @@ async function saveBooking() {
     createError.value = 'Mijoz ismini kiriting'
     return
   }
-  if (!form.value.offeredServiceId || !form.value.startAt || !form.value.endAt) {
-    createError.value = 'Xizmat va vaqtni tanlang'
+  if (!form.value.offeredServiceId) {
+    createError.value = 'Xizmat tanlang'
     return
   }
   if (!form.value.staffId) {
     createError.value = 'Xodimni tanlang'
     return
   }
-  if (new Date(form.value.endAt) <= new Date(form.value.startAt)) {
-    createError.value = 'Tugash vaqti boshlanish vaqtidan keyin bo\'lishi kerak'
-    return
+
+  if (!editingBookingId.value) {
+    if (!form.value.startAt || !form.value.endAt) {
+      createError.value = 'Sana va vaqtni tanlang'
+      return
+    }
+  }
+
+  if (form.value.startAt && form.value.endAt) {
+    const startAt = new Date(form.value.startAt)
+    const endAt = new Date(form.value.endAt)
+
+    if (endAt <= startAt) {
+      createError.value = 'Tugash vaqti boshlanish vaqtidan keyin bo\'lishi kerak'
+      return
+    }
   }
   saving.value = true
+
   try {
     const payload: BookingCreateRequest = {
       ...form.value,
-      startAt: new Date(form.value.startAt).toISOString(),
-      endAt: new Date(form.value.endAt).toISOString(),
+      startAt: form.value.startAt
+          ? new Date(form.value.startAt).toISOString()
+          : '',
+      endAt: form.value.endAt
+          ? new Date(form.value.endAt).toISOString()
+          : '',
       staffId: form.value.staffId || undefined,
     }
 
