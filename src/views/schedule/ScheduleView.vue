@@ -112,21 +112,47 @@
 
           <!-- Body -->
           <div class="flex relative" :style="{ height: `${gridHeight}px` }">
-            <div class="w-16 flex-shrink-0 flex items-center border-r border-slate-100 sticky left-0 z-20 bg-white">
+            <div class="w-16 flex-shrink-0 flex items-center border-r border-slate-100 sticky left-0 z-20 bg-slate-100">
               <span
                   v-for="slot in timeSlots"
                   :key="slot.label"
-                  class="absolute border-t border-slate-200 pointer-events-none w-full font-bold text-[11px] px-5 py-0.5 text-slate-400"
+                  class="absolute border-t border-slate-200 pointer-events-none w-full font-bold text-[11px] px-5 py-2 flex items-center justify-center text-slate-400"
                   :style="{ top: `${slot.top}px` }"
               >
                 {{ slot.label }}
               </span>
+              <div
+                  v-if="nowTop !== null"
+                  class="absolute left-3 z-40 pointer-events-none"
+                  :style="{ top: `${nowTop}px` }"
+              >
+                <div
+                    class="w-16 h-0 flex  justify-center"
+                >
+                  <div
+                      class="relative -translate-y-1/2 flex items-center rounded border
+                       border-rose-300
+                        bg-rose-300/80 px-1.5 py-1.5 shadow-[0_2px_8px_rgba(244,63,94,0.25)]"
+                  >
+                  <span
+                      class="text-[11px] font-bold leading-none text-red-500 whitespace-nowrap"
+                  >
+                    {{ formatNowTime }}
+                  </span>
+                    <span
+                        class="absolute -right-1 top-1/2 w-2 h-2 -translate-y-1/2 rotate-45
+                        bg-rose-300/80 border-r border-t
+                        border-rose-300"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div
                 v-for="col in columns"
                 :key="col.id ?? 'unassigned'"
-                class="flex-1 relative border-r border-slate-100 duration-200 transition-colors group"
+                class="flex-1 relative z-10 border-r border-slate-100 duration-200 transition-colors group"
                 :style="{ minWidth: `${COLUMN_WIDTH}px` }"
                 title="Yangi navbat qo'shish uchun bosing"
                 @click.self="onColumnClick($event, col.id, col.name)"
@@ -227,49 +253,19 @@
 
             <div
                 v-if="nowTop !== null"
-                class="absolute left-16 right-0 border-t-2 border-red-500 z-20 pointer-events-none"
+                class="absolute inset-x-0 z-10 pointer-events-none"
                 :style="{ top: `${nowTop}px` }"
             >
-              <div class="absolute flex items-center -left-8 -top-2.5" >
-                <div
-                    class="
-                      relative flex items-center
-                      rounded
-                      border border-rose-200
-                      bg-red-200
-                      px-1 py-0.5
-                      shadow-[0_4px_14px_rgba(244,63,94,0.18)]
-                    "
-                >
-                  <!-- Clock -->
-<!--                  <div-->
-<!--                      class="-->
-<!--                        flex h-4 w-4 items-center justify-center-->
-
-<!--                      "-->
-<!--                  >-->
-<!--                    <Clock class="h-3 w-3 text-red-500" />-->
-<!--                  </div>-->
-
-                  <!-- Time -->
-                  <span class="flex flex-col text-[11px] leading-none text-rose-500">
-                    <span class="font-bold">09:45</span>
-<!--                    <span class="text-[10px]">Hozir</span>-->
-                  </span>
-
-                  <!-- small arrow -->
-                  <span
-                      class="
-                        absolute -right-1.5 top-1/2
-                        h-2.5 w-2.5
-                        -translate-y-1/2
-                        rotate-45
-                        border-r border-t border-rose-200
-                      bg-red-200
-                      "
-                  />
-                </div>
-              </div>
+              <div
+                  class="
+                  absolute
+                  left-16
+                  right-0
+                  top-0
+                  border-t-2
+                  border-red-500
+                "
+              />
             </div>
           </div>
         </div>
@@ -495,7 +491,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { ChevronLeft, ChevronRight, CalendarDays, X as XIcon, Clock } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, CalendarDays, X as XIcon } from 'lucide-vue-next'
 import { staffApi } from '@/api/staff'
 import { businessHoursApi } from '@/api/businessHours'
 import { bookingsApi } from '@/api/bookings'
@@ -743,11 +739,11 @@ const activeFilter =ref<Tabs>('all')
 const filteredButtons: {label: string; value: Tabs; activeColor?: string; color?: string; }[] = [
   {label: 'Hammasi', value: 'all', color: 'bg-gray-600 text-white border-gray-200'},
   {label: 'Mijoz', value: 'PENDING', activeColor: 'bg-amber-500', color: 'bg-amber-100 text-gray-600 border-amber-200'},
-  {label: 'Bekor(Mijoz)', value: 'CANCELLED_BY_CUSTOMER', activeColor: 'bg-red-500', color: 'bg-red-200 text-gray-600 border-red-500'},
-  {label: 'Bekor(Xodim)', value: 'CANCELLED_BY_BUSINESS', activeColor: 'bg-red-400', color: 'bg-red-100 text-gray-600 border-red-400'},
+  {label: 'Bekor(Mijoz)', value: 'CANCELLED_BY_CUSTOMER', activeColor: 'bg-red-500', color: 'bg-red-200 text-red-600 border-red-500'},
+  {label: 'Bekor(Xodim)', value: 'CANCELLED_BY_BUSINESS', activeColor: 'bg-red-400', color: 'bg-red-100 text-red-600 border-red-400'},
   {label: 'Kelmadi', value: 'NO_SHOW', activeColor: 'bg-gray-400', color: 'bg-gray-100 text-gray-600 border-gray-500'},
-  {label: 'Tasdiqlandi', value: 'CONFIRMED', activeColor: 'bg-blue-400', color: 'bg-gray-100 text-gray-600 border-blue-500'},
-  {label: 'Jarayonda', value: 'IN_PROGRESS', activeColor: 'bg-indigo-500', color: 'bg-indigo-100 text-gray-600 border-indigo-500'},
+  {label: 'Tasdiqlandi', value: 'CONFIRMED', activeColor: 'bg-blue-400', color: 'bg-blue-100 text-blue-600 border-blue-300'},
+  {label: 'Jarayonda', value: 'IN_PROGRESS', activeColor: 'bg-indigo-500', color: 'bg-indigo-400 text-indigo-500 border-indigo-300'},
   {label: 'Bajarildi', value: 'COMPLETED', activeColor: 'bg-emerald-500', color: 'bg-emerald-100 text-gray-600 border-emerald-500' },
 ]
 
@@ -971,6 +967,15 @@ async function loadStaticData() {
     loading.value = false
   }
 }
+
+const formatNowTime = computed(() => {
+  const date = new Date(nowTick.value)
+
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+
+  return `${hours}:${minutes}`
+})
 
 async function loadBookings() {
   const bid = businessStore.business?.id
