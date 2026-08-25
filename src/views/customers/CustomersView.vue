@@ -66,8 +66,6 @@
           <div class="flex items-center gap-4 mb-3">
             <div
               :class="[
-                'w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm flex-shrink-0',
-                getColor(c.fullName),
                 'w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg flex-shrink-0',
                 getColor(customerName(c)),
               ]"

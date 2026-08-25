@@ -9,6 +9,14 @@ const apiClient = axios.create({
   timeout: 10000,
 })
 
+function isAuthRequest(url?: string) {
+  return !!url && (
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/password-reset')
+  )
+}
+
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
@@ -20,11 +28,14 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+    if (error.response?.status === 401 && !isAuthRequest(error.config?.url)) {
+      import('@/stores/auth').then(({ useAuthStore }) => {
+        useAuthStore().logout()
+      })
       import('@/router').then(({ default: router }) => {
-        router.push('/login')
+        if (router.currentRoute.value.name !== 'login') {
+          router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
+        }
       })
     }
     // 402 Payment Required — sinov/obuna muddati tugagan (read-only rejim).

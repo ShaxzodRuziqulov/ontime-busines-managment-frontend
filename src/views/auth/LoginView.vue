@@ -22,6 +22,7 @@ function validatePassword() {
 }
 
 async function handleLogin() {
+  if (loading.value) return
   if (!form.login || !form.password) {
     error.value = 'Login va parol kiritilishi shart'
     return

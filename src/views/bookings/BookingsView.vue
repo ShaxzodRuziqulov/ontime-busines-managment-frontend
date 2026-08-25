@@ -764,8 +764,6 @@ async function saveBooking() {
       ...form.value,
       customerFirstName: form.value.customerFirstName?.trim() || undefined,
       customerPhone: form.value.customerPhone?.trim() || undefined,
-      startAt: new Date(form.value.startAt).toISOString(),
-      endAt: new Date(form.value.endAt).toISOString(),
       startAt: form.value.startAt
           ? new Date(form.value.startAt).toISOString()
           : '',
