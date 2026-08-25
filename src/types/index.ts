@@ -179,6 +179,7 @@ export interface StaffMember {
   lastName: string | null
   serviceIds: string[]
   active: boolean
+  avatarUrl?: string
   createdAt: string
   updatedAt: string
 }

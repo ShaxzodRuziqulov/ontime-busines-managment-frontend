@@ -50,9 +50,16 @@
         >
           <div class="flex items-center gap-4 mb-4">
             <!-- Avatar -->
+            <img
+                v-if="member.avatarUrl"
+                :src="getAvatarUrl(member.avatarUrl)"
+                alt=""
+                class="w-12 h-12 rounded-full"
+            >
             <div
+                v-else
               :class="[
-                'w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg flex-shrink-0',
+                'w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm flex-shrink-0',
                 getColor(personName(member)),
               ]"
             >
@@ -713,6 +720,14 @@ function getColor(name: string) {
   const idx = name.charCodeAt(0) % avatarColors.length
   return avatarColors[idx]
 }
+
+const BASE_URL = import.meta.env.VITE_BASE_API as string;
+
+const getAvatarUrl = (url: string | undefined): string => {
+  if (!url) return "";
+  if (url.startsWith("https")) return url;
+  return `${BASE_URL}${url}`;
+};
 
 function serviceName(serviceId: string) {
   return services.value.find((service) => service.id === serviceId)?.name ?? "O'chirilgan xizmat"
