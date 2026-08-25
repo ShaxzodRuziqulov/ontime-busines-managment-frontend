@@ -39,7 +39,7 @@ onMounted(async () => {
       <TrialBanner />
 
       <!-- Page content -->
-      <main class="flex-1 overflow-y-auto p-6">
+      <main class="flex-1 z-30 overflow-y-auto p-6">
         <div v-if="!ready" class="flex items-center justify-center h-full text-slate-400 text-sm">
           Yuklanmoqda...
         </div>
