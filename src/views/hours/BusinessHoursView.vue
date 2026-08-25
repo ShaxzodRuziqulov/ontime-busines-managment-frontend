@@ -47,7 +47,7 @@
           :class="[
               'flex flex-col sm:flex-row sm:items-center border transition-colors gap-3 px-5 py-4',
               isInvalid(day.weekday) ? 'bg-red-50/40' : '',
-              isToday(day.weekday) ? 'border-red-300' : 'border-slate-200 border-transparent',
+              isToday(day.weekday) ? 'border-blue-500 bg-blue-50' : 'border-slate-200 border-transparent',
             ]"
         >
           <div class="flex items-center gap-3 sm:w-44 flex-shrink-0">
@@ -66,7 +66,7 @@
                   ]"
                 />
               </span>
-              <span class="text-sm font-medium text-slate-700">{{ day.label }}</span>
+              <span class="text-sm font-medium text-slate-600">{{ day.label }}</span>
             </label>
             <span v-if="isDirty(day.weekday)" class="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" title="Saqlanmagan o'zgarish" />
           </div>
