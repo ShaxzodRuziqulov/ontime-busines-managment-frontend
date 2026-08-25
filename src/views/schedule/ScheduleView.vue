@@ -101,7 +101,14 @@
                 class="flex-1 p-2 z-1 border-r border-gray-200  flex items-center gap-2"
                 :style="{ minWidth: `${COLUMN_WIDTH}px` }"
             >
+              <img
+                  v-if="col.avatarUrl"
+                  :src="getAvatarUrl(col.avatarUrl)"
+                  alt=""
+                  class="w-8 h-8 rounded-full"
+              >
               <span
+                  v-else
                   class="bg-indigo-200 flex font-semibold items-center justify-center w-6 h-6 text-xs text-indigo-600 rounded-full"
               >
                 {{getInitials(col.name)}}
@@ -536,6 +543,14 @@ const WEEKDAY_LABELS: Record<string, string> = {
   THURSDAY: 'Payshanba', FRIDAY: 'Juma', SATURDAY: 'Shanba', SUNDAY: 'Yakshanba',
 }
 
+const BASE_URL = import.meta.env.VITE_BASE_API as string;
+
+const getAvatarUrl = (url: string | undefined): string => {
+  if (!url) return "";
+  if (url.startsWith("https")) return url;
+  return `${BASE_URL}${url}`;
+};
+
 function getInitials(name: string) {
   return name
       .split(' ')
@@ -597,7 +612,7 @@ const quickAvailableServices = computed(() => {
 
 // Ustunlar: har bir faol xodim + "Tayinlanmagan" (staffId yo'q bronlar uchun)
 const columns = computed(() => [
-  ...activeStaff.value.map((s) => ({ id: s.id, name: personName(s), color: colorForStaff(s.id) })),
+  ...activeStaff.value.map((s) => ({ id: s.id, avatarUrl: s.avatarUrl, name: personName(s), color: colorForStaff(s.id) })),
   // { id: null, name: 'Tayinlanmagan', color: '#94a3b8' },
 ])
 
