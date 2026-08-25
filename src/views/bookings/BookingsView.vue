@@ -82,8 +82,8 @@
               <StatusBadge :status="booking.status" />
             </div>
             <p class="text-xs text-slate-500 mb-1">
-              <span class="font-medium">Mijoz:</span> {{ booking.customerName || booking.guestName || '—' }}
-              <span v-if="booking.guestPhone"> · {{ booking.guestPhone }}</span>
+              <span class="font-medium">Mijoz:</span> {{ bookingCustomerName(booking, '—') }}
+              <span v-if="booking.customerPhone"> · {{ booking.customerPhone }}</span>
             </p>
             <p class="text-xs text-slate-500 mb-1">
               <span class="font-medium">Xizmat:</span> {{ serviceNameById(booking.offeredServiceId) }}
@@ -155,8 +155,8 @@
                 >
                   <td class="px-5 py-4 text-slate-700">{{index + 1}}</td>
                   <td class="px-5 py-4 text-slate-700">
-                    <div>{{ booking.customerName || booking.guestName || '—' }}</div>
-                    <div v-if="booking.guestPhone" class="text-xs text-slate-400">{{ booking.guestPhone }}</div>
+                    <div>{{ bookingCustomerName(booking, '—') }}</div>
+                    <div v-if="booking.customerPhone" class="text-xs text-slate-400">{{ booking.customerPhone }}</div>
                   </td>
                   <td class="px-5 py-4 text-slate-700 whitespace-nowrap">{{ formatDate(booking.startAt) }}</td>
                   <td class="px-5 py-4 text-slate-500 whitespace-nowrap">
@@ -249,13 +249,12 @@
       <form @submit.prevent="saveBooking" class="space-y-4 text-gray-600">
         <p v-if="createError" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ createError }}</p>
 
-        <!-- Guest customer info -->
         <div class="flex flex-col p-4 gap-3 overflow-y-auto max-h-[68vh]">
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">Mijoz ismi *</label>
               <input
-                  v-model="form.guestName"
+                  v-model="form.customerFirstName"
                   type="text"
                   placeholder="Ismni kiriting"
                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -264,7 +263,7 @@
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">Telefon (ixtiyoriy)</label>
               <input
-                  v-model="form.guestPhone"
+                  v-model="form.customerPhone"
                   type="tel"
                   placeholder="+998901234567"
                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -441,7 +440,7 @@ import AppModal from '@/components/common/AppModal.vue'
 import {
   weekdayFromDate, toMinutes, todayIso, isStaffBusy, generatePossibleStarts, minutesToLabel,
 } from '@/utils/scheduling'
-import { personName } from '@/utils/names'
+import { bookingCustomerName, personName } from '@/utils/names'
 import type { Booking, BookingStatus, BookingCreateRequest, OfferedService, StaffMember, BusinessHours } from '@/types'
 
 const businessStore = useBusinessStore()
@@ -482,8 +481,8 @@ const statuses: { label: string; value: BookingStatus | '' }[] = [
 ]
 
 const defaultForm = (): BookingCreateRequest => ({
-  guestName: '',
-  guestPhone: '',
+  customerFirstName: '',
+  customerPhone: '',
   businessId: businessStore.business?.id ?? '',
   offeredServiceId: '',
   staffId: undefined,
@@ -691,8 +690,9 @@ const editForm = (booking: Booking) => {
 
   form.value = {
     businessId: businessStore.business?.id ?? '',
-    guestName: booking.guestName ?? booking.customerName ?? '',
-    guestPhone: booking.guestPhone ?? '',
+    customerId: booking.customerId ?? undefined,
+    customerFirstName: bookingCustomerName(booking, '') ?? '',
+    customerPhone: booking.customerPhone ?? '',
     offeredServiceId: booking.offeredServiceId ?? '',
     staffId: booking.staffId ?? undefined,
     startAt: booking.startAt ?? '',
@@ -712,7 +712,7 @@ const editForm = (booking: Booking) => {
 
 async function saveBooking() {
   createError.value = ''
-  if (!form.value.guestName?.trim()) {
+  if (!form.value.customerId && !form.value.customerFirstName?.trim()) {
     createError.value = 'Mijoz ismini kiriting'
     return
   }
@@ -732,6 +732,8 @@ async function saveBooking() {
   try {
     const payload: BookingCreateRequest = {
       ...form.value,
+      customerFirstName: form.value.customerFirstName?.trim() || undefined,
+      customerPhone: form.value.customerPhone?.trim() || undefined,
       startAt: new Date(form.value.startAt).toISOString(),
       endAt: new Date(form.value.endAt).toISOString(),
       staffId: form.value.staffId || undefined,

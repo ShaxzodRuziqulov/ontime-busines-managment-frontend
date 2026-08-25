@@ -65,17 +65,17 @@
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-3">
               <div class="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center text-sm font-semibold text-primary-700">
-                {{ (review.customerName || 'M').charAt(0).toUpperCase() }}
+                {{ reviewCustomerName(review, 'M').charAt(0).toUpperCase() }}
               </div>
               <div class="flex flex-col gap-1">
-                <p class="text-xs font-semibold pb-1 text-slate-700">{{ review.customerName || 'Mijoz' }}</p>
+                <p class="text-xs font-semibold pb-1 text-slate-700">{{ reviewCustomerName(review) }}</p>
                 <p class="text-xs flex items-center gap-2 text-slate-400">
                   <CalendarDays class="w-4 h-4"/>
                   {{ formatDate(review.createdAt) }}
                 </p>
                 <p class="text-xs flex items-center gap-2 text-slate-400">
                   <User class="w-4 h-4"/>
-                  {{review.staffName}}
+                  {{ reviewStaffName(review) }}
                 </p>
               </div>
             </div>
@@ -106,6 +106,7 @@ import { reviewsApi } from '@/api/reviews'
 import { useBusinessStore } from '@/stores/business'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import { reviewCustomerName, reviewStaffName } from '@/utils/names'
 import type { Review } from '@/types'
 
 const businessStore = useBusinessStore()

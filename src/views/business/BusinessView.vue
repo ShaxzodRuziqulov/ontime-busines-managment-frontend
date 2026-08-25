@@ -200,6 +200,20 @@
               />
             </div>
 
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                <MapPin class="w-4 h-4 inline mr-1.5" />
+                Xaritadagi joylashuv
+              </label>
+              <MapPicker
+                v-model="mapPoint"
+                :address-line="form.addressLine"
+                :city="form.city"
+                :disabled="businessStore.isReadOnly"
+                @address-selected="applyMapAddress"
+              />
+            </div>
+
             <div class="flex items-center gap-3 pt-2">
               <button
                 type="submit"
@@ -246,6 +260,7 @@ import { useBusinessStore } from '@/stores/business'
 import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import MapPicker from '@/components/common/MapPicker.vue'
 import type { BusinessCategory } from '@/types'
 
 const toast = useToast()
@@ -268,7 +283,26 @@ const form = ref({
   addressLine: '',
   city: '',
   contactPhone: '',
+  latitude: undefined as number | undefined,
+  longitude: undefined as number | undefined,
 })
+
+const mapPoint = computed({
+  get: () => (
+    form.value.latitude != null && form.value.longitude != null
+      ? { lat: form.value.latitude, lng: form.value.longitude }
+      : null
+  ),
+  set: (point: { lat: number; lng: number } | null) => {
+    form.value.latitude = point?.lat
+    form.value.longitude = point?.lng
+  },
+})
+
+function applyMapAddress(address: { addressLine: string; city: string }) {
+  if (address.addressLine) form.value.addressLine = address.addressLine
+  if (address.city) form.value.city = address.city
+}
 
 const categoryOptions: { value: BusinessCategory; label: string }[] = [
   { value: 'BARBER', label: 'Sartarosh' },
@@ -380,6 +414,8 @@ watch(
         form.value.contactPhone = biz.contactPhone || ''
         form.value.addressLine = biz.addressLine || ''
         form.value.city = biz.city || ''
+        form.value.latitude = biz.latitude
+        form.value.longitude = biz.longitude
       }
     },
     { immediate: true }
@@ -389,7 +425,11 @@ async function saveChanges() {
   if (!businessStore.business || businessStore.isReadOnly) return
   saving.value = true
   try {
-    await businessesApi.update(businessStore.business.id, form.value)
+    await businessesApi.update(businessStore.business.id, {
+      ...form.value,
+      latitude: form.value.latitude,
+      longitude: form.value.longitude,
+    })
     await businessStore.fetchMyBusiness()
     saved.value = true
     setTimeout(() => (saved.value = false), 2500)

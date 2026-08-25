@@ -201,7 +201,7 @@
             >
               <div class="flex items-center gap-3 min-w-0">
                 <span class="text-sm font-semibold text-slate-800 w-12 flex-shrink-0">{{ formatTime(booking.startAt) }}</span>
-                <span class="text-sm text-slate-600 truncate">{{ booking.customerName || booking.guestName || 'Mijoz' }}</span>
+                <span class="text-sm text-slate-600 truncate">{{ bookingCustomerName(booking) }}</span>
               </div>
               <StatusBadge :status="booking.status" />
             </div>
@@ -262,6 +262,7 @@ import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import { todayIso } from '@/utils/scheduling'
+import { bookingCustomerName } from '@/utils/names'
 import type { Booking, OfferedService, StaffMember, Review, BusinessHours } from '@/types'
 
 const businessStore = useBusinessStore()

@@ -99,15 +99,18 @@ export type BookingStatus =
 export interface Booking {
   id: string
   customerId: string | null
-  customerName?: string | null
-  guestName: string | null
-  guestPhone: string | null
+  customerAccountId?: string | null
+  customerFirstName?: string | null
+  customerLastName?: string | null
+  customerMiddleName?: string | null
+  customerPhone?: string | null
   businessId: string
   businessName?: string
   offeredServiceId: string
   offeredServiceName?: string
   staffId: string | null
-  staffName?: string | null
+  staffFirstName?: string | null
+  staffLastName?: string | null
   startAt: string
   endAt: string
   status: BookingStatus
@@ -126,8 +129,10 @@ export interface Page<T> {
 
 export interface BookingCreateRequest {
   customerId?: string
-  guestName?: string
-  guestPhone?: string
+  customerFirstName?: string
+  customerLastName?: string
+  customerMiddleName?: string
+  customerPhone?: string
   businessId: string
   offeredServiceId: string
   staffId?: string
@@ -143,8 +148,6 @@ export interface BookingUpdateRequest {
   endAt?: string
   status?: BookingStatus
   customerNote?: string
-  guestName?: string
-  guestPhone?: string
 }
 
 export interface OfferedService {
@@ -201,7 +204,10 @@ export interface StaffRegisterRequest {
 export interface Customer {
   id: string
   businessId: string
-  fullName: string
+  appUserId?: string | null
+  firstName: string
+  lastName: string | null
+  middleName: string | null
   phone: string | null
   email: string | null
   note: string | null
@@ -213,14 +219,18 @@ export interface Customer {
 }
 
 export interface CustomerCreateRequest {
-  fullName: string
+  firstName: string
+  lastName?: string
+  middleName?: string
   phone?: string
   email?: string
   note?: string
 }
 
 export interface CustomerUpdateRequest {
-  fullName?: string
+  firstName?: string
+  lastName?: string | null
+  middleName?: string | null
   phone?: string
   email?: string
   note?: string
@@ -240,8 +250,10 @@ export interface Review {
   bookingId: string
   businessId: string | null
   staffId: string | null
-  staffName: string | null
-  customerName?: string | null
+  staffFirstName: string | null
+  staffLastName: string | null
+  customerFirstName?: string | null
+  customerLastName?: string | null
   stars: number
   comment: string
   createdAt: string

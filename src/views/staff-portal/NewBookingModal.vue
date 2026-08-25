@@ -47,13 +47,13 @@
         </div>
       </div>
 
-      <div v-if="!matched">
+      <div>
         <label class="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
           <UserPlus class="w-3.5 h-3.5 text-slate-400" />
           Mijoz ismi
         </label>
         <input
-          v-model="guestName"
+          v-model="customerFirstName"
           type="text"
           placeholder="Ism familiya"
           class="w-full px-2 py-1.5 text-gray-600 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
@@ -183,7 +183,7 @@ const selectedService = computed(() => services.value.find((s) => s.id === servi
 
 // ── Mijoz (telefon orqali aniqlash) ─────────────────────────
 const phone = ref('')
-const guestName = ref('')
+const customerFirstName = ref('')
 const matched = ref<UserLookup | null>(null)
 const candidates = ref<UserLookup[]>([])
 const searching = ref(false)
@@ -199,7 +199,7 @@ async function searchPhone() {
     const { data } = await usersApi.lookupByPhone(phone.value)
     if (data.length === 1) selectCustomer(data[0])
     else if (data.length > 1) candidates.value = data
-    // 0 ta → mehmon: guestName qo'lda kiritiladi
+    // 0 ta bo'lsa, mijoz ismi qo'lda kiritiladi.
   } catch {
     // qidiruv xatosi bron qilishga to'sqinlik qilmasin
   } finally {
@@ -210,7 +210,7 @@ async function searchPhone() {
 function selectCustomer(u: UserLookup) {
   matched.value = u
   candidates.value = []
-  guestName.value = personName(u, u.login)
+  customerFirstName.value = personName(u, u.login)
 }
 
 function resetCustomer() {
@@ -289,7 +289,7 @@ function toInstant(d: string, minutes: number): string {
 const canSubmit = computed(() =>
     !!serviceId.value &&
     selectedStartMin.value !== null &&
-    (!!matched.value || guestName.value.trim().length > 0),
+    customerFirstName.value.trim().length > 0,
 )
 
 async function submit() {
@@ -308,9 +308,8 @@ async function submit() {
       startAt,
       endAt,
       customerNote: note.value.trim() || undefined,
-      ...(matched.value
-          ? { customerId: matched.value.id }
-          : { guestName: guestName.value.trim(), guestPhone: phone.value.trim() || undefined }),
+      customerFirstName: customerFirstName.value.trim(),
+      customerPhone: phone.value.trim() || undefined,
     })
 
     toast.success('Bron yaratildi')

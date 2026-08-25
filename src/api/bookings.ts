@@ -2,7 +2,7 @@ import apiClient from './client'
 import type { Booking, BookingCreateRequest, BookingUpdateRequest, Page } from '@/types'
 
 export const bookingsApi = {
-  getAll: (params?: { customerId?: string; businessId?: string; date?: string; status?: string; q?: string; page?: number; size?: number }) =>
+  getAll: (params?: { customerId?: string; customerAccountId?: string; businessId?: string; date?: string; status?: string; q?: string; page?: number; size?: number }) =>
     apiClient.get<Page<Booking>>('/bookings', { params }),
 
   get: (id: string) =>

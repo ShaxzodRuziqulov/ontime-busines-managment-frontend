@@ -122,7 +122,7 @@
               @click="selectedBooking = item.booking"
           >
             <span class="text-xs font-semibold truncate leading-tight">
-              {{ item.booking.customerName || item.booking.guestName || 'Mijoz' }}
+              {{ bookingCustomerName(item.booking) }}
             </span>
             <span class="text-[10px] opacity-80 truncate leading-tight">
               {{ timeLabel(item.booking.startAt) }}–{{ timeLabel(item.booking.endAt) }}
@@ -151,11 +151,11 @@
               <span
                   class="bg-indigo-200 flex font-semibold items-center justify-center w-10 h-10 text-indigo-600 rounded-full"
               >
-                {{getInitials(selectedBooking.customerName || selectedBooking.guestName || 'Mijoz')}}
+                {{ getInitials(bookingCustomerName(selectedBooking)) }}
               </span>
               <span class="flex flex-col">
                 <span class="font-semibold">
-                {{ selectedBooking.customerName || selectedBooking.guestName || 'Mijoz' }}
+                {{ bookingCustomerName(selectedBooking) }}
                 </span>
                 <span
                     class="text-gray-400 text-xs"
@@ -174,13 +174,13 @@
           <div class="px-5 py-4 space-y-2 text-sm">
             <p class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1">
               <span>Xodim:</span>
-              {{selectedBooking.staffName}}
+              {{ bookingStaffName(selectedBooking) }}
             </p>
             <p
                 class="text-slate-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
             >
               Telefon
-              <span>{{ selectedBooking.guestPhone }}</span>
+              <span>{{ selectedBooking.customerPhone }}</span>
             </p>
             <p
                 class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1 text-slate-700"
@@ -252,7 +252,7 @@ import { businessHoursApi } from '@/api/businessHours'
 import { useToast } from '@/composables/useToast'
 import {bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions} from '@/utils/bookingStatus'
 import { todayIso, weekdayFromDate, toMinutes, minutesOfDay } from '@/utils/scheduling'
-import { personName } from '@/utils/names'
+import { bookingCustomerName, bookingStaffName, personName } from '@/utils/names'
 import NewBookingModal from './NewBookingModal.vue'
 import type {StaffMember, Booking, BusinessHours, BookingStatus} from '@/types'
 import { bookingsApi } from "@/api/bookings.ts";

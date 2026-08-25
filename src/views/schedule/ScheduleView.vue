@@ -175,12 +175,12 @@
                     class="absolute flex border-t-2 border-gray-100 items-center rounded-md text-left text-xs shadow-sm transition-all overflow-hidden hover:z-30 hover:shadow-md"
                     :class="[bookingStatusBlockColors[item.booking.status], isProblem(item.booking.status) ? 'px-1' : 'px-2']"
                     :style="item.style"
-                    :title="isProblem(item.booking.status) ? `${item.booking.customerName || item.booking.guestName || 'Mijoz'} — ${bookingStatusLabels[item.booking.status]}` : ''"
+                    :title="isProblem(item.booking.status) ? `${bookingCustomerName(item.booking)} — ${bookingStatusLabels[item.booking.status]}` : ''"
                     @click="selectedBooking = item.booking"
                 >
                   <span v-if="!isProblem(item.booking.status)" class="flex w-full flex-col text-xs gap-1">
                     <span class="font-medium break-words">
-                      {{ item.booking.customerName || item.booking.guestName || 'Mijoz' }}
+                      {{ bookingCustomerName(item.booking) }}
                     </span>
                     <span class="flex gap-1 justify-between w-full items-center text-xs">
                       <span v-if="item.booking.offeredServiceName" class="break-all opacity-90 text-xs w-full">
@@ -221,7 +221,7 @@
                             @click="openFromGroup(b)"
                         >
                           <span class="flex flex-col">
-                            <span class="text-xs font-medium text-slate-700">{{ b.customerName || b.guestName || 'Mijoz' }}</span>
+                            <span class="text-xs font-medium text-slate-700">{{ bookingCustomerName(b) }}</span>
                             <span class="text-[11px] text-slate-400">{{ formatTime(b.startAt) }} - {{ formatTime(b.endAt) }}</span>
                           </span>
                           <span
@@ -284,11 +284,11 @@
               <span
                   class="bg-indigo-200 flex font-semibold items-center justify-center w-10 h-10 text-indigo-600 rounded-full"
               >
-                {{getInitials(selectedBooking.customerName || selectedBooking.guestName || 'Mijoz')}}
+                {{ getInitials(bookingCustomerName(selectedBooking)) }}
               </span>
               <span class="flex flex-col">
                 <span class="font-semibold">
-                {{ selectedBooking.customerName || selectedBooking.guestName || 'Mijoz' }}
+                {{ bookingCustomerName(selectedBooking) }}
                 </span>
                 <span
                     class="text-gray-400 text-xs"
@@ -307,13 +307,13 @@
           <div class="px-5 py-4 space-y-2 text-sm">
             <p class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1">
               <span>Xodim:</span>
-              {{selectedBooking.staffName}}
+              {{ bookingStaffName(selectedBooking) }}
             </p>
             <p
                 class="text-slate-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
             >
               Telefon
-              <span>{{ selectedBooking.guestPhone }}</span>
+              <span>{{ selectedBooking.customerPhone }}</span>
             </p>
             <p
                 class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1 text-slate-700"
@@ -443,7 +443,7 @@
             <div>
               <label class="block border-t border-gray-200 py-2 text-xs font-medium text-slate-600 mb-1">Mijoz ismi *</label>
               <input
-                  v-model="quickForm.guestName"
+                  v-model="quickForm.customerFirstName"
                   type="text"
                   placeholder="Ism kiriting"
                   class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -456,7 +456,7 @@
                 Telefon
               </label>
               <input
-                  v-model="quickForm.guestPhone"
+                  v-model="quickForm.customerPhone"
                   type="tel"
                   placeholder="+998901234567"
                   class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -508,7 +508,7 @@ import {
 import {
   weekdayFromDate, toMinutes, minutesOfDay, todayIso, isStaffBusy, generatePossibleStarts, minutesToLabel,
 } from '@/utils/scheduling'
-import { personName } from '@/utils/names'
+import { bookingCustomerName, bookingStaffName, personName } from '@/utils/names'
 import type { StaffMember, BusinessHours, Booking, BookingStatus, OfferedService, BookingCreateRequest } from '@/types'
 
 const businessStore = useBusinessStore()
@@ -525,7 +525,7 @@ const updatingId = ref<string | null>(null)
 
 // Bo'sh joyga bosib tezkor navbat yaratish
 const quickCreate = ref<{ staffId: string | null; staffName: string } | null>(null)
-const quickForm = ref({ offeredServiceId: '', startMin: null as number | null, guestName: '', guestPhone: '', customerNote: '' })
+const quickForm = ref({ offeredServiceId: '', startMin: null as number | null, customerFirstName: '', customerPhone: '', customerNote: '' })
 const quickSaving = ref(false)
 const quickError = ref('')
 
@@ -867,7 +867,7 @@ function onColumnClick(event: MouseEvent, staffId: string | null, staffName: str
   const startMin = Math.min(Math.max(snapped, openMinutes.value), Math.max(closeMinutes.value - SLOT_INTERVAL, openMinutes.value))
 
   quickCreate.value = { staffId, staffName }
-  quickForm.value = { offeredServiceId: '', startMin, guestName: '', guestPhone: '', customerNote: '' }
+  quickForm.value = { offeredServiceId: '', startMin, customerFirstName: '', customerPhone: '', customerNote: '' }
   quickError.value = ''
 }
 
@@ -917,7 +917,7 @@ async function submitQuickCreate() {
   const bid = businessStore.business?.id
   const service = quickSelectedService.value
   if (!bid || !quickCreate.value || !service || quickForm.value.startMin === null) return
-  if (!quickForm.value.guestName.trim()) {
+  if (!quickForm.value.customerFirstName.trim()) {
     quickError.value = 'Mijoz ismini kiriting'
     return
   }
@@ -935,8 +935,8 @@ async function submitQuickCreate() {
       // Backend `Instant` kutadi — zonasiz mahalliy vaqt emas, to'liq ISO instant kerak.
       startAt: start.toISOString(),
       endAt: end.toISOString(),
-      guestName: quickForm.value.guestName.trim(),
-      guestPhone: quickForm.value.guestPhone.trim() || undefined,
+      customerFirstName: quickForm.value.customerFirstName.trim(),
+      customerPhone: quickForm.value.customerPhone.trim() || undefined,
       customerNote: quickForm.value.customerNote.trim() || undefined,
     }
     await bookingsApi.create(payload)

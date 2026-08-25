@@ -67,13 +67,13 @@
             <div
               :class="[
                 'w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg flex-shrink-0',
-                getColor(c.fullName),
+                getColor(customerName(c)),
               ]"
             >
-              {{ getInitials(c.fullName) }}
+              {{ getInitials(customerName(c)) }}
             </div>
             <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-slate-800 truncate">{{ c.fullName }}</h3>
+              <h3 class="font-semibold text-slate-800 truncate">{{ customerName(c) }}</h3>
               <div v-if="c.visitCount > 0" class="flex items-center gap-1 mt-0.5">
                 <Repeat class="w-3.5 h-3.5 text-emerald-500" />
                 <span class="text-xs font-medium text-emerald-600">{{ c.visitCount }} marta tashrif</span>
@@ -153,13 +153,33 @@
     >
       <form @submit.prevent="save" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Ism Familiya *</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Ism *</label>
           <input
-            v-model="form.fullName"
+            v-model="form.firstName"
             type="text"
-            placeholder="Ism familiyani kiriting"
+            placeholder="Ismni kiriting"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Familiya</label>
+            <input
+              v-model="form.lastName"
+              type="text"
+              placeholder="Familiyani kiriting"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Otasining ismi</label>
+            <input
+              v-model="form.middleName"
+              type="text"
+              placeholder="Otasining ismini kiriting"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -272,7 +292,9 @@ const totalElements = ref(0)
 const PAGE_SIZE = 12
 
 const defaultForm = (): CustomerCreateRequest & { active: boolean } => ({
-  fullName: '',
+  firstName: '',
+  lastName: '',
+  middleName: '',
   phone: '',
   email: '',
   note: '',
@@ -322,7 +344,9 @@ function openAdd() {
 function openEdit(c: Customer) {
   editing.value = c
   form.value = {
-    fullName: c.fullName,
+    firstName: c.firstName,
+    lastName: c.lastName || '',
+    middleName: c.middleName || '',
     phone: c.phone || '',
     email: c.email || '',
     note: c.note || '',
@@ -334,14 +358,16 @@ function openEdit(c: Customer) {
 async function save() {
   const bid = businessStore.business?.id
   if (!bid) return
-  if (!form.value.fullName.trim()) {
+  if (!form.value.firstName.trim()) {
     toast.error('Ism kiritilishi shart')
     return
   }
   saving.value = true
   try {
     const payload = {
-      fullName: form.value.fullName.trim(),
+      firstName: form.value.firstName.trim(),
+      lastName: form.value.lastName?.trim() || (editing.value ? '' : undefined),
+      middleName: form.value.middleName?.trim() || (editing.value ? '' : undefined),
       phone: form.value.phone?.trim() || undefined,
       email: form.value.email?.trim() || undefined,
       note: form.value.note?.trim() || undefined,
@@ -391,6 +417,13 @@ function getInitials(name: string) {
       .join('')
       .toUpperCase()
       .slice(0, 2)
+}
+
+function customerName(customer: Customer) {
+  return [customer.firstName, customer.lastName, customer.middleName]
+      .filter(Boolean)
+      .join(' ')
+      .trim()
 }
 
 const avatarColors = [

@@ -149,11 +149,11 @@
               </div>
               <div class="flex-1 min-w-0">
                 <p class="font-medium text-slate-800 text-sm flex items-center gap-2">
-                  {{ booking.customerName || booking.guestName || 'Mijoz' }}
+                  {{ bookingCustomerName(booking) }}
                   <span v-if="isToday(booking.startAt)" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary-100 text-primary-700">BUGUN</span>
                 </p>
                 <p class="text-xs text-slate-500 mt-0.5 truncate">
-                  {{ formatDate(booking.startAt) }}<span v-if="booking.guestPhone"> · {{ booking.guestPhone }}</span>
+                  {{ formatDate(booking.startAt) }}<span v-if="booking.customerPhone"> · {{ booking.customerPhone }}</span>
                 </p>
               </div>
               <span :class="['text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0', bookingStatusBadgeColors[booking.status] ?? 'bg-slate-100 text-slate-500']">
@@ -195,7 +195,7 @@
             </thead>
             <tbody class="divide-y divide-slate-50">
               <tr v-for="booking in bookings" :key="booking.id" class="hover:bg-slate-50/50 transition-colors">
-                <td class="px-4 py-3 text-slate-700">{{ booking.customerName || booking.guestName || '—' }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ bookingCustomerName(booking, '—') }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ formatDate(booking.startAt) }}</td>
                 <td class="px-4 py-3 text-slate-500">{{ formatDate(booking.endAt) }}</td>
                 <td class="px-4 py-3 hidden sm:table-cell">
@@ -268,7 +268,7 @@ import { bookingsApi } from '@/api/bookings'
 import { useToast } from '@/composables/useToast'
 import { bookingStatusLabels, bookingStatusBadgeColors, nextBookingActions } from '@/utils/bookingStatus'
 import { todayIso } from '@/utils/scheduling'
-import { personName } from '@/utils/names'
+import { bookingCustomerName, personName } from '@/utils/names'
 import NewBookingModal from './NewBookingModal.vue'
 import type { StaffMember, Booking, BookingStatus, StaffStats } from '@/types'
 

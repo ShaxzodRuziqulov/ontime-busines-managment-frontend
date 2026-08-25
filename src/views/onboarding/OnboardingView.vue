@@ -185,6 +185,19 @@
             </div>
           </div>
 
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">
+              Xaritadagi joylashuv
+              <span class="text-slate-400 font-normal">(ixtiyoriy)</span>
+            </label>
+            <MapPicker
+              v-model="mapPoint"
+              :address-line="form.address"
+              :city="form.city"
+              @address-selected="applyMapAddress"
+            />
+          </div>
+
           <!-- Trial info -->
           <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
             <Clock class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -213,11 +226,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { computed, ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { Building2, Clock, Loader2, AlertCircle, CheckCircle2, MapPin, Phone, FileText, Info, Tag } from 'lucide-vue-next'
 import { businessesApi } from '@/api/businesses'
 import { useAuthStore } from '@/stores/auth'
+import MapPicker from '@/components/common/MapPicker.vue'
 import type { BusinessCategory } from '@/types'
 
 const router = useRouter()
@@ -230,7 +244,26 @@ const form = reactive({
   phone: '',
   address: '',
   city: '',
+  latitude: undefined as number | undefined,
+  longitude: undefined as number | undefined,
 })
+
+const mapPoint = computed({
+  get: () => (
+    form.latitude != null && form.longitude != null
+      ? { lat: form.latitude, lng: form.longitude }
+      : null
+  ),
+  set: (point: { lat: number; lng: number } | null) => {
+    form.latitude = point?.lat
+    form.longitude = point?.lng
+  },
+})
+
+function applyMapAddress(address: { addressLine: string; city: string }) {
+  if (address.addressLine) form.address = address.addressLine
+  if (address.city) form.city = address.city
+}
 
 const categoryOptions: { value: BusinessCategory; label: string }[] = [
   { value: 'BARBER', label: 'Sartarosh' },
@@ -272,6 +305,8 @@ async function handleCreate() {
       contactPhone: form.phone || undefined,
       addressLine: form.address || undefined,
       city: form.city || undefined,
+      latitude: form.latitude,
+      longitude: form.longitude,
     })
 
     step.value = 'relogin'
