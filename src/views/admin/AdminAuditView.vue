@@ -43,9 +43,26 @@ const actionColors: Record<string, string> = {
 const allActions = Object.keys(actionLabels)
 const entityTypes = ['BUSINESS', 'USER']
 
+const entityTypeLabels: Record<string, string> = {
+  BUSINESS: 'Biznes',
+  USER: 'Foydalanuvchi',
+}
+
 function formatDate(iso: string) {
   const d = new Date(iso)
   return d.toLocaleDateString('uz-UZ') + ' ' + d.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+}
+
+function entityTypeLabel(type: string) {
+  return entityTypeLabels[type] ?? type
+}
+
+function shortEntityId(id: string) {
+  return id.length > 8 ? `${id.slice(0, 8)}...` : id
+}
+
+function entityDisplayName(log: AuditLog) {
+  return log.entityName || shortEntityId(log.entityId)
 }
 
 async function load() {
@@ -91,12 +108,13 @@ watch(page, load)
 
 function exportCsv() {
   const rows = [
-    ['Vaqt', 'Admin', 'Harakat', 'Entity', 'Entity ID', 'Tafsilot'],
+    ['Vaqt', 'Admin', 'Harakat', 'Obyekt turi', 'Obyekt nomi', 'Entity ID', 'Tafsilot'],
     ...logs.value.map(l => [
       formatDate(l.createdAt),
       l.adminLogin,
       actionLabels[l.action] ?? l.action,
-      l.entityType,
+      entityTypeLabel(l.entityType),
+      entityDisplayName(l),
       l.entityId,
       l.details ?? '',
     ]),
@@ -159,7 +177,7 @@ onMounted(load)
         class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-slate-700"
       >
         <option value="">Barcha turlar</option>
-        <option v-for="t in entityTypes" :key="t" :value="t">{{ t }}</option>
+        <option v-for="t in entityTypes" :key="t" :value="t">{{ entityTypeLabel(t) }}</option>
       </select>
 
       <!-- Action -->
@@ -204,7 +222,7 @@ onMounted(load)
                 <th class="px-5 py-3 text-left font-medium">Vaqt</th>
                 <th class="px-5 py-3 text-left font-medium">Admin</th>
                 <th class="px-5 py-3 text-left font-medium">Harakat</th>
-                <th class="px-5 py-3 text-left font-medium">Entity</th>
+                <th class="px-5 py-3 text-left font-medium">Obyekt</th>
                 <th class="px-5 py-3 text-left font-medium">Tafsilot</th>
               </tr>
             </thead>
@@ -234,9 +252,14 @@ onMounted(load)
                   <div class="flex items-center gap-1.5">
                     <Building2 v-if="log.entityType === 'BUSINESS'" class="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
                     <Users v-else class="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
-                    <span class="text-xs text-slate-500 font-mono truncate max-w-[120px]" :title="log.entityId">
-                      {{ log.entityId.slice(0, 8) }}…
-                    </span>
+                    <div class="min-w-0">
+                      <p class="text-xs font-medium text-slate-700 truncate max-w-[180px]" :title="entityDisplayName(log)">
+                        {{ entityDisplayName(log) }}
+                      </p>
+                      <p class="text-[11px] text-slate-400 font-mono truncate max-w-[180px]" :title="log.entityId">
+                        {{ entityTypeLabel(log.entityType) }} · {{ shortEntityId(log.entityId) }}
+                      </p>
+                    </div>
                   </div>
                 </td>
                 <td class="px-5 py-3 text-slate-500 text-xs max-w-xs truncate" :title="log.details ?? ''">

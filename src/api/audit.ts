@@ -6,6 +6,7 @@ export interface AuditLog {
   action: string
   entityType: string
   entityId: string
+  entityName: string | null
   details: string | null
   createdAt: string
 }

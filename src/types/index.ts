@@ -52,6 +52,10 @@ export type BusinessCategory =
 export interface Business {
   id: string
   ownerId: string
+  ownerLogin?: string | null
+  ownerFirstName?: string | null
+  ownerLastName?: string | null
+  ownerPhone?: string | null
   name: string
   description: string
   category: BusinessCategory

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { Search, Building2, Trash2, Settings, CheckCircle2, XCircle, Clock, AlertCircle, Download, ExternalLink, ChevronDown, ChevronLeft, ChevronRight, Tag } from 'lucide-vue-next'
+import { Search, Building2, Trash2, Settings, CheckCircle2, XCircle, Clock, AlertCircle, Download, ExternalLink, ChevronDown, ChevronLeft, ChevronRight, Tag, UserRound } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 import { businessesApi } from '@/api/businesses'
 import { useAdminStore } from '@/stores/admin'
@@ -228,6 +228,10 @@ function categoryLabel(category?: BusinessCategory) {
   return categoryOptions.find((item) => item.value === category)?.label ?? 'Boshqa'
 }
 
+function ownerName(biz: Business) {
+  return [biz.ownerFirstName, biz.ownerLastName].filter(Boolean).join(' ') || biz.ownerLogin || '—'
+}
+
 function setStatusFilter(status: BusinessStatus | 'all') {
   statusFilter.value = status
   router.replace({
@@ -247,9 +251,9 @@ function formatDate(iso: string | null) {
 
 function exportCsv() {
   const rows = [
-    ['ID', 'Nomi', 'Xizmat turi', 'Manzil', 'Shahar', 'Telefon', 'Holat', 'Trial tugash', 'Obuna tugash', 'Yaratilgan'],
+    ['ID', 'Nomi', 'Biznes egasi', 'Egasi telefoni', 'Xizmat turi', 'Manzil', 'Shahar', 'Telefon', 'Holat', 'Trial tugash', 'Obuna tugash', 'Yaratilgan'],
     ...filtered.value.map(b => [
-      b.id, b.name, categoryLabel(b.category), b.addressLine ?? '', b.city ?? '', b.contactPhone ?? '',
+      b.id, b.name, ownerName(b), b.ownerPhone ?? '', categoryLabel(b.category), b.addressLine ?? '', b.city ?? '', b.contactPhone ?? '',
       statusLabels[b.status], formatDate(b.trialEndDate), formatDate(b.subscriptionEndDate),
       new Date(b.createdAt).toLocaleDateString('uz-UZ'),
     ]),
@@ -409,7 +413,7 @@ onMounted(async () => {
         <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           v-model="search" type="text"
-          placeholder="Biznes nomi, xizmat turi, manzil yoki shahar bo'yicha qidirish..."
+          placeholder="Biznes nomi, egasi, xizmat turi, manzil yoki shahar bo'yicha qidirish..."
           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
         />
       </div>
@@ -484,7 +488,7 @@ onMounted(async () => {
       </div>
     </Transition>
 
-    <SkeletonTable v-if="loading" :rows="7" :cols="8" />
+    <SkeletonTable v-if="loading" :rows="7" :cols="9" />
 
     <template v-else>
       <EmptyState
@@ -515,6 +519,7 @@ onMounted(async () => {
                   />
                 </th>
                 <th class="px-3 py-3 text-left font-medium">Biznes</th>
+                <th class="px-3 py-3 text-left font-medium">Biznes egasi</th>
                 <th class="px-3 py-3 text-left font-medium">Telefon</th>
                 <th class="px-3 py-3 text-left font-medium">Xizmat turi</th>
                 <th class="px-3 py-3 text-left font-medium">Holat</th>
@@ -550,6 +555,15 @@ onMounted(async () => {
                     <div class="min-w-0">
                       <p class="truncate font-medium text-slate-800">{{ biz.name }}</p>
                       <p class="text-xs text-slate-400 mt-0.5">{{ [biz.city, biz.addressLine].filter(Boolean).join(', ') || '—' }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-3 py-3.5">
+                  <div class="flex items-center gap-2 min-w-40">
+                    <UserRound class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <div class="min-w-0">
+                      <p class="truncate text-slate-700 font-medium">{{ ownerName(biz) }}</p>
+                      <p class="text-xs text-slate-400 mt-0.5">{{ biz.ownerPhone || '—' }}</p>
                     </div>
                   </div>
                 </td>
