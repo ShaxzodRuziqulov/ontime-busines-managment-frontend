@@ -1,65 +1,3 @@
-<script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { Eye, EyeOff, Clock, Loader2, AlertCircle, UserPlus } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-const form = reactive({
-  login: '',
-  password: '',
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-})
-const showPassword = ref(false)
-const loading = ref(false)
-const error = ref('')
-const fieldErrors = reactive({ firstName: '', login: '', password: '' })
-
-function validateFirstName() {
-  fieldErrors.firstName = form.firstName.length < 2 ? 'Ism kamida 2 ta belgi bo\'lishi kerak' : ''
-}
-function validateLogin() {
-  fieldErrors.login = form.login.length < 3 ? 'Login kamida 3 ta belgi bo\'lishi kerak' : ''
-}
-function validatePassword() {
-  fieldErrors.password = form.password.length < 4 ? 'Parol kamida 4 ta belgi bo\'lishi kerak' : ''
-}
-
-async function handleRegister() {
-  if (!form.login || !form.firstName) {
-    error.value = 'Login va ism kiritilishi shart'
-    return
-  }
-  if (form.password.length < 4) {
-    error.value = 'Parol kamida 4 ta belgidan iborat bo\'lishi kerak'
-    return
-  }
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    await authStore.register(form)
-    router.push('/onboarding')
-  } catch (e: any) {
-    if (e.response?.status === 409) {
-      error.value = 'Bu login allaqachon band'
-    } else if (e.response?.status === 400) {
-      error.value = e.response.data?.message || 'Ma\'lumotlar noto\'g\'ri'
-    } else {
-      error.value = 'Serverga ulanishda xatolik'
-    }
-  } finally {
-    loading.value = false
-  }
-}
-</script>
-
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex">
     <!-- Left: Branding -->
@@ -81,13 +19,13 @@ async function handleRegister() {
 
       <div class="mt-12 space-y-4">
         <div
-          v-for="step in [
+            v-for="step in [
             { num: '1', text: 'Ro\'yxatdan o\'ting' },
             { num: '2', text: 'Biznesingizni yarating' },
             { num: '3', text: '14 kun bepul foydalaning' },
           ]"
-          :key="step.num"
-          class="flex items-center gap-4"
+            :key="step.num"
+            class="flex items-center gap-4"
         >
           <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
             {{ step.num }}
@@ -119,8 +57,8 @@ async function handleRegister() {
 
           <!-- Error -->
           <div
-            v-if="error"
-            class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm"
+              v-if="error"
+              class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm"
           >
             <AlertCircle class="w-4 h-4 flex-shrink-0" />
             {{ error }}
@@ -131,27 +69,34 @@ async function handleRegister() {
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">Ism *</label>
               <input
-                v-model="form.firstName"
-                type="text"
-                placeholder="Ism"
-                autocomplete="given-name"
-                @blur="validateFirstName"
-                :class="[
+                  v-model="form.firstName"
+                  type="text"
+                  placeholder="Ism"
+                  autocomplete="given-name"
+                  @blur="validateFirstName"
+                  :class="[
                   'w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white',
-                  fieldErrors.firstName ? 'border-red-300 focus:ring-red-400' : 'border-slate-200 focus:ring-primary-500',
+                  fieldErrors.firstName
+                  ? 'border-red-300 focus:ring-red-400'
+                  : 'border-slate-200 focus:ring-primary-500',
                 ]"
               />
-              <p v-if="fieldErrors.firstName" class="text-xs text-red-500 mt-1">{{ fieldErrors.firstName }}</p>
+              <p
+                  v-if="fieldErrors.firstName"
+                  class="text-xs text-red-500 mt-1"
+              >
+                {{ fieldErrors.firstName }}
+              </p>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">Familiya</label>
               <input
-                v-model="form.lastName"
-                type="text"
-                placeholder="Familiya"
-                autocomplete="family-name"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white"
+                  v-model="form.lastName"
+                  type="text"
+                  placeholder="Familiya"
+                  autocomplete="family-name"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white"
               />
             </div>
 
@@ -159,18 +104,25 @@ async function handleRegister() {
             <div>
               <label for="reg-username" class="block text-sm font-medium text-slate-700 mb-1.5">Login *</label>
               <input
-                id="reg-username"
-                v-model="form.login"
-                type="text"
-                placeholder="username"
-                autocomplete="username"
-                @blur="validateLogin"
-                :class="[
+                  id="reg-username"
+                  v-model="form.login"
+                  type="text"
+                  placeholder="username"
+                  autocomplete="username"
+                  @blur="validateLogin"
+                  :class="[
                   'w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white',
-                  fieldErrors.login ? 'border-red-300 focus:ring-red-400' : 'border-slate-200 focus:ring-primary-500',
+                  fieldErrors.login
+                  ? 'border-red-300 focus:ring-red-400'
+                  : 'border-slate-200 focus:ring-primary-500',
                 ]"
               />
-              <p v-if="fieldErrors.login" class="text-xs text-red-500 mt-1">{{ fieldErrors.login }}</p>
+              <p
+                  v-if="fieldErrors.login"
+                  class="text-xs text-red-500 mt-1"
+              >
+                {{ fieldErrors.login }}
+              </p>
             </div>
 
             <!-- Password -->
@@ -178,28 +130,33 @@ async function handleRegister() {
               <label for="reg-password" class="block text-sm font-medium text-slate-700 mb-1.5">Parol *</label>
               <div class="relative">
                 <input
-                  id="reg-password"
-                  v-model="form.password"
-                  :type="showPassword ? 'text' : 'password'"
-                  placeholder="••••••••"
-                  autocomplete="new-password"
-                  @blur="validatePassword"
-                  :class="[
+                    id="reg-password"
+                    v-model="form.password"
+                    :type="showPassword ? 'text' : 'password'"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                    @blur="validatePassword"
+                    :class="[
                     'w-full px-4 py-3 pr-12 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white',
                     fieldErrors.password ? 'border-red-300 focus:ring-red-400' : 'border-slate-200 focus:ring-primary-500',
                   ]"
                 />
                 <button
-                  type="button"
-                  :aria-label="showPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish'"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
-                  @click="showPassword = !showPassword"
+                    type="button"
+                    :aria-label="showPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish'"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                    @click="showPassword = !showPassword"
                 >
                   <EyeOff v-if="showPassword" class="w-5 h-5" />
                   <Eye v-else class="w-5 h-5" />
                 </button>
               </div>
-              <p v-if="fieldErrors.password" class="text-xs text-red-500 mt-1">{{ fieldErrors.password }}</p>
+              <p
+                  v-if="fieldErrors.password"
+                  class="text-xs text-red-500 mt-1"
+              >
+                {{ fieldErrors.password }}
+              </p>
             </div>
 
             <!-- Email & Phone -->
@@ -207,32 +164,36 @@ async function handleRegister() {
               <div>
                 <label for="reg-email" class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
                 <input
-                  id="reg-email"
-                  v-model="form.email"
-                  type="email"
-                  placeholder="email@example.com"
-                  autocomplete="email"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white text-sm"
+                    id="reg-email"
+                    v-model="form.email"
+                    type="email"
+                    placeholder="email@example.com"
+                    autocomplete="email"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white text-sm"
                 />
               </div>
               <div>
                 <label for="reg-phone" class="block text-sm font-medium text-slate-700 mb-1.5">Telefon</label>
                 <input
-                  id="reg-phone"
-                  v-model="form.phone"
-                  type="tel"
-                  placeholder="+998901234567"
-                  autocomplete="tel"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white text-sm"
+                    id="reg-phone"
+                    v-model="displayPhone"
+                    inputmode="numeric"
+                    required
+                    type="tel"
+                    placeholder="+99890 123 45 67"
+                    autocomplete="tel"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white text-sm"
+                    @input="onPhoneInput"
+                    @keydown="onPhoneKeydown"
                 />
               </div>
             </div>
 
             <!-- Submit -->
             <button
-              type="submit"
-              :disabled="loading"
-              class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 mt-2"
+                type="submit"
+                :disabled="loading"
+                class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 mt-2"
             >
               <Loader2 v-if="loading" class="w-5 h-5 animate-spin" />
               {{ loading ? 'Ro\'yxatdan o\'tilmoqda...' : 'Davom etish' }}
@@ -250,3 +211,115 @@ async function handleRegister() {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, reactive, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { Eye, EyeOff, Clock, Loader2, AlertCircle, UserPlus } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/auth'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+const digits = ref('')
+
+// Foydalanuvchiga ko'rinadigan, formatlangan qiymat: +998 90 123 45 67
+const displayPhone = computed({
+  get(): string {
+    let result = '+998';
+    const d = digits.value;
+    if (d.length > 0) result += ' ' + d.slice(0, 2);
+    if (d.length > 2) result += ' ' + d.slice(2, 5);
+    if (d.length > 5) result += ' ' + d.slice(5, 7);
+    if (d.length > 7) result += ' ' + d.slice(7, 9);
+    return result;
+  },
+  set(val: string) {
+    let raw = val.replace(/\D/g, '');
+    if (raw.startsWith('998')) raw = raw.slice(3);
+    digits.value = raw.slice(0, 9);
+  },
+});
+
+const phone = computed(() => `+998${digits.value}`);
+const isPhoneComplete = computed(() => digits.value.length === 9);
+
+function onPhoneInput(e: Event) {
+  const input = e.target as HTMLInputElement
+  // Faqat raqamlarni ajratib olamiz, "998" prefiksini (agar kiritilgan bo'lsa) olib tashlaymiz
+  let raw = input.value.replace(/\D/g, '')
+  if (raw.startsWith('998')) raw = raw.slice(3)
+  digits.value = raw.slice(0, 9)
+  // Kursorni oxiriga qo'yish uchun keyingi tikda qayta render bo'ladi
+  input.value = displayPhone.value
+}
+
+function onPhoneKeydown(e: KeyboardEvent) {
+  // Backspace bosilganda, agar oxirgi belgi bo'shliq bo'lsa, undan oldingi raqamni ham o'chirish
+  if (e.key === 'Backspace' && digits.value.length > 0) {
+    const cursorAtEnd = (e.target as HTMLInputElement).selectionStart === displayPhone.value.length
+    if (cursorAtEnd) {
+      e.preventDefault()
+      digits.value = digits.value.slice(0, -1)
+    }
+  }
+}
+
+const form = reactive({
+  login: '',
+  password: '',
+  firstName: '',
+  lastName: '',
+  email: '',
+})
+
+
+const showPassword = ref(false)
+const loading = ref(false)
+const error = ref('')
+const fieldErrors = reactive({ firstName: '', login: '', password: '' })
+
+function validateFirstName() {
+  fieldErrors.firstName = form.firstName.length < 2 ? 'Ism kamida 2 ta belgi bo\'lishi kerak' : ''
+}
+function validateLogin() {
+  fieldErrors.login = form.login.length < 3 ? 'Login kamida 3 ta belgi bo\'lishi kerak' : ''
+}
+function validatePassword() {
+  fieldErrors.password = form.password.length < 4 ? 'Parol kamida 4 ta belgi bo\'lishi kerak' : ''
+}
+
+async function handleRegister() {
+  if (!form.login || !form.firstName) {
+    error.value = 'Login va ism kiritilishi shart'
+    return
+  }
+  if (form.password.length < 4) {
+    error.value = 'Parol kamida 4 ta belgidan iborat bo\'lishi kerak'
+    return
+  }
+
+  if (!isPhoneComplete.value) {
+    error.value = "Telefon raqamni to'liq kiriting";
+    return;
+  }
+
+  loading.value = true
+  error.value = ''
+
+  try {
+    await authStore.register(form, phone.value)
+    await router.push('/onboarding')
+  } catch (e: any) {
+    if (e.response?.status === 409) {
+      error.value = 'Bu login allaqachon band'
+    } else if (e.response?.status === 400) {
+      error.value = e.response.data?.message || 'Ma\'lumotlar noto\'g\'ri'
+    } else {
+      error.value = 'Serverga ulanishda xatolik'
+    }
+  } finally {
+    loading.value = false
+  }
+}
+</script>
