@@ -93,11 +93,15 @@
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1">Telefon</label>
               <input
-                v-model="form.phone"
+                v-model="displayPhone"
+                inputmode="numeric"
                 type="tel"
-                autocomplete="tel"
-                placeholder="+998901234567"
+                maxlength="17"
+                required
+                placeholder="+99890 123 45 67"
                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                @input="onPhoneInput"
+                @keydown="onPhoneKeydown"
               />
             </div>
           </div>
@@ -198,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { User as UserIcon, Camera, CheckCircle, Eye, EyeOff, Shield } from 'lucide-vue-next'
 import { usersApi } from '@/api/users'
 import { useAuthStore } from '@/stores/auth'
@@ -220,11 +224,54 @@ const showCurrentPassword = ref(false)
 const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
 
+const digits = ref('')
+
+// Foydalanuvchiga ko'rinadigan, formatlangan qiymat: +998 90 123 45 67
+const displayPhone = computed({
+  get(): string {
+    let result = '+998';
+    const d = digits.value;
+    if (d.length > 0) result += ' ' + d.slice(0, 2);
+    if (d.length > 2) result += ' ' + d.slice(2, 5);
+    if (d.length > 5) result += ' ' + d.slice(5, 7);
+    if (d.length > 7) result += ' ' + d.slice(7, 9);
+    return result;
+  },
+  set(val: string) {
+    let raw = val.replace(/\D/g, '');
+    if (raw.startsWith('998')) raw = raw.slice(3);
+    digits.value = raw.slice(0, 9);
+  },
+});
+
+const phone = computed(() => `+998${digits.value}`);
+const isPhoneComplete = computed(() => digits.value.length === 9);
+
+function onPhoneInput(e: Event) {
+  const input = e.target as HTMLInputElement
+  // Faqat raqamlarni ajratib olamiz, "998" prefiksini (agar kiritilgan bo'lsa) olib tashlaymiz
+  let raw = input.value.replace(/\D/g, '')
+  if (raw.startsWith('998')) raw = raw.slice(3)
+  digits.value = raw.slice(0, 9)
+  // Kursorni oxiriga qo'yish uchun keyingi tikda qayta render bo'ladi
+  input.value = displayPhone.value
+}
+
+function onPhoneKeydown(e: KeyboardEvent) {
+  // Backspace bosilganda, agar oxirgi belgi bo'shliq bo'lsa, undan oldingi raqamni ham o'chirish
+  if (e.key === 'Backspace' && digits.value.length > 0) {
+    const cursorAtEnd = (e.target as HTMLInputElement).selectionStart === displayPhone.value.length
+    if (cursorAtEnd) {
+      e.preventDefault()
+      digits.value = digits.value.slice(0, -1)
+    }
+  }
+}
+
 const form = reactive({
   firstName: '',
   lastName: '',
   email: '',
-  phone: '',
 })
 
 const passwordForm = reactive({
@@ -241,7 +288,8 @@ function applyProfile(data: User) {
   form.firstName = data.firstName ?? ''
   form.lastName = data.lastName ?? ''
   form.email = data.email ?? ''
-  form.phone = data.phone ?? ''
+  const raw = (data.phone ?? '').replace(/\D/g, '')
+  digits.value = raw.startsWith('998') ? raw.slice(3, 12) : raw.slice(0, 9)
 }
 
 onMounted(async () => {
@@ -294,13 +342,17 @@ async function save() {
     toast.error('Ism kiritilishi shart')
     return
   }
+  if (!isPhoneComplete.value) {
+    toast.error("Telefon raqamni to'liq kiriting");
+    return;
+  }
   saving.value = true
   try {
     const { data } = await usersApi.update(profile.value.id, {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim() || undefined,
       email: form.email.trim() || undefined,
-      phone: form.phone.trim() || undefined,
+      phone: phone.value,
     })
     applyProfile(data)
     authStore.updateProfile({ firstName: data.firstName, lastName: data.lastName })
