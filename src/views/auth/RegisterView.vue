@@ -308,7 +308,10 @@ async function handleRegister() {
   error.value = ''
 
   try {
-    await authStore.register(form, phone.value)
+    await authStore.register({
+      ...form,
+      phone: phone.value
+    })
     await router.push('/onboarding')
   } catch (e: any) {
     if (e.response?.status === 409) {
