@@ -190,7 +190,7 @@
                       {{ bookingCustomerName(item.booking) }}
                     </span>
                     <span class="flex gap-1 justify-between w-full items-center text-xs">
-                      <span v-if="item.booking.offeredServiceName" class="break-all opacity-90 text-xs w-full">
+                      <span v-if="item.booking.offeredServiceName" class="break-words opacity-90 text-xs w-full">
                         {{ item.booking.offeredServiceName }}
                       </span>
                       <span class="text-[12px] w-full justify-end flex">
@@ -317,7 +317,7 @@
               {{ bookingStaffName(selectedBooking) }}
             </p>
             <p
-                class="text-slate-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
+                class="text-slate-700 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
             >
               Telefon
               <span>{{ selectedBooking.customerPhone }}</span>
@@ -329,7 +329,7 @@
               <span>{{ selectedBooking.offeredServiceName || '—' }}</span>
             </p>
             <p
-                class="text-gray-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
+                class="text-slate-700 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
             >
               <span>Vaqt</span>
               <span>
@@ -337,7 +337,7 @@
               </span>
             </p>
             <p
-                class="flex text-gray-600 items-center justify-between border-b border-dashed border-slate-300 pb-1"
+                class="flex text-slate-700 items-center justify-between border-b border-dashed border-slate-300 pb-1"
             >
               <span>Holat</span>
               <span
@@ -348,10 +348,10 @@
               </span>
             </p>
             <p
-                class="flex text-gray-600 items-center justify-between border-b border-dashed border-slate-300 pb-1"
+                class="flex flex-wrap text-slate-700 items-center justify-between border-b border-dashed border-slate-300 pb-1"
             >
               <span>Izoh:</span>
-              {{selectedBooking.customerNote}}
+              <span class="text-slate-400">{{selectedBooking.customerNote}}</span>
             </p>
           </div>
           <div v-if="nextBookingActions[selectedBooking?.status]?.length"
