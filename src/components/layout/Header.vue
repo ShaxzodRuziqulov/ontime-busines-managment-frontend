@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, onBeforeUnmount  } from 'vue'
 import { useRouter } from 'vue-router'
-import { Menu, LogOut, ChevronDown, User, UserCog, Search, Moon, Sun } from 'lucide-vue-next'
+import { Menu, LogOut, ChevronDown, User, UserCog, Search, Moon, Sun, Download } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useBusinessStore } from '@/stores/business'
 import GlobalSearch from '@/components/common/GlobalSearch.vue'
@@ -9,8 +9,23 @@ import { mediaUrl } from '@/utils/media'
 import { personName } from '@/utils/names'
 import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import type { BusinessStatus } from '@/types'
+import { usePwaInstall } from '@/composables/usePwaInstall'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
+
 
 defineEmits<{ toggleSidebar: [] }>()
+
+const {
+  canInstall,
+  install
+} = usePwaInstall()
+
+const handleInstall = async () => {
+  toast.success('Ilova yuklandi')
+  await install()
+}
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -136,17 +151,17 @@ onBeforeUnmount(() => {
           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
           @click="dropdownOpen = !dropdownOpen"
         >
-          <div class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+          <span class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
             <img
               v-if="mediaUrl(authStore.user?.avatarUrl)"
               :src="mediaUrl(authStore.user?.avatarUrl)!"
               class="w-full h-full object-cover"
               alt="avatar"
             />
-            <div v-else class="w-full h-full bg-primary-600 flex items-center justify-center">
+            <span v-else class="w-full h-full bg-primary-600 flex items-center justify-center">
               <User class="w-4 h-4 text-white" />
-            </div>
-          </div>
+            </span>
+          </span>
           <span class="text-sm font-medium text-slate-700 hidden sm:block">
             {{ personName(authStore.user, authStore.user?.login) }}
           </span>
@@ -166,6 +181,15 @@ onBeforeUnmount(() => {
             <UserCog class="w-4 h-4" />
             Profilim
           </RouterLink>
+          <button
+              v-if="canInstall"
+              type="button"
+              class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              @click="handleInstall"
+          >
+            <Download class="w-4 h-4"/>
+            Yuklash
+          </button>
           <button
             class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
             @click="dropdownOpen = false; logout()"
