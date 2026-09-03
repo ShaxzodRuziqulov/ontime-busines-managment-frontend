@@ -11,6 +11,7 @@ export default defineConfig(({mode}) => {
                 registerType: 'autoUpdate',
 
                 manifest: {
+                    id: '/',
                     name: 'OnTime Business Panel',
                     short_name: 'OnTime',
                     description: 'Biznes uchun navbat va jadval boshqaruvi',
@@ -39,7 +40,7 @@ export default defineConfig(({mode}) => {
                     ]
                 },
                 devOptions: {
-                    enabled: true
+                    enabled: false
                 }
             })
         ],
