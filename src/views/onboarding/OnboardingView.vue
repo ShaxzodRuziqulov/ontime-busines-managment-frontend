@@ -2,12 +2,7 @@
   <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
     <div class="w-full max-w-lg">
       <!-- Logo -->
-      <div class="flex items-center justify-center gap-2.5 mb-8">
-        <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
-          <Clock class="w-5 h-5 text-white" />
-        </div>
-        <span class="text-xl font-bold text-white tracking-tight">OnTime Business</span>
-      </div>
+      <AppLogo size="md" class="justify-center mb-8" />
 
       <!-- Success state -->
       <div v-if="step === 'done'" class="bg-white rounded-3xl shadow-2xl p-10 text-center">
@@ -232,6 +227,7 @@ import { Building2, Clock, Loader2, AlertCircle, CheckCircle2, MapPin, Phone, Fi
 import { businessesApi } from '@/api/businesses'
 import { useAuthStore } from '@/stores/auth'
 import MapPicker from '@/components/common/MapPicker.vue'
+import AppLogo from '@/components/common/AppLogo.vue'
 import type { BusinessCategory } from '@/types'
 
 const router = useRouter()

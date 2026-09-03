@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, onBeforeUnmount  } from 'vue'
+import { ref, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { Menu, LogOut, ChevronDown, User, UserCog, Search, Moon, Sun, Download } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
@@ -14,7 +14,6 @@ import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
 
-
 defineEmits<{ toggleSidebar: [] }>()
 
 const {
@@ -22,9 +21,27 @@ const {
   install
 } = usePwaInstall()
 
+const isInstalling = ref(false)
+
 const handleInstall = async () => {
-  toast.success('Ilova yuklandi')
-  await install()
+  if (isInstalling.value) return
+
+  dropdownOpen.value = false
+  isInstalling.value = true
+
+  try {
+    const installed = await install()
+
+    if (installed) {
+      toast.success('Ilova yuklandi')
+    } else {
+      toast.info('Yuklash bekor qilindi')
+    }
+  } catch {
+    toast.error('Ilovani yuklab bo‘lmadi')
+  } finally {
+    isInstalling.value = false
+  }
 }
 
 const router = useRouter()
@@ -182,13 +199,17 @@ onBeforeUnmount(() => {
             Profilim
           </RouterLink>
           <button
-              v-if="canInstall"
-              type="button"
-              class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-              @click="handleInstall"
+            v-if="canInstall"
+            type="button"
+            :disabled="isInstalling"
+            :class="[
+              'w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors',
+              isInstalling ? 'opacity-60 cursor-not-allowed' : ''
+            ]"
+            @click="handleInstall"
           >
-            <Download class="w-4 h-4"/>
-            Yuklash
+            <Download class="w-4 h-4" />
+            {{ isInstalling ? 'Yuklanmoqda' : 'Yuklash' }}
           </button>
           <button
             class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"

@@ -10,7 +10,6 @@ import {
   Building2,
   Star,
   X,
-  Clock,
   ShieldCheck,
   AlarmClock,
   ClipboardList,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminStore } from '@/stores/admin'
+import AppLogo from '@/components/common/AppLogo.vue'
 
 defineProps<{ open: boolean }>()
 defineEmits<{ close: [] }>()
@@ -77,12 +77,7 @@ onMounted(() => {
   >
     <!-- Logo -->
     <div class="flex items-center justify-between h-16 px-6 border-b border-slate-700/50">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-          <Clock class="w-4 h-4 text-white" />
-        </div>
-        <span class="text-white font-semibold text-lg tracking-tight">OnTime</span>
-      </div>
+      <AppLogo label="OnTime" size="sm" />
       <button
         aria-label="Yopish"
         class="lg:hidden text-slate-400 hover:text-white transition-colors"

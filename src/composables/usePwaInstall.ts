@@ -25,15 +25,11 @@ function handleBeforeInstallPrompt(event: Event) {
     event.preventDefault()
 
     deferredPrompt.value = event as BeforeInstallPromptEvent
-
-    console.log('PWA install prompt tayyor')
 }
 
 function handleAppInstalled() {
     deferredPrompt.value = null
     isInstalled.value = true
-
-    console.log('PWA o‘rnatildi')
 }
 
 function initPwaInstall() {
@@ -70,14 +66,11 @@ export function usePwaInstall() {
         }
 
         const promptEvent = deferredPrompt.value
+        deferredPrompt.value = null
 
         await promptEvent.prompt()
 
         const { outcome } = await promptEvent.userChoice
-
-        console.log('Install natijasi:', outcome)
-
-        deferredPrompt.value = null
 
         if (outcome === 'accepted') {
             isInstalled.value = true

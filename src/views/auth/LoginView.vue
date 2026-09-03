@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Eye, EyeOff, Clock, Loader2, AlertCircle } from 'lucide-vue-next'
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
+import AppLogo from '@/components/common/AppLogo.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -63,12 +64,7 @@ async function handleLogin() {
   <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex">
     <!-- Left: Branding -->
     <div class="hidden lg:flex flex-1 flex-col justify-center px-16 text-white">
-      <div class="flex items-center gap-3 mb-10">
-        <div class="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center shadow-xl">
-          <Clock class="w-6 h-6 text-white" />
-        </div>
-        <span class="text-2xl font-bold tracking-tight">OnTime Business</span>
-      </div>
+      <AppLogo size="lg" class="mb-10" />
 
       <h1 class="text-4xl font-bold leading-tight mb-4">
         Biznesingizni<br />
@@ -98,12 +94,7 @@ async function handleLogin() {
     <div class="flex-1 flex items-center justify-center p-8">
       <div class="w-full max-w-md">
         <!-- Mobile logo -->
-        <div class="flex items-center gap-2 mb-8 lg:hidden">
-          <div class="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
-            <Clock class="w-5 h-5 text-white" />
-          </div>
-          <span class="text-xl font-bold text-white">OnTime Business</span>
-        </div>
+        <AppLogo size="md" class="mb-8 lg:hidden" />
 
         <div class="bg-white rounded-3xl shadow-2xl p-8">
           <div class="mb-8">
