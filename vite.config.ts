@@ -12,7 +12,7 @@ export default defineConfig(({mode}) => {
 
                 manifest: {
                     id: '/',
-                    name: 'OnTime Biznes Panel',
+                    name: 'OnTime Biznes',
                     short_name: 'Biznes',
                     description: 'Biznes uchun ilova',
 
