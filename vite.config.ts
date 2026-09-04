@@ -12,9 +12,9 @@ export default defineConfig(({mode}) => {
 
                 manifest: {
                     id: '/',
-                    name: 'OnTime Business Panel',
+                    name: 'OnTime Biznes Panel',
                     short_name: 'Biznes',
-                    description: 'Biznes uchun navbat va jadval boshqaruvi',
+                    description: 'Biznes uchun ilova',
 
                     theme_color: '#2563eb',
                     background_color: '#f8fafc',
