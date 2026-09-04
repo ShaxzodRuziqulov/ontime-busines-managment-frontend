@@ -53,7 +53,7 @@
             <img
                 v-if="member.avatarUrl"
                 :src="getAvatarUrl(member.avatarUrl)"
-                alt=""
+                alt="Xodim"
                 class="w-12 h-12 rounded-full"
             >
             <div
@@ -721,7 +721,7 @@ function getColor(name: string) {
   return avatarColors[idx]
 }
 
-const BASE_URL = import.meta.env.VITE_BASE_API as string;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
 const getAvatarUrl = (url: string | undefined): string => {
   if (!url) return "";

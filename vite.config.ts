@@ -10,6 +10,7 @@ export default defineConfig(({mode}) => {
             VitePWA({
                 registerType: 'autoUpdate',
 
+                includeAssets: ['apple-touch-icon-180.png'],
                 manifest: {
                     id: '/',
                     name: 'OnTime Biznes',
