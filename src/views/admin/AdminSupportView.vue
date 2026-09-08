@@ -1,29 +1,9 @@
-<script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { ArrowLeft, MessageCircle, RefreshCw, Send } from 'lucide-vue-next'
-import { supportApi, type SupportStatus, type SupportTicket } from '@/api/support'
-import StatusBadge from '@/components/common/StatusBadge.vue'
-import { useToast } from '@/composables/useToast'
-const tickets = ref<SupportTicket[]>([]); const selected = ref<SupportTicket | null>(null); const loading = ref(false); const filter = ref<SupportStatus | ''>(''); const reply = ref(''); const toast = useToast()
-const statuses: SupportStatus[] = ['NEW','IN_PROGRESS','WAITING_USER','RESOLVED','CLOSED']
-const label: Record<SupportStatus,string> = { NEW:'Yangi', IN_PROGRESS:'Jarayonda', WAITING_USER:'User javobi kutilmoqda', RESOLVED:'Hal qilindi', CLOSED:'Yopildi' }
-const priorities = ['LOW','NORMAL','HIGH','URGENT'] as const
-const priorityLabel: Record<(typeof priorities)[number], string> = { LOW:'Past', NORMAL:'Oddiy', HIGH:'Yuqori', URGENT:'Shoshilinch' }
-async function load() { loading.value=true; try { tickets.value=(await supportApi.adminList({status:filter.value||undefined})).data.content } finally { loading.value=false } }
-async function open(id:string) { selected.value=(await supportApi.adminGet(id)).data; reply.value='' }
-function closeTicket() { selected.value = null; reply.value = '' }
-async function save(data:{status?:string;priority?:string}) { if(!selected.value)return; selected.value=(await supportApi.update(selected.value.id,data)).data; await load() }
-async function send() { if(!selected.value||!reply.value.trim())return; try { selected.value=(await supportApi.reply(selected.value.id,reply.value.trim())).data; reply.value=''; await load(); toast.success('Javob Telegramga yuborildi') } catch(e:any){toast.error(e.response?.data?.message||'Yuborib bo‘lmadi')} }
-function date(v:string){return new Date(v).toLocaleString('uz-UZ',{dateStyle:'short',timeStyle:'short'})}
-onMounted(load)
-</script>
-
 <template>
   <div class="grid w-full min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(280px,.82fr)_minmax(420px,1.18fr)]">
     <section :class="selected ? 'hidden lg:block' : 'block'" class="min-w-0 max-w-full">
       <div class="mb-5 flex items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Support</h1>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-600">Support</h1>
           <p class="text-sm text-slate-500">Telegramdan kelgan murojaatlar</p>
         </div>
         <button aria-label="Yangilash" @click="load" class="min-h-11 min-w-11 rounded-xl border border-slate-200 bg-white p-3 text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
@@ -97,3 +77,83 @@ onMounted(load)
     </section>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import { ArrowLeft, MessageCircle, RefreshCw, Send } from 'lucide-vue-next'
+import { supportApi, type SupportStatus, type SupportTicket } from '@/api/support'
+import StatusBadge from '@/components/common/StatusBadge.vue'
+import { useToast } from '@/composables/useToast'
+
+const tickets = ref<SupportTicket[]>([]);
+const selected = ref<SupportTicket | null>(null);
+const loading = ref(false);
+const filter = ref<SupportStatus | ''>('');
+const reply = ref('');
+const toast = useToast()
+const statuses: SupportStatus[] = ['NEW','IN_PROGRESS','WAITING_USER','RESOLVED','CLOSED']
+const label: Record<SupportStatus,string> = {
+  NEW:'Yangi',
+  IN_PROGRESS:'Jarayonda',
+  WAITING_USER:'User javobi kutilmoqda',
+  RESOLVED:'Hal qilindi',
+  CLOSED:'Yopildi'
+}
+const priorities = ['LOW','NORMAL','HIGH','URGENT'] as const
+const priorityLabel: Record<(typeof priorities)[number], string> = {
+  LOW:'Past',
+  NORMAL:'Oddiy',
+  HIGH:'Yuqori',
+  URGENT:'Shoshilinch'
+}
+
+async function load() {
+  loading.value=true;
+  try {
+    tickets.value=(
+        await supportApi.adminList({status:filter.value||undefined}))
+        .data.content
+  } finally {
+    loading.value=false
+  }
+}
+
+async function open(id:string) {
+  selected.value=(await supportApi.adminGet(id))
+      .data; reply.value=''
+}
+
+function closeTicket() {
+  selected.value = null;
+  reply.value = ''
+}
+async function save(data:{
+  status?:string;
+  priority?:string
+})
+
+{
+  if(!selected.value)return;
+  selected.value=(await supportApi.update(selected.value.id,data))
+      .data; await load()
+}
+
+async function send() {
+  if(!selected.value||!reply.value.trim())return;
+  try {
+    selected.value=(await supportApi.reply(selected.value.id,reply.value.trim()))
+        .data; reply.value='';
+        await load();
+        toast.success('Javob Telegramga yuborildi')
+  } catch(e:any){
+    toast.error(e.response?.data?.message||'Yuborib bo‘lmadi')
+  }
+}
+
+function date(v:string){
+  return new Date(v).toLocaleString('uz-UZ',{dateStyle:'short',timeStyle:'short'})
+}
+
+onMounted(load)
+
+</script>
