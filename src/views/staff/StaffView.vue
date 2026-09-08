@@ -15,8 +15,16 @@
       </button>
     </div>
 
-    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <SkeletonCard v-for="i in 6" :key="i" :lines="2" show-avatar />
+    <div
+        v-if="loading"
+        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+    >
+      <SkeletonCard
+          v-for="i in 6"
+          :key="i"
+          :lines="2"
+          show-avatar
+      />
     </div>
 
     <template v-else>
@@ -70,9 +78,9 @@
               <div class="flex items-center gap-2 mt-0.5">
                 <div class="flex items-center gap-1">
                   <Briefcase class="w-3.5 h-3.5 text-slate-400" />
-                  <span class="text-sm text-slate-500">{{
-                    member.linkedUserId ? "Bog'langan" : 'Mustaqil'
-                  }}</span>
+                  <span class="text-sm text-slate-500">
+                    {{ member.linkedUserId ? "Bog'langan" : 'Mustaqil' }}
+                  </span>
                 </div>
                 <!-- Avg rating badge -->
                 <div
@@ -80,9 +88,9 @@
                   class="flex items-center gap-0.5 bg-amber-50 px-1.5 py-0.5 rounded-full"
                 >
                   <Star class="w-3 h-3 text-amber-400 fill-amber-400" />
-                  <span class="text-xs font-medium text-amber-600">{{
-                    ratings[member.id].toFixed(1)
-                  }}</span>
+                  <span class="text-xs font-medium text-amber-600">
+                    {{ ratings[member.id].toFixed(1) }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -91,13 +99,22 @@
               @click="toggleActive(member)"
               class="flex-shrink-0"
             >
-              <ToggleRight v-if="member.active" class="w-6 h-6 text-emerald-500" />
-              <ToggleLeft v-else class="w-6 h-6 text-slate-300" />
+              <ToggleRight
+                  v-if="member.active"
+                  class="w-6 h-6 text-emerald-500"
+              />
+              <ToggleLeft
+                  v-else
+                  class="w-6 h-6 text-slate-300"
+              />
             </button>
           </div>
 
           <div class="mb-4 min-h-8">
-            <div v-if="member.serviceIds?.length" class="flex flex-wrap gap-1.5">
+            <div
+                v-if="member.serviceIds?.length"
+                class="flex flex-wrap gap-1.5"
+            >
               <span
                 v-for="serviceId in member.serviceIds.slice(0, 3)"
                 :key="serviceId"
@@ -112,7 +129,12 @@
                 +{{ member.serviceIds.length - 3 }}
               </span>
             </div>
-            <p v-else class="text-xs font-medium text-red-500">Xizmat biriktirilmagan</p>
+            <p
+                v-else
+                class="text-xs font-medium text-red-500"
+            >
+              Xizmat biriktirilmagan
+            </p>
           </div>
 
           <div class="flex items-center justify-between pt-3 border-t border-slate-100">
@@ -150,10 +172,17 @@
       size="lg"
       @close="showModal = false"
     >
-      <form @submit.prevent="save" class="space-y-4">
+      <form
+          @submit.prevent="save"
+          class="space-y-4"
+      >
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Ism *</label>
+            <label
+                class="block text-sm font-medium text-slate-700 mb-1.5"
+            >
+              Ism *
+            </label>
             <input
               v-model="form.firstName"
               type="text"
@@ -163,7 +192,11 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Familiya</label>
+            <label
+                class="block text-sm font-medium text-slate-700 mb-1.5"
+            >
+              Familiya
+            </label>
             <input
               v-model="form.lastName"
               type="text"
@@ -177,7 +210,10 @@
           <label class="block text-sm font-medium text-slate-700 mb-1.5">
             Qila oladigan xizmatlar
           </label>
-          <div v-if="services.length" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div
+              v-if="services.length"
+              class="grid grid-cols-1 sm:grid-cols-2 gap-2"
+          >
             <label
               v-for="service in services"
               :key="service.id"
@@ -199,11 +235,22 @@
                 :value="service.id"
                 class="sr-only"
               />
-              <span class="min-w-0 truncate font-medium">{{ service.name }}</span>
-              <span class="flex-shrink-0 text-xs text-slate-400">{{ service.durationMinutes }} daq</span>
+              <span
+                  class="min-w-0 truncate font-medium"
+              >
+                {{ service.name }}
+              </span>
+              <span
+                  class="flex-shrink-0 text-xs text-slate-400"
+              >
+                {{ service.durationMinutes }} daq
+              </span>
             </label>
           </div>
-          <p v-else class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          <p
+              v-else
+              class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700"
+          >
             Avval xizmat qo'shing, keyin xodimni shu xizmatlarga biriktirasiz.
           </p>
         </div>
@@ -240,9 +287,16 @@
           </div>
 
           <!-- "register" rejimi: yangi login/parol -->
-          <div v-if="accountMode === 'register'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 rounded-xl p-4">
+          <div
+              v-if="accountMode === 'register'"
+              class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 rounded-xl p-4"
+          >
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Login *</label>
+              <label
+                  class="block text-xs font-medium text-slate-600 mb-1"
+              >
+                Login *
+              </label>
               <input
                 v-model="registerForm.login"
                 type="text"
@@ -251,7 +305,11 @@
               />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Parol *</label>
+              <label
+                  class="block text-xs font-medium text-slate-600 mb-1"
+              >
+                Parol *
+              </label>
               <input
                 v-model="registerForm.password"
                 type="text"
@@ -261,7 +319,11 @@
             </div>
             <div class="contents">
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Email (ixtiyoriy)</label>
+                <label
+                    class="block text-xs font-medium text-slate-600 mb-1"
+                >
+                  Email (ixtiyoriy)
+                </label>
                 <input
                   v-model="registerForm.email"
                   type="email"
@@ -270,7 +332,11 @@
                 />
               </div>
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Telefon (ixtiyoriy)</label>
+                <label
+                    class="block text-xs font-medium text-slate-600 mb-1"
+                >
+                  Telefon (ixtiyoriy)
+                </label>
                 <input
                   v-model="registerForm.phone"
                   type="tel"
@@ -282,28 +348,48 @@
           </div>
 
           <!-- "link" rejimi: mavjud loginni qidirish -->
-          <template v-else-if="accountMode === 'link'">
-            <template v-if="linkedUser">
+          <template
+              v-else-if="accountMode === 'link'"
+          >
+            <template
+                v-if="linkedUser"
+            >
               <div class="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5">
                 <span class="flex items-center gap-2 text-sm text-emerald-700">
                   <CheckCircle2 class="w-4 h-4" />
-                  {{ personName(linkedUser) }}<template v-if="linkedUser.login"> ({{ linkedUser.login }})</template>
+                  {{ personName(linkedUser) }}
+                  <template
+                      v-if="linkedUser.login"
+                  >
+                    ({{ linkedUser.login }})
+                  </template>
                 </span>
-                <button type="button" @click="unlinkUser" class="text-emerald-600 hover:text-emerald-800">
+                <button
+                    type="button"
+                    @click="unlinkUser"
+                    class="text-emerald-600 hover:text-emerald-800"
+                >
                   <XIcon class="w-4 h-4" />
                 </button>
               </div>
 
               <!-- Bog'langan hisobning ma'lumotlarini yangilash (faqat tahrirlashda) -->
-              <details v-if="editingStaff" class="group bg-slate-50 rounded-xl mt-3">
+              <details
+                  v-if="editingStaff"
+                  class="group bg-slate-50 rounded-xl mt-3"
+              >
                 <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-xs font-semibold text-slate-600">
                   Hisob ma'lumotlarini o'zgartirish
-                  <span class="text-slate-400 transition-transform group-open:rotate-180">v</span>
+                  <span class="text-slate-400 transition-transform group-open:rotate-180">
+                    v
+                  </span>
                 </summary>
                 <div class="space-y-3 border-t border-slate-100 px-4 pb-4 pt-3">
                   <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Ism</label>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">
+                      Ism
+                    </label>
                     <input
                       v-model="accountUpdateForm.firstName"
                       type="text"
@@ -311,7 +397,9 @@
                     />
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Familiya</label>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">
+                      Familiya
+                    </label>
                     <input
                       v-model="accountUpdateForm.lastName"
                       type="text"
@@ -373,20 +461,20 @@
 
         <div class="sticky -bottom-5 -mx-6 flex flex-col gap-3 border-t border-slate-100 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <label class="flex items-center gap-3 cursor-pointer select-none">
-            <div
+            <span
               @click="form.active = !form.active"
               :class="[
                 'relative w-11 h-6 rounded-full transition-colors',
                 form.active ? 'bg-primary-600' : 'bg-slate-200',
               ]"
             >
-              <div
+              <span
                 :class="[
                   'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
                   form.active ? 'translate-x-5' : '',
                 ]"
               />
-            </div>
+            </span>
             <span class="text-sm font-medium text-slate-700">Faol holat</span>
           </label>
 

@@ -1,112 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
-import { Menu, LogOut, ChevronDown, User, UserCog, Search, Moon, Sun, Download } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth'
-import { useBusinessStore } from '@/stores/business'
-import GlobalSearch from '@/components/common/GlobalSearch.vue'
-import { mediaUrl } from '@/utils/media'
-import { personName } from '@/utils/names'
-import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
-import type { BusinessStatus } from '@/types'
-import { usePwaInstall } from '@/composables/usePwaInstall'
-import { useToast } from '@/composables/useToast'
-
-const toast = useToast()
-
-defineEmits<{ toggleSidebar: [] }>()
-
-const {
-  canInstall,
-  install
-} = usePwaInstall()
-
-const isInstalling = ref(false)
-
-const handleInstall = async () => {
-  if (isInstalling.value) return
-
-  dropdownOpen.value = false
-  isInstalling.value = true
-
-  try {
-    const installed = await install()
-
-    if (installed) {
-      toast.success('Ilova yuklandi')
-    } else {
-      toast.info('Yuklash bekor qilindi')
-    }
-  } catch {
-    toast.error('Ilovani yuklab bo‘lmadi')
-  } finally {
-    isInstalling.value = false
-  }
-}
-
-const router = useRouter()
-const authStore = useAuthStore()
-const businessStore = useBusinessStore()
-const dropdownOpen = ref(false)
-const searchOpen = ref(false)
-const darkMode = ref(false)
-
-function applyTheme(isDark: boolean) {
-  darkMode.value = isDark
-  document.documentElement.classList.toggle('dark', isDark)
-  localStorage.setItem('ontime-theme', isDark ? 'dark' : 'light')
-}
-
-function toggleTheme() {
-  applyTheme(!darkMode.value)
-}
-
-function logout() {
-  authStore.logout()
-  router.push('/login')
-}
-
-function getStatusLabel(status: BusinessStatus) {
-  return businessStatusLabels[status] || status
-}
-
-function getStatusColor(status: BusinessStatus) {
-  return businessStatusColor(status)
-}
-
-function onGlobalKeydown(e: KeyboardEvent) {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-    e.preventDefault()
-    if (authStore.isAdmin) searchOpen.value = true
-  }
-}
-
-function handleOutsideClick(event: MouseEvent) {
-  const target = event.target as HTMLElement
-
-  if (!target.closest('.profile-dropdown')) {
-    dropdownOpen.value = false
-  }
-}
-
-onMounted(() => {
-  const savedTheme = localStorage.getItem('ontime-theme')
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
-  applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark)
-  window.addEventListener('keydown', onGlobalKeydown)
-})
-onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
-
-onMounted(() => {
-  document.addEventListener('click', handleOutsideClick)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleOutsideClick)
-})
-
-</script>
-
 <template>
   <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 flex-shrink-0">
     <!-- Left -->
@@ -224,5 +115,117 @@ onBeforeUnmount(() => {
   </header>
 
   <!-- Global Search -->
-  <GlobalSearch v-if="searchOpen" @close="searchOpen = false" />
+  <GlobalSearch
+      v-if="searchOpen"
+      @close="searchOpen = false"
+  />
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { Menu, LogOut, ChevronDown, User, UserCog, Search, Moon, Sun, Download } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/auth'
+import { useBusinessStore } from '@/stores/business'
+import GlobalSearch from '@/components/common/GlobalSearch.vue'
+import { mediaUrl } from '@/utils/media'
+import { personName } from '@/utils/names'
+import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
+import type { BusinessStatus } from '@/types'
+import { usePwaInstall } from '@/composables/usePwaInstall'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
+
+defineEmits<{ toggleSidebar: [] }>()
+
+const {
+  canInstall,
+  install
+} = usePwaInstall()
+
+const isInstalling = ref(false)
+
+const handleInstall = async () => {
+  if (isInstalling.value) return
+
+  dropdownOpen.value = false
+  isInstalling.value = true
+
+  try {
+    const installed = await install()
+
+    if (installed) {
+      toast.success('Ilova yuklandi')
+    } else {
+      toast.info('Yuklash bekor qilindi')
+    }
+  } catch {
+    toast.error('Ilovani yuklab bo‘lmadi')
+  } finally {
+    isInstalling.value = false
+  }
+}
+
+const router = useRouter()
+const authStore = useAuthStore()
+const businessStore = useBusinessStore()
+const dropdownOpen = ref(false)
+const searchOpen = ref(false)
+const darkMode = ref(false)
+
+function applyTheme(isDark: boolean) {
+  darkMode.value = isDark
+  document.documentElement.classList.toggle('dark', isDark)
+  localStorage.setItem('ontime-theme', isDark ? 'dark' : 'light')
+}
+
+function toggleTheme() {
+  applyTheme(!darkMode.value)
+}
+
+function logout() {
+  authStore.logout()
+  router.push('/login')
+}
+
+function getStatusLabel(status: BusinessStatus) {
+  return businessStatusLabels[status] || status
+}
+
+function getStatusColor(status: BusinessStatus) {
+  return businessStatusColor(status)
+}
+
+function onGlobalKeydown(e: KeyboardEvent) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault()
+    if (authStore.isAdmin) searchOpen.value = true
+  }
+}
+
+function handleOutsideClick(event: MouseEvent) {
+  const target = event.target as HTMLElement
+
+  if (!target.closest('.profile-dropdown')) {
+    dropdownOpen.value = false
+  }
+}
+
+onMounted(() => {
+  const savedTheme = localStorage.getItem('ontime-theme')
+  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
+  applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark)
+  window.addEventListener('keydown', onGlobalKeydown)
+})
+onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
+
+onMounted(() => {
+  document.addEventListener('click', handleOutsideClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
+
+</script>
