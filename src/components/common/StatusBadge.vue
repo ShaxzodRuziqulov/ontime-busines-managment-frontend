@@ -22,6 +22,10 @@ const businessLabels: Record<string, string> = {
   SUSPENDED: 'To\'xtatilgan',
   DRAFT: 'Qoralama',
   PENDING_REVIEW: 'Moderatsiyada',
+  NEW: 'Yangi',
+  WAITING_USER: 'User javobi kutilmoqda',
+  RESOLVED: 'Hal qilindi',
+  CLOSED: 'Yopildi',
 }
 
 const colorMap: Record<string, string> = {
@@ -38,6 +42,10 @@ const colorMap: Record<string, string> = {
   SUSPENDED: 'bg-red-100 text-red-700 ring-red-200',
   DRAFT: 'bg-slate-100 text-slate-600 ring-slate-200',
   PENDING_REVIEW: 'bg-blue-100 text-blue-700 ring-blue-200',
+  NEW: 'bg-amber-100 text-amber-700 ring-amber-200',
+  WAITING_USER: 'bg-violet-100 text-violet-700 ring-violet-200',
+  RESOLVED: 'bg-emerald-100 text-emerald-700 ring-emerald-200',
+  CLOSED: 'bg-slate-100 text-slate-600 ring-slate-200',
 }
 
 const dotMap: Record<string, string> = {
@@ -54,6 +62,10 @@ const dotMap: Record<string, string> = {
   SUSPENDED: 'bg-red-500',
   DRAFT: 'bg-slate-400',
   PENDING_REVIEW: 'bg-blue-500',
+  NEW: 'bg-amber-500',
+  WAITING_USER: 'bg-violet-500',
+  RESOLVED: 'bg-emerald-500',
+  CLOSED: 'bg-slate-400',
 }
 
 function getLabel(status: string) {

@@ -28,7 +28,7 @@ const iconStyles = {
 
 <template>
   <Teleport to="body">
-    <div class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+    <div class="fixed inset-x-4 bottom-4 z-[9999] flex w-auto flex-col gap-2 pointer-events-none sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-full sm:max-w-sm">
       <TransitionGroup
         enter-active-class="transition-all duration-300 ease-out"
         enter-from-class="opacity-0 translate-y-4 scale-95"

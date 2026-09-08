@@ -215,7 +215,14 @@ onMounted(load)
       </EmptyState>
 
       <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="divide-y divide-slate-100 sm:hidden">
+          <article v-for="log in logs" :key="log.id" class="p-4">
+            <div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="truncate text-sm font-semibold text-slate-800">{{ entityDisplayName(log) }}</p><p class="mt-1 text-xs text-slate-500">{{ formatDate(log.createdAt) }} · {{ log.adminLogin }}</p></div><span :class="['shrink-0 rounded-full px-2 py-1 text-[11px] font-medium', actionColors[log.action] ?? 'bg-slate-100 text-slate-600']">{{ actionLabels[log.action] ?? log.action }}</span></div>
+            <p v-if="log.details" class="mt-3 line-clamp-2 text-xs leading-5 text-slate-500">{{ log.details }}</p>
+            <p class="mt-2 text-[11px] text-slate-400">{{ entityTypeLabel(log.entityType) }} · {{ shortEntityId(log.entityId) }}</p>
+          </article>
+        </div>
+        <div class="hidden overflow-x-auto sm:block">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
@@ -271,11 +278,11 @@ onMounted(load)
         </div>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+        <div v-if="totalPages > 1" class="flex flex-col gap-3 border-t border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <span class="text-xs text-slate-500">
             {{ page * PAGE_SIZE + 1 }}–{{ Math.min((page + 1) * PAGE_SIZE, totalElements) }} / {{ totalElements }}
           </span>
-          <div class="flex gap-1">
+          <div class="flex max-w-full gap-1 overflow-x-auto">
             <button
               :disabled="page === 0"
               @click="page--"

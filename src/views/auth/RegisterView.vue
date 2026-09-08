@@ -1,54 +1,53 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex">
-    <!-- Left: Branding -->
-    <div class="hidden lg:flex flex-1 flex-col justify-center px-16 text-white">
-      <AppLogo size="lg" class="mb-10" />
+  <div class="relative flex min-h-screen overflow-hidden bg-[#081120] text-white">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_15%,rgba(37,99,235,.22),transparent_27%),radial-gradient(circle_at_72%_78%,rgba(20,184,166,.16),transparent_25%)]" />
+    <div class="pointer-events-none absolute inset-0 opacity-[.035] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:42px_42px]" />
 
-      <h1 class="text-4xl font-bold leading-tight mb-4">
-        Biznesingizni<br />
-        <span class="text-primary-400">bugun boshlang</span>
-      </h1>
-      <p class="text-slate-400 text-lg leading-relaxed max-w-md">
-        14 kun bepul sinov davri bilan biznesingizni ro'yxatdan o'tkazing va navbat boshqaruvini boshlang.
-      </p>
+    <section class="relative hidden min-h-screen flex-1 lg:flex lg:max-w-[58%] lg:flex-col lg:justify-between lg:px-16 lg:py-12 xl:px-24">
+      <AppLogo size="lg" />
 
-      <div class="mt-12 space-y-4">
+      <div class="max-w-xl">
+        <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-400/25 bg-primary-500/10 px-3 py-1.5 text-xs font-bold text-primary-200">Yangi biznesingizni bugun boshlang</div>
+        <h1 class="text-5xl font-black leading-[1.08] tracking-tight xl:text-6xl">Bir necha daqiqada<br /><span class="bg-gradient-to-r from-primary-300 to-teal-300 bg-clip-text text-transparent">ishga tayyor</span> bo‘ling.</h1>
+        <p class="mt-6 max-w-lg text-lg leading-8 text-slate-300">Biznesingiz, jamoangiz va navbatlaringizni bitta tizimdan boshqaring. Dastlabki 14 kun bepul.</p>
+      </div>
+
+      <div class="grid max-w-2xl grid-cols-3 gap-3">
         <div
             v-for="step in [
-            { num: '1', text: 'Ro\'yxatdan o\'ting' },
-            { num: '2', text: 'Biznesingizni yarating' },
-            { num: '3', text: '14 kun bepul foydalaning' },
+            { num: '1', text: 'Hisob yarating' },
+            { num: '2', text: 'Biznesingizni sozlang' },
+            { num: '3', text: 'Bepul sinab ko‘ring' },
           ]"
             :key="step.num"
-            class="flex items-center gap-4"
+            class="rounded-2xl border border-white/10 bg-white/[.045] p-4 backdrop-blur"
         >
-          <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-500/20 text-sm font-black text-primary-200">
             {{ step.num }}
           </div>
-          <span class="text-slate-300">{{ step.text }}</span>
+          <p class="mt-3 text-sm font-bold text-slate-200">{{ step.text }}</p>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Right: Register form -->
-    <div class="flex-1 flex items-center justify-center p-8">
+    <section class="relative flex min-h-screen flex-1 items-center justify-center px-5 py-10 sm:px-8 lg:border-l lg:border-white/[.06]">
       <div class="w-full max-w-md">
-        <!-- Mobile logo -->
-        <AppLogo size="md" class="mb-8 lg:hidden" />
+        <AppLogo size="md" class="mb-10 lg:hidden" />
 
-        <div class="bg-white rounded-3xl shadow-2xl p-8">
+        <div class="rounded-[2rem] border border-white/10 bg-slate-950/45 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
           <div class="mb-8">
-            <div class="w-12 h-12 bg-primary-100 rounded-2xl flex items-center justify-center mb-4">
-              <UserPlus class="w-6 h-6 text-primary-600" />
+            <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500/20">
+              <UserPlus class="w-6 h-6 text-primary-300" />
             </div>
-            <h2 class="text-2xl font-bold text-slate-800">Ro'yxatdan o'tish</h2>
-            <p class="text-slate-500 mt-1">Hisob yarating va biznesingizni boshqaring</p>
+            <p class="text-sm font-bold text-primary-300">OnTime Business</p>
+            <h2 class="mt-2 text-3xl font-black tracking-tight">Ro'yxatdan o'tish</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-400">Hisob yarating va biznesingizni boshqarishni boshlang.</p>
           </div>
 
           <!-- Error -->
           <div
               v-if="error"
-              class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm"
+              class="mb-6 flex items-center gap-2 rounded-xl border border-red-400/25 bg-red-400/10 px-4 py-3 text-sm text-red-200"
           >
             <AlertCircle class="w-4 h-4 flex-shrink-0" />
             {{ error }}
@@ -57,7 +56,7 @@
           <form @submit.prevent="handleRegister" class="space-y-4">
             <!-- Name -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Ism *</label>
+              <label class="mb-1.5 block text-sm font-bold text-slate-200">Ism *</label>
               <input
                   v-model="form.firstName"
                   type="text"
@@ -65,34 +64,34 @@
                   autocomplete="given-name"
                   @blur="validateFirstName"
                   :class="[
-                  'w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white',
+                  'w-full rounded-xl border bg-white/[.045] px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:bg-white/[.075] focus:ring-2 focus:ring-primary-500/30',
                   fieldErrors.firstName
-                  ? 'border-red-300 focus:ring-red-400'
-                  : 'border-slate-200 focus:ring-primary-500',
+                  ? 'border-red-400/60'
+                  : 'border-white/10 focus:border-primary-400',
                 ]"
               />
               <p
                   v-if="fieldErrors.firstName"
-                  class="text-xs text-red-500 mt-1"
+                  class="mt-1 text-xs text-red-300"
               >
                 {{ fieldErrors.firstName }}
               </p>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Familiya</label>
+              <label class="mb-1.5 block text-sm font-bold text-slate-200">Familiya</label>
               <input
                   v-model="form.lastName"
                   type="text"
                   placeholder="Familiya"
                   autocomplete="family-name"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white"
+                  class="w-full rounded-xl border border-white/10 bg-white/[.045] px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-primary-400 focus:bg-white/[.075] focus:ring-2 focus:ring-primary-500/30"
               />
             </div>
 
             <!-- Login -->
             <div>
-              <label for="reg-username" class="block text-sm font-medium text-slate-700 mb-1.5">Login *</label>
+              <label for="reg-username" class="mb-1.5 block text-sm font-bold text-slate-200">Login *</label>
               <input
                   id="reg-username"
                   v-model="form.login"
@@ -101,15 +100,15 @@
                   autocomplete="username"
                   @blur="validateLogin"
                   :class="[
-                  'w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white',
+                  'w-full rounded-xl border bg-white/[.045] px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:bg-white/[.075] focus:ring-2 focus:ring-primary-500/30',
                   fieldErrors.login
-                  ? 'border-red-300 focus:ring-red-400'
-                  : 'border-slate-200 focus:ring-primary-500',
+                  ? 'border-red-400/60'
+                  : 'border-white/10 focus:border-primary-400',
                 ]"
               />
               <p
                   v-if="fieldErrors.login"
-                  class="text-xs text-red-500 mt-1"
+                  class="mt-1 text-xs text-red-300"
               >
                 {{ fieldErrors.login }}
               </p>
@@ -117,7 +116,7 @@
 
             <!-- Password -->
             <div>
-              <label for="reg-password" class="block text-sm font-medium text-slate-700 mb-1.5">Parol *</label>
+              <label for="reg-password" class="mb-1.5 block text-sm font-bold text-slate-200">Parol *</label>
               <div class="relative">
                 <input
                     id="reg-password"
@@ -127,14 +126,14 @@
                     autocomplete="new-password"
                     @blur="validatePassword"
                     :class="[
-                    'w-full px-4 py-3 pr-12 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white',
-                    fieldErrors.password ? 'border-red-300 focus:ring-red-400' : 'border-slate-200 focus:ring-primary-500',
+                    'w-full rounded-xl border bg-white/[.045] px-4 py-3 pr-12 text-white placeholder-slate-500 outline-none transition focus:bg-white/[.075] focus:ring-2 focus:ring-primary-500/30',
+                    fieldErrors.password ? 'border-red-400/60' : 'border-white/10 focus:border-primary-400',
                   ]"
                 />
                 <button
                     type="button"
                     :aria-label="showPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish'"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 transition hover:text-white"
                     @click="showPassword = !showPassword"
                 >
                   <EyeOff v-if="showPassword" class="w-5 h-5" />
@@ -143,7 +142,7 @@
               </div>
               <p
                   v-if="fieldErrors.password"
-                  class="text-xs text-red-500 mt-1"
+                  class="mt-1 text-xs text-red-300"
               >
                 {{ fieldErrors.password }}
               </p>
@@ -152,18 +151,18 @@
             <!-- Email & Phone -->
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label for="reg-email" class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                <label for="reg-email" class="mb-1.5 block text-sm font-bold text-slate-200">Email</label>
                 <input
                     id="reg-email"
                     v-model="form.email"
                     type="email"
                     placeholder="email@example.com"
                     autocomplete="email"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white text-sm"
+                    class="w-full rounded-xl border border-white/10 bg-white/[.045] px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition focus:border-primary-400 focus:bg-white/[.075] focus:ring-2 focus:ring-primary-500/30"
                 />
               </div>
               <div>
-                <label for="reg-phone" class="block text-sm font-medium text-slate-700 mb-1.5">Telefon</label>
+                <label for="reg-phone" class="mb-1.5 block text-sm font-bold text-slate-200">Telefon</label>
                 <input
                     id="reg-phone"
                     v-model="displayPhone"
@@ -172,7 +171,7 @@
                     type="tel"
                     placeholder="+99890 123 45 67"
                     autocomplete="tel"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white text-sm"
+                    class="w-full rounded-xl border border-white/10 bg-white/[.045] px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition focus:border-primary-400 focus:bg-white/[.075] focus:ring-2 focus:ring-primary-500/30"
                     @input="onPhoneInput"
                     @keydown="onPhoneKeydown"
                 />
@@ -183,22 +182,22 @@
             <button
                 type="submit"
                 :disabled="loading"
-                class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 mt-2"
+                class="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 py-3.5 font-bold text-white shadow-lg shadow-primary-900/30 transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Loader2 v-if="loading" class="w-5 h-5 animate-spin" />
               {{ loading ? 'Ro\'yxatdan o\'tilmoqda...' : 'Davom etish' }}
             </button>
           </form>
 
-          <p class="mt-6 text-center text-sm text-slate-500">
+          <p class="mt-7 text-center text-sm text-slate-400">
             Hisobingiz bormi?
-            <RouterLink to="/login" class="font-semibold text-primary-600 hover:text-primary-700">
+            <RouterLink :to="{ name: 'login' }" class="font-bold text-primary-300 transition hover:text-primary-200">
               Kirish
             </RouterLink>
           </p>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 

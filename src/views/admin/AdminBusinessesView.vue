@@ -384,11 +384,11 @@ onMounted(async () => {
     </div>
 
     <!-- Status filter tabs -->
-    <div class="flex flex-wrap gap-2">
+    <div class="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
       <button
         @click="setStatusFilter('all')"
         :class="[
-          'px-3 py-1.5 rounded-xl text-xs font-medium border transition-all',
+          'shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all',
           statusFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
         ]"
       >
@@ -398,7 +398,7 @@ onMounted(async () => {
         v-for="s in allStatuses" :key="s"
         @click="setStatusFilter(s)"
         :class="[
-          'px-3 py-1.5 rounded-xl text-xs font-medium border transition-all',
+          'shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all',
           statusFilter === s ? statusColor(s) + ' border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
         ]"
       >
@@ -506,7 +506,13 @@ onMounted(async () => {
             - <button @click="setStatusFilter('all')" class="text-primary-600 hover:underline">Filterni tozalash</button>
           </span>
         </div>
-        <div class="overflow-x-auto">
+        <div class="divide-y divide-slate-100 sm:hidden">
+          <article v-for="biz in filtered" :key="biz.id" :class="['p-4', selected.has(biz.id) && 'bg-primary-50/40']">
+            <div class="flex items-start gap-3"><input type="checkbox" :checked="selected.has(biz.id)" @change="toggleOne(biz.id)" class="mt-1 shrink-0 rounded border-slate-300 text-primary-600" /><button class="min-w-0 flex-1 text-left" @click="openBusiness(biz)"><p class="truncate text-sm font-semibold text-slate-800">{{ biz.name }}</p><p class="mt-1 truncate text-xs text-slate-500">{{ ownerName(biz) }} · {{ biz.contactPhone || 'Telefon yo‘q' }}</p></button><span :class="['shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold', statusColor(biz.status)]">{{ statusLabels[biz.status] }}</span></div>
+            <div class="mt-3 flex items-center justify-between gap-2"><p class="truncate text-xs text-slate-500">{{ categoryLabel(biz.category) }} · {{ formatDate(biz.subscriptionEndDate) }}</p><div class="flex shrink-0 gap-1"><button @click="openBusiness(biz)" class="rounded-lg p-1.5 text-primary-600" title="Batafsil"><ExternalLink class="h-4 w-4" /></button><button @click="openStatusModal(biz)" class="rounded-lg p-1.5 text-indigo-600" title="Holat"><Settings class="h-4 w-4" /></button><button @click="deleteConfirm = biz.id" class="rounded-lg p-1.5 text-red-600" title="O‘chirish"><Trash2 class="h-4 w-4" /></button></div></div>
+          </article>
+        </div>
+        <div class="hidden overflow-x-auto sm:block">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">

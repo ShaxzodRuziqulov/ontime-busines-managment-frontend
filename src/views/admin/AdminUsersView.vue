@@ -285,13 +285,13 @@ onMounted(async () => {
           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
         />
       </div>
-      <div class="flex gap-1 bg-slate-100 rounded-xl p-1 self-start">
+      <div class="flex w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 sm:w-auto sm:self-start">
         <button
           v-for="tab in filterTabs"
           :key="tab.key"
           @click="roleFilter = tab.key"
           :class="[
-            'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+            'shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
             roleFilter === tab.key ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700',
           ]"
         >
@@ -315,7 +315,20 @@ onMounted(async () => {
         <div class="px-5 py-3 border-b border-slate-100 text-xs text-slate-500">
           {{ filtered.length }} ta natija
         </div>
-        <div class="overflow-x-auto overflow-y-auto max-h-[700px]">
+        <div class="divide-y divide-slate-100 sm:hidden">
+          <article v-for="user in filtered" :key="user.id" :class="['p-4', !user.active && 'opacity-60']">
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+                <img v-if="mediaUrl(user.avatarUrl)" :src="mediaUrl(user.avatarUrl)!" class="h-full w-full object-cover" :alt="personName(user, user.login)" />
+                <ShieldCheck v-else-if="isAdmin(user)" class="h-4 w-4 text-red-500" /><Building2 v-else-if="user.businessOwner" class="h-4 w-4 text-violet-500" /><Users v-else class="h-4 w-4 text-slate-400" />
+              </div>
+              <button class="min-w-0 flex-1 text-left" @click="openUser(user)"><p class="truncate text-sm font-semibold text-slate-800">{{ personName(user) }}</p><p class="truncate text-xs text-slate-500">{{ user.login }} · {{ user.phone || 'Telefon yo‘q' }}</p></button>
+              <button :disabled="togglingId === user.id" @click="activeConfirm = user" :aria-label="user.active ? 'Bloklash' : 'Aktivlashtirish'" class="shrink-0"><ToggleRight v-if="user.active" class="h-7 w-7 text-emerald-500" /><ToggleLeft v-else class="h-7 w-7 text-slate-300" /></button>
+            </div>
+            <div class="mt-3 flex items-center justify-between gap-2"><span :class="['rounded-full px-2.5 py-1 text-xs font-medium', roleColor(user)]">{{ roleLabel(user) }}</span><div class="flex gap-1"><button v-if="!isAdmin(user)" :disabled="togglingId === user.id" @click="adminConfirm = { user, wasAdmin: false }" class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500">+ Admin</button><button v-else :disabled="togglingId === user.id" @click="adminConfirm = { user, wasAdmin: true }" class="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-600">− Admin</button><button @click="openEdit(user)" class="rounded-lg p-1.5 text-primary-600"><Edit2 class="h-4 w-4" /></button><button @click="deleteConfirm = user.id" class="rounded-lg p-1.5 text-red-600"><Trash2 class="h-4 w-4" /></button></div></div>
+          </article>
+        </div>
+        <div class="hidden max-h-[700px] overflow-x-auto overflow-y-auto sm:block">
           <table class="w-full text-xs">
             <thead>
               <tr class="sticky z-30 top-0 bg-white border-b border-gray-50 shadow-sm text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
