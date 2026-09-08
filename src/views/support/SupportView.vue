@@ -34,7 +34,7 @@ async function openTelegram() {
 <template>
   <div class="max-w-3xl mx-auto space-y-6">
     <div>
-      <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Yordam va qo‘llab-quvvatlash</h1>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-600">Yordam va qo‘llab-quvvatlash</h1>
       <p class="mt-1 text-slate-500 dark:text-slate-400">Murojaatingizni OnTime Telegram botiga yozing — javob ham shu chatga keladi.</p>
     </div>
 
