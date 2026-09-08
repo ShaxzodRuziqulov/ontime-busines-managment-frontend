@@ -5,7 +5,7 @@ const props = withDefaults(defineProps<{
   tone?: 'light' | 'dark'
   showText?: boolean
 }>(), {
-  label: 'OnTime Business',
+  label: 'OnTime Biznes',
   size: 'md',
   tone: 'light',
   showText: true,

@@ -721,7 +721,8 @@ function getColor(name: string) {
   return avatarColors[idx]
 }
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string)
+    .replace(/\/api\/v1\/?$/, '');
 
 const getAvatarUrl = (url: string | undefined): string => {
   if (!url) return "";

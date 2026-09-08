@@ -105,7 +105,7 @@
                   v-if="col.avatarUrl"
                   :src="getAvatarUrl(col.avatarUrl)"
                   alt=""
-                  class="w-8 h-8 rounded-full"
+                  class="w-6 h-6 rounded-full object-cover shrink-0"
               >
               <span
                   v-else
@@ -543,7 +543,8 @@ const WEEKDAY_LABELS: Record<string, string> = {
   THURSDAY: 'Payshanba', FRIDAY: 'Juma', SATURDAY: 'Shanba', SUNDAY: 'Yakshanba',
 }
 
-const BASE_URL = import.meta.env.VITE_BASE_API as string;
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string)
+    .replace(/\/api\/v1\/?$/, '');
 
 const getAvatarUrl = (url: string | undefined): string => {
   if (!url) return "";

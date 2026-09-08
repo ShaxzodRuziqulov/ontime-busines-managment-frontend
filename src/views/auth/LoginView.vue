@@ -99,7 +99,7 @@ async function handleLogin() {
         <div class="bg-white rounded-3xl shadow-2xl p-8">
           <div class="mb-8">
             <h2 class="text-2xl font-bold text-slate-800">Xush kelibsiz!</h2>
-            <p class="text-slate-500 mt-1">Business panelga kirish uchun ma'lumotlarni kiriting</p>
+            <p class="text-slate-500 mt-1">Biznes panelga kirish uchun ma'lumotlarni kiriting</p>
           </div>
 
           <!-- Error -->
