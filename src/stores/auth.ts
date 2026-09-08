@@ -24,7 +24,10 @@ export const useAuthStore = defineStore('auth', () => {
 
     const pendingCredentials = ref<{ login: string; password: string } | null>(null)
 
-    const isAuthenticated = computed(() => !!user.value)
+    // Faqat `user` localStorageda qolib ketgani sessiya borligini anglatmaydi.
+    // Token ham bo'lishi va amal qilishi kerak; aks holda guest sahifalari
+    // (kirish/ro'yxatdan o'tish) noto'g'ri redirect qilinib, yo'qolgandek ko'rinadi.
+    const isAuthenticated = computed(() => !!user.value && !!token.value && !isTokenExpired())
     const isAdmin = computed(() => user.value?.admin === true || (user.value?.roles?.includes('ROLE_ADMIN') ?? false))
     const isBusinessOwner = computed(() => user.value?.roles?.includes('ROLE_BUSINESS_OWNER') ?? false)
     const isManager = computed(() => user.value?.roles?.includes('ROLE_MANAGER') ?? false)

@@ -146,7 +146,7 @@ onMounted(async () => {
     </div>
 
     <template v-if="loading">
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid grid-cols-3 gap-2 sm:gap-4">
         <div v-for="i in 3" :key="i" class="h-28 animate-pulse rounded-2xl border border-slate-100 bg-white" />
       </div>
       <SkeletonTable :rows="4" :cols="4" />
@@ -158,41 +158,41 @@ onMounted(async () => {
           v-for="item in priorityItems"
           :key="item.label"
           :to="item.to"
-          :class="['rounded-2xl border p-5 transition hover:-translate-y-0.5 hover:shadow-sm', item.tone]"
+          :class="['rounded-2xl border p-3 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-5', item.tone]"
         >
           <div class="flex items-start justify-between gap-3">
             <div>
-              <p class="text-sm font-semibold">{{ item.label }}</p>
-              <p class="mt-2 text-3xl font-bold">{{ item.value }}</p>
+              <p class="text-xs font-semibold leading-4 sm:text-sm">{{ item.label }}</p>
+              <p class="mt-1.5 text-2xl font-bold sm:mt-2 sm:text-3xl">{{ item.value }}</p>
             </div>
-            <component :is="item.icon" class="h-6 w-6" />
+            <component :is="item.icon" class="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
           </div>
         </RouterLink>
       </div>
 
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Foydalanuvchilar</span>
             <Users class="h-5 w-5 text-blue-600" />
           </div>
           <div class="mt-3 text-2xl font-bold text-slate-800">{{ users.length }}</div>
         </div>
-        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Bizneslar</span>
             <Building2 class="h-5 w-5 text-emerald-600" />
           </div>
           <div class="mt-3 text-2xl font-bold text-slate-800">{{ totalBusinesses }}</div>
         </div>
-        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Biznes egalari</span>
             <Building2 class="h-5 w-5 text-violet-600" />
           </div>
           <div class="mt-3 text-2xl font-bold text-slate-800">{{ businessOwners.length }}</div>
         </div>
-        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Adminlar</span>
             <ShieldCheck class="h-5 w-5 text-slate-600" />
@@ -211,12 +211,12 @@ onMounted(async () => {
             Barchasi <ArrowRight class="h-3.5 w-3.5" />
           </RouterLink>
         </div>
-        <div class="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-6">
+        <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-6">
           <RouterLink
             v-for="card in statusCards"
             :key="card.status"
             :to="{ name: 'admin-businesses', query: { status: card.status } }"
-            class="rounded-xl border border-slate-100 p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+            class="rounded-xl border border-slate-100 p-3 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-4"
             :class="card.color"
           >
             <component :is="card.icon" :class="['mb-3 h-5 w-5', card.textColor]" />
@@ -300,7 +300,13 @@ onMounted(async () => {
           Biznes yo'q
         </div>
 
-        <div v-else class="overflow-x-auto">
+        <div v-else class="divide-y divide-slate-50 sm:hidden">
+          <button v-for="biz in recentBusinesses" :key="biz.id" class="flex w-full items-center gap-3 px-4 py-3 text-left" @click="router.push(`/admin/businesses/${biz.id}`)">
+            <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold text-slate-800">{{ biz.name }}</p><p class="mt-1 truncate text-xs text-slate-500">{{ businessLocation(biz) }}</p></div>
+            <div class="shrink-0 text-right"><span :class="['rounded-full px-2 py-1 text-[11px] font-semibold', statusColor(biz.status)]">{{ statusLabels[biz.status] }}</span><p class="mt-1 text-[11px] text-slate-400">{{ new Date(biz.createdAt).toLocaleDateString('uz-UZ') }}</p></div>
+          </button>
+        </div>
+        <div class="hidden overflow-x-auto sm:block">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-500">

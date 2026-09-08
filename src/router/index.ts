@@ -96,6 +96,11 @@ const router = createRouter({
           name: 'profile',
           component: () => import('@/views/profile/ProfileView.vue'),
         },
+        {
+          path: 'help',
+          name: 'help',
+          component: () => import('@/views/support/SupportView.vue'),
+        },
       ],
     },
     {
@@ -150,6 +155,7 @@ const router = createRouter({
           name: 'admin-audit',
           component: () => import('@/views/admin/AdminAuditView.vue'),
         },
+        { path: 'support', name: 'admin-support', component: () => import('@/views/admin/AdminSupportView.vue') },
       ],
     },
     {
@@ -197,6 +203,7 @@ router.beforeEach((to, _, next) => {
     !auth.isAdmin &&
     !auth.isStaff &&
     to.name !== 'onboarding' &&
+    to.name !== 'help' &&
     to.name !== 'profile'
   ) {
     return next({ name: 'onboarding' })

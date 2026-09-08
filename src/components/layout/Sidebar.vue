@@ -14,7 +14,8 @@ import {
   AlarmClock,
   ClipboardList,
   House,
-  Briefcase
+  Briefcase,
+  CircleHelp
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminStore } from '@/stores/admin'
@@ -54,6 +55,7 @@ const adminNavItems = [
     badge: () => adminStore.pendingReviewCount,
   },
   { name: 'Audit', to: '/admin/audit', icon: ClipboardList, badge: null },
+  { name: 'Support', to: '/admin/support', icon: CircleHelp, badge: null },
 ]
 
 function isActive(path: string) {
@@ -157,6 +159,17 @@ onMounted(() => {
 
     <!-- Footer -->
     <div class="px-3 py-3 border-t border-slate-700/50">
+      <RouterLink
+        to="/help"
+        @click="$emit('close')"
+        :class="[
+          'mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+          isActive('/help') ? 'bg-primary-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white',
+        ]"
+      >
+        <CircleHelp class="h-5 w-5" />
+        Yordam
+      </RouterLink>
       <div class="px-3 py-2 text-xs text-slate-500">
         Business Management v1.0
       </div>
