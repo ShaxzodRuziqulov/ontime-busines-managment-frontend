@@ -61,6 +61,23 @@
           <p class="text-sm font-semibold text-red-700 mb-1">Obuna kerak</p>
           <p class="text-xs text-red-600">Amallar bloklangan. Obunani faollashtiring.</p>
         </div>
+
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-800">Mijozlar uchun QR-kod</h3>
+              <p class="text-xs text-slate-500 mt-1">Mijoz skanerlab, bevosita navbat oladi</p>
+            </div>
+            <QrCode class="w-5 h-5 text-primary-600 flex-shrink-0" />
+          </div>
+
+          <RouterLink
+            to="/qr-code"
+            class="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
+          >
+            <QrCode class="w-4 h-4" /> QR-kodni olish
+          </RouterLink>
+        </div>
       </div>
 
       <div class="lg:col-span-2">
@@ -228,6 +245,7 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -239,6 +257,7 @@ import {
   Building2,
   CalendarCheck,
   ChevronRight,
+  QrCode,
   Save,
   Phone,
   MapPin,

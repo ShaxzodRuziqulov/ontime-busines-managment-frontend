@@ -15,7 +15,7 @@ import {
   ClipboardList,
   House,
   Briefcase,
-  CircleHelp
+  CircleHelp,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminStore } from '@/stores/admin'
