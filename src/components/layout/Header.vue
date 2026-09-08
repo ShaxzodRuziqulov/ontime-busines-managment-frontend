@@ -11,11 +11,18 @@
       </button>
 
       <!-- Business badge (non-admin) -->
-      <div v-if="!authStore.isAdmin && businessStore.business" class="flex items-center gap-2">
+      <div
+          v-if="!authStore.isAdmin && businessStore.business"
+          class="flex items-center gap-2"
+      >
         <span class="font-semibold text-slate-800 text-sm hidden sm:block">
           {{ businessStore.business.name }}
         </span>
-        <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', getStatusColor(businessStore.business.status)]">
+        <span
+            :class="['text-xs px-2 py-0.5 rounded-full font-medium',
+             getStatusColor(businessStore.business.status)
+             ]"
+        >
           {{ getStatusLabel(businessStore.business.status) }}
         </span>
       </div>
@@ -104,7 +111,8 @@
           </button>
           <button
             class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-            @click="dropdownOpen = false; logout()"
+            @click="dropdownOpen = false;
+            logout()"
           >
             <LogOut class="w-4 h-4" />
             Chiqish

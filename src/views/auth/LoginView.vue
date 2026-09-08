@@ -57,7 +57,7 @@
         <div class="rounded-[2rem] border border-white/10 bg-slate-950/45 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
           <div class="mb-8">
             <p class="text-sm font-bold text-primary-300">
-              OnTime Business
+              OnTime Biznes
             </p>
             <h2 class="mt-2 text-3xl font-black tracking-tight">
               Xush kelibsiz

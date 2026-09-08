@@ -7,9 +7,22 @@
       <AppLogo size="lg" />
 
       <div class="max-w-xl">
-        <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-400/25 bg-primary-500/10 px-3 py-1.5 text-xs font-bold text-primary-200">Yangi biznesingizni bugun boshlang</div>
-        <h1 class="text-5xl font-black leading-[1.08] tracking-tight xl:text-6xl">Bir necha daqiqada<br /><span class="bg-gradient-to-r from-primary-300 to-teal-300 bg-clip-text text-transparent">ishga tayyor</span> bo‘ling.</h1>
-        <p class="mt-6 max-w-lg text-lg leading-8 text-slate-300">Biznesingiz, jamoangiz va navbatlaringizni bitta tizimdan boshqaring. Dastlabki 14 kun bepul.</p>
+        <div
+            class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-400/25 bg-primary-500/10 px-3 py-1.5 text-xs font-bold text-primary-200"
+        >
+          Yangi biznesingizni bugun boshlang
+        </div>
+        <h1 class="text-5xl font-black leading-[1.08] tracking-tight xl:text-6xl">
+          Bir necha daqiqada
+          <br />
+          <span class="bg-gradient-to-r from-primary-300 to-teal-300 bg-clip-text text-transparent">
+            ishga tayyor
+          </span>
+          bo‘ling.
+        </h1>
+        <p class="mt-6 max-w-lg text-lg leading-8 text-slate-300">
+          Biznesingiz, jamoangiz va navbatlaringizni bitta tizimdan boshqaring. Dastlabki 14 kun bepul.
+        </p>
       </div>
 
       <div class="grid max-w-2xl grid-cols-3 gap-3">
@@ -39,9 +52,15 @@
             <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500/20">
               <UserPlus class="w-6 h-6 text-primary-300" />
             </div>
-            <p class="text-sm font-bold text-primary-300">OnTime Business</p>
-            <h2 class="mt-2 text-3xl font-black tracking-tight">Ro'yxatdan o'tish</h2>
-            <p class="mt-2 text-sm leading-6 text-slate-400">Hisob yarating va biznesingizni boshqarishni boshlang.</p>
+            <p class="text-sm font-bold text-primary-300">
+              OnTime Biznes
+            </p>
+            <h2 class="mt-2 text-3xl font-black tracking-tight">
+              Ro'yxatdan o'tish
+            </h2>
+            <p class="mt-2 text-sm leading-6 text-slate-400">
+              Hisob yarating va biznesingizni boshqarishni boshlang.
+            </p>
           </div>
 
           <!-- Error -->
@@ -53,10 +72,17 @@
             {{ error }}
           </div>
 
-          <form @submit.prevent="handleRegister" class="space-y-4">
+          <form
+              @submit.prevent="handleRegister"
+              class="space-y-4"
+          >
             <!-- Name -->
             <div>
-              <label class="mb-1.5 block text-sm font-bold text-slate-200">Ism *</label>
+              <label
+                  class="mb-1.5 block text-sm font-bold text-slate-200"
+              >
+                Ism *
+              </label>
               <input
                   v-model="form.firstName"
                   type="text"
@@ -79,7 +105,11 @@
             </div>
 
             <div>
-              <label class="mb-1.5 block text-sm font-bold text-slate-200">Familiya</label>
+              <label
+                  class="mb-1.5 block text-sm font-bold text-slate-200"
+              >
+                Familiya
+              </label>
               <input
                   v-model="form.lastName"
                   type="text"
@@ -91,7 +121,12 @@
 
             <!-- Login -->
             <div>
-              <label for="reg-username" class="mb-1.5 block text-sm font-bold text-slate-200">Login *</label>
+              <label
+                  for="reg-username"
+                  class="mb-1.5 block text-sm font-bold text-slate-200"
+              >
+                Login *
+              </label>
               <input
                   id="reg-username"
                   v-model="form.login"
@@ -116,7 +151,12 @@
 
             <!-- Password -->
             <div>
-              <label for="reg-password" class="mb-1.5 block text-sm font-bold text-slate-200">Parol *</label>
+              <label
+                  for="reg-password"
+                  class="mb-1.5 block text-sm font-bold text-slate-200"
+              >
+                Parol *
+              </label>
               <div class="relative">
                 <input
                     id="reg-password"
@@ -136,8 +176,14 @@
                     class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 transition hover:text-white"
                     @click="showPassword = !showPassword"
                 >
-                  <EyeOff v-if="showPassword" class="w-5 h-5" />
-                  <Eye v-else class="w-5 h-5" />
+                  <EyeOff
+                      v-if="showPassword"
+                      class="w-5 h-5"
+                  />
+                  <Eye
+                      v-else
+                      class="w-5 h-5"
+                  />
                 </button>
               </div>
               <p
@@ -151,7 +197,12 @@
             <!-- Email & Phone -->
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label for="reg-email" class="mb-1.5 block text-sm font-bold text-slate-200">Email</label>
+                <label
+                    for="reg-email"
+                    class="mb-1.5 block text-sm font-bold text-slate-200"
+                >
+                  Email
+                </label>
                 <input
                     id="reg-email"
                     v-model="form.email"
@@ -162,7 +213,12 @@
                 />
               </div>
               <div>
-                <label for="reg-phone" class="mb-1.5 block text-sm font-bold text-slate-200">Telefon</label>
+                <label
+                    for="reg-phone"
+                    class="mb-1.5 block text-sm font-bold text-slate-200"
+                >
+                  Telefon
+                </label>
                 <input
                     id="reg-phone"
                     v-model="displayPhone"
@@ -191,7 +247,10 @@
 
           <p class="mt-7 text-center text-sm text-slate-400">
             Hisobingiz bormi?
-            <RouterLink :to="{ name: 'login' }" class="font-bold text-primary-300 transition hover:text-primary-200">
+            <RouterLink
+                :to="{ name: 'login' }"
+                class="font-bold text-primary-300 transition hover:text-primary-200"
+            >
               Kirish
             </RouterLink>
           </p>

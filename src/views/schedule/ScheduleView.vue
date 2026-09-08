@@ -7,7 +7,10 @@
 <!--          <p class="text-slate-500 text-sm">{{ formatDate() }}</p>-->
         </div>
         <div class="flex items-center gap-2">
-          <button @click="shiftDate(-1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 cursor-pointer text-slate-500">
+          <button
+              @click="shiftDate(-1)"
+              class="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 cursor-pointer text-slate-500"
+          >
             <ChevronLeft class="w-4 h-4" />
           </button>
           <div class="relative">
@@ -18,7 +21,10 @@
                 class="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
             />
           </div>
-          <button @click="shiftDate(1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 cursor-pointer text-slate-500">
+          <button
+              @click="shiftDate(1)"
+              class="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 cursor-pointer text-slate-500"
+          >
             <ChevronRight class="w-4 h-4" />
           </button>
           <button
@@ -60,7 +66,10 @@
       </div>
     </div>
 
-    <div v-if="loading" class="bg-white rounded-2xl border border-slate-100 p-10 text-center text-slate-400">
+    <div
+        v-if="loading"
+        class="bg-white rounded-2xl border border-slate-100 p-10 text-center text-slate-400"
+    >
       Yuklanmoqda...
     </div>
 
@@ -69,7 +78,9 @@
         title="Faol xodim yo'q"
         description="Jadvalni ko'rish uchun avval faol xodim qo'shing"
     >
-      <template #icon><CalendarDays class="w-8 h-8 text-slate-400" /></template>
+      <template #icon>
+        <CalendarDays class="w-8 h-8 text-slate-400" />
+      </template>
     </EmptyState>
 
     <EmptyState
@@ -77,18 +88,28 @@
         :title="`${WEEKDAY_LABELS[weekdayForSelectedDate]} kuni ish yo'q`"
         description="Bu kun uchun ish vaqti belgilanmagan yoki dam olish kuni"
     >
-      <template #icon><CalendarDays class="w-8 h-8 text-slate-400" /></template>
+      <template #icon>
+        <CalendarDays class="w-8 h-8 text-slate-400" />
+      </template>
     </EmptyState>
 
-    <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative">
+    <div
+        v-else
+        class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative"
+    >
       <div
           v-if="bookingsLoading"
           class="absolute inset-0 bg-white/60 z-30 flex items-center justify-center text-sm text-slate-400"
       >
         Yuklanmoqda...
       </div>
-      <div class="overflow-auto" style="max-height: min(67vh, 620px)">
-        <div :style="{ minWidth: `${64 + columns.length * COLUMN_WIDTH}px` }">
+      <div
+          class="overflow-auto"
+          style="max-height: min(67vh, 620px)"
+      >
+        <div
+            :style="{ minWidth: `${64 + columns.length * COLUMN_WIDTH}px` }"
+        >
           <!-- Header -->
           <div class="flex sticky top-0 z-30 bg-slate-100 border-b border-gray-200">
             <div class="w-16 flex-shrink-0 bg-slate-50 flex items-center justify-center text-xs font-medium border-r border-gray-200 text-slate-600 sticky left-0"
@@ -118,7 +139,10 @@
           </div>
 
           <!-- Body -->
-          <div class="flex relative" :style="{ height: `${gridHeight}px` }">
+          <div
+              class="flex relative"
+              :style="{ height: `${gridHeight}px` }"
+          >
             <div class="w-16 flex-shrink-0 flex items-center border-r border-slate-100 sticky left-0 z-20 bg-slate-100">
               <span
                   v-for="slot in timeSlots"
@@ -212,7 +236,10 @@
                   </button>
 
                   <Teleport to="body" v-if="openGroupKey === item.key">
-                    <div class="fixed inset-0 z-40" @click="openGroupKey = null" />
+                    <div
+                        class="fixed inset-0 z-40"
+                        @click="openGroupKey = null"
+                    />
                     <div
                         class="fixed z-50 bg-white rounded-xl shadow-2xl border border-slate-100 w-56 overflow-hidden"
                         :style="{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }"
@@ -280,7 +307,10 @@
     </div>
 
     <!-- Booking detail modal -->
-    <Teleport to="body" v-if="selectedBooking">
+    <Teleport
+        to="body"
+        v-if="selectedBooking"
+    >
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
              @click="selectedBooking = null"
@@ -351,11 +381,16 @@
                 class="flex flex-wrap text-slate-700 items-center justify-between border-b border-dashed border-slate-300 pb-1"
             >
               <span>Izoh:</span>
-              <span class="text-slate-400">{{selectedBooking.customerNote}}</span>
+              <span
+                  class="text-slate-400"
+              >
+                {{selectedBooking.customerNote}}
+              </span>
             </p>
           </div>
-          <div v-if="nextBookingActions[selectedBooking?.status]?.length"
-               class="flex flex-wrap gap-2 px-5 pb-5"
+          <div
+              v-if="nextBookingActions[selectedBooking?.status]?.length"
+              class="flex flex-wrap gap-2 px-5 pb-5"
           >
             <button
                 v-for="action in nextBookingActions[selectedBooking?.status]"
@@ -373,7 +408,10 @@
     </Teleport>
 
     <!-- Tezkor navbat yaratish -->
-    <Teleport to="body" v-if="quickCreate">
+    <Teleport
+        to="body"
+        v-if="quickCreate"
+    >
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"
              @click="closeQuickCreate"
@@ -415,20 +453,28 @@
                   {{ s.name }} — ({{ s.durationMinutes }} daq. - {{s.basePrice}} so'm).
                 </option>
               </select>
-              <p v-if="quickCreate.staffId && quickAvailableServices.length === 0" class="mt-1 text-xs text-red-500">
+              <p
+                  v-if="quickCreate.staffId && quickAvailableServices.length === 0"
+                  class="mt-1 text-xs text-red-500"
+              >
                 Bu xodimga xizmat biriktirilmagan
               </p>
             </div>
 
             <div v-if="quickSelectedService">
-              <label class="block text-xs font-medium text-slate-600 mb-1">Vaqt *</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">
+                Vaqt *
+              </label>
               <div
                   v-if="quickPossibleStarts.length === 0"
                   class="text-xs text-slate-400"
               >
                 Bu kunda bo'sh vaqt yo'q
               </div>
-              <div v-else class="overflow-y-auto grid grid-cols-5 max-h-60 gap-1.5">
+              <div
+                  v-else
+                  class="overflow-y-auto grid grid-cols-5 max-h-60 gap-1.5"
+              >
                 <button
                     v-for="m in quickPossibleStarts"
                     :key="m"
@@ -448,7 +494,9 @@
             </div>
 
             <div>
-              <label class="block border-t border-gray-200 py-2 text-xs font-medium text-slate-600 mb-1">Mijoz ismi *</label>
+              <label class="block border-t border-gray-200 py-2 text-xs font-medium text-slate-600 mb-1">
+                Mijoz ismi *
+              </label>
               <input
                   v-model="quickForm.customerFirstName"
                   type="text"
@@ -470,7 +518,12 @@
               />
             </div>
 
-            <p v-if="quickError" class="text-xs text-red-600">{{ quickError }}</p>
+            <p
+                v-if="quickError"
+                class="text-xs text-red-600"
+            >
+              {{ quickError }}
+            </p>
           </div>
 
           <div class="flex gap-3 px-5 pb-5">
@@ -532,7 +585,14 @@ const updatingId = ref<string | null>(null)
 
 // Bo'sh joyga bosib tezkor navbat yaratish
 const quickCreate = ref<{ staffId: string | null; staffName: string } | null>(null)
-const quickForm = ref({ offeredServiceId: '', startMin: null as number | null, customerFirstName: '', customerPhone: '', customerNote: '' })
+const quickForm = ref({
+  offeredServiceId: '',
+  startMin: null as number | null,
+  customerFirstName: '',
+  customerPhone: '',
+  customerNote: ''
+})
+
 const quickSaving = ref(false)
 const quickError = ref('')
 
