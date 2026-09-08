@@ -10,10 +10,12 @@ export default defineConfig(({mode}) => {
             VitePWA({
                 registerType: 'autoUpdate',
 
+                includeAssets: ['apple-touch-icon-180.png'],
                 manifest: {
-                    name: 'OnTime Business Panel',
-                    short_name: 'OnTime',
-                    description: 'Biznes uchun navbat va jadval boshqaruvi',
+                    id: '/',
+                    name: 'OnTime Biznes',
+                    short_name: 'Biznes',
+                    description: 'Biznes uchun ilova',
 
                     theme_color: '#2563eb',
                     background_color: '#f8fafc',
@@ -39,7 +41,7 @@ export default defineConfig(({mode}) => {
                     ]
                 },
                 devOptions: {
-                    enabled: true
+                    enabled: false
                 }
             })
         ],
