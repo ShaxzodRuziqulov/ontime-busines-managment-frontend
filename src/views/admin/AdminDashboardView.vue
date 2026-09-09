@@ -219,9 +219,11 @@ onMounted(async () => {
             class="rounded-xl border border-slate-100 p-3 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-4"
             :class="card.color"
           >
-            <component :is="card.icon" :class="['mb-3 h-5 w-5', card.textColor]" />
+            <div class="flex items-center mb-2 gap-2">
+              <component :is="card.icon" :class="['h-5 w-5', card.textColor]" />
+              <div class="text-xs font-medium text-slate-600">{{ card.label }}</div>
+            </div>
             <div class="text-2xl font-bold" :class="card.textColor">{{ card.value }}</div>
-            <div class="mt-1 text-xs font-medium text-slate-600">{{ card.label }}</div>
           </RouterLink>
         </div>
       </div>

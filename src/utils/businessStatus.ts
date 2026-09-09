@@ -15,7 +15,7 @@ const businessStatusColors: Record<BusinessStatus, string> = {
   EXPIRED: 'bg-red-100 text-red-700',
   SUSPENDED: 'bg-slate-100 text-slate-600',
   DRAFT: 'bg-blue-100 text-blue-700',
-  PENDING_REVIEW: 'bg-violet-100 text-violet-700',
+  PENDING_REVIEW: 'bg-violet-200 text-violet-700',
 }
 
 export function businessStatusColor(status: BusinessStatus): string {

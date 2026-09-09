@@ -1,6 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
-import { Search, Building2, Trash2, Settings, CheckCircle2, XCircle, Clock, AlertCircle, Download, ExternalLink, ChevronDown, ChevronLeft, ChevronRight, Tag, UserRound } from 'lucide-vue-next'
+import {ref, onMounted, computed, watch, type Component} from 'vue'
+import {
+  Search,
+  Building2,
+  Trash2,
+  Settings,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertCircle,
+  Download,
+  ExternalLink,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Tag,
+  UserRound,
+  PauseCircle, FileEdit
+} from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 import { businessesApi } from '@/api/businesses'
 import { useAdminStore } from '@/stores/admin'
@@ -217,6 +234,15 @@ async function confirmDelete(id: string) {
 
 const statusColor = businessStatusColor
 
+const statusIcons: Record<BusinessStatus, Component> = {
+  ACTIVE: CheckCircle2,
+  TRIAL: Clock,
+  EXPIRED: XCircle,
+  PENDING_REVIEW: AlertCircle,
+  SUSPENDED: PauseCircle,
+  DRAFT: FileEdit
+}
+
 function statusIcon(status: BusinessStatus) {
   if (status === 'ACTIVE') return CheckCircle2
   if (status === 'TRIAL') return Clock
@@ -348,43 +374,33 @@ onMounted(async () => {
       </button>
     </div>
 
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
       <button
-        type="button"
-        class="rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
-        @click="setStatusFilter('all')"
+          type="button"
+          class="flex flex-col rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+          @click="setStatusFilter('all')"
       >
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Jami</p>
-        <p class="mt-2 text-2xl font-bold text-slate-800">{{ statusCounts.all }}</p>
+        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Jami</span>
+        <span class="mt-2 text-2xl font-bold text-slate-800">{{ statusCounts.all }}</span>
       </button>
       <button
-        type="button"
-        class="rounded-2xl border border-violet-100 bg-violet-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
-        @click="setStatusFilter('PENDING_REVIEW')"
+          type="button"
+          v-for="status in allStatuses"
+          :key="status"
+          @click="setStatusFilter(status)"
+          class="rounded-2xl uppercase font-semibold text-xs border p-4 gap-2 flex flex-col text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+          :class="statusColor(status) + 'border-transparent'"
       >
-        <p class="text-xs font-semibold uppercase tracking-wide text-violet-700">Tekshiruvda</p>
-        <p class="mt-2 text-2xl font-bold text-violet-700">{{ statusCounts.PENDING_REVIEW ?? 0 }}</p>
-      </button>
-      <button
-        type="button"
-        class="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
-        @click="setStatusFilter('TRIAL')"
-      >
-        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">Sinov</p>
-        <p class="mt-2 text-2xl font-bold text-amber-700">{{ statusCounts.TRIAL ?? 0 }}</p>
-      </button>
-      <button
-        type="button"
-        class="rounded-2xl border border-red-100 bg-red-50 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
-        @click="setStatusFilter('EXPIRED')"
-      >
-        <p class="text-xs font-semibold uppercase tracking-wide text-red-700">Muddati o'tgan</p>
-        <p class="mt-2 text-2xl font-bold text-red-700">{{ statusCounts.EXPIRED ?? 0 }}</p>
+        <span :class="statusColor(status)" class="flex items-center gap-2">
+          <component :is="statusIcons[status]" class="w-4 h-4 shrink-0" />
+          {{statusLabels[status]}}
+        </span>
+        <span :class="statusColor(status)" class="text-2xl">{{statusCounts[status]}}</span>
       </button>
     </div>
 
     <!-- Status filter tabs -->
-    <div class="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+    <div class="flex flex-wrap gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
       <button
         @click="setStatusFilter('all')"
         :class="[
