@@ -1,3 +1,590 @@
+<template>
+  <div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">
+          Foydalanuvchilar
+        </h1>
+        <p class="text-slate-500 text-sm mt-1">
+          {{ users.length }} ta foydalanuvchi
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <button
+          @click="exportCsv"
+          class="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+        >
+          <Download class="w-4 h-4" />
+          CSV
+        </button>
+        <button
+          @click="openAdd"
+          class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+        >
+          <Plus class="w-4 h-4" />
+          Qo'shish
+        </button>
+      </div>
+    </div>
+
+    <!-- Search + Filter -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-5">
+      <div class="relative flex-1">
+        <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Login, ism yoki email bo'yicha qidirish..."
+          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+        />
+      </div>
+      <div class="flex w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 sm:w-auto sm:self-start">
+        <button
+          v-for="tab in filterTabs"
+          :key="tab.key"
+          @click="roleFilter = tab.key"
+          :class="[
+            'shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+            roleFilter === tab.key ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700',
+          ]"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+    </div>
+
+    <SkeletonTable v-if="loading" :rows="6" :cols="6" />
+
+    <template v-else>
+      <EmptyState
+        v-if="filtered.length === 0"
+        title="Foydalanuvchi topilmadi"
+        description="Qidiruv so'zini o'zgartiring yoki yangi foydalanuvchi qo'shing"
+      >
+        <template #icon>
+          <Users class="w-8 h-8 text-slate-400" />
+        </template>
+      </EmptyState>
+
+      <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="px-5 py-3 border-b border-slate-100 text-xs text-slate-500">
+          {{ filtered.length }} ta natija
+        </div>
+        <div class="divide-y divide-slate-100 sm:hidden">
+          <article
+              v-for="user in filtered"
+              :key="user.id"
+              :class="['p-4', !user.active && 'opacity-60']"
+          >
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+                <img
+                    v-if="mediaUrl(user.avatarUrl)"
+                    :src="mediaUrl(user.avatarUrl)!"
+                    class="h-full w-full object-cover"
+                    :alt="personName(user, user.login)"
+                />
+                <ShieldCheck
+                    v-else-if="isAdmin(user)"
+                    class="h-4 w-4 text-red-500"
+                />
+                <Building2
+                    v-else-if="user.businessOwner"
+                    class="h-4 w-4 text-violet-500"
+                />
+                <Users v-else class="h-4 w-4 text-slate-400" />
+              </div>
+              <button
+                  class="min-w-0 flex-1 text-left"
+                  @click="openUser(user)"
+              >
+                <p class="truncate text-sm font-semibold text-slate-800">
+                  {{ personName(user) }}
+                </p>
+                <p class="truncate text-xs text-slate-500">
+                  {{ user.login }} · {{ user.phone || 'Telefon yo‘q' }}
+                </p>
+              </button>
+              <button
+                  :disabled="togglingId === user.id"
+                  @click="activeConfirm = user"
+                  :aria-label="user.active ? 'Bloklash' : 'Aktivlashtirish'"
+                  class="shrink-0"
+              >
+                <ToggleRight
+                    v-if="user.active"
+                    class="h-7 w-7 text-emerald-500"
+                />
+                <ToggleLeft
+                    v-else
+                    class="h-7 w-7 text-slate-300"
+                />
+              </button>
+            </div>
+            <div
+                class="mt-3 flex items-center justify-between gap-2"
+            >
+              <span
+                  :class="[
+                      'rounded-full px-2.5 py-1 text-xs font-medium',
+                       roleColor(user)
+                       ]"
+              >
+                {{ roleLabel(user) }}
+              </span>
+              <div class="flex gap-1">
+                <button
+                    v-if="!isAdmin(user)"
+                    :disabled="togglingId === user.id"
+                    @click="adminConfirm = { user, wasAdmin: false }"
+                    class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500"
+                >
+                  + Admin
+                </button>
+                <button
+                    v-else
+                    :disabled="togglingId === user.id"
+                    @click="adminConfirm = { user, wasAdmin: true }"
+                    class="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-600"
+                >
+                  − Admin
+                </button>
+                <button
+                    @click="openEdit(user)"
+                    class="rounded-lg p-1.5 text-primary-600"
+                >
+                  <Edit2 class="h-4 w-4" />
+                </button>
+                <button
+                    @click="deleteConfirm = user.id"
+                    class="rounded-lg p-1.5 text-red-600"
+                >
+                  <Trash2 class="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="hidden max-h-[700px] overflow-x-auto overflow-y-auto sm:block">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="sticky z-30 top-0 bg-white border-b border-gray-50 shadow-sm text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
+                <th class="px-5 py-3 text-center font-medium">№</th>
+                <th class="px-5 py-3 text-left font-medium">Foydalanuvchi</th>
+                <th class="px-5 py-3 text-left font-medium">Login</th>
+                <th class="px-5 py-3 text-left font-medium">Telefon</th>
+                <th class="px-5 py-3 text-left font-medium">Rol</th>
+                <th class="px-5 py-3 text-center font-medium">Aktiv</th>
+                <th class="px-5 py-3 text-right font-medium">Amallar</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <tr
+                v-for="(user, index) in filtered"
+                :key="user.id"
+                :class="[
+                  'cursor-pointer transition-colors hover:bg-slate-50/80 focus-within:bg-slate-50',
+                  !user.active && 'opacity-60',
+                ]"
+                tabindex="0"
+                @click="openUser(user)"
+                @keydown.enter="openUser(user)"
+              >
+                <td class="px-5 text-center py-3">{{index + 1}}</td>
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-slate-100 flex items-center justify-center">
+                      <img
+                        v-if="mediaUrl(user.avatarUrl)"
+                        :src="mediaUrl(user.avatarUrl)!"
+                        class="w-full h-full object-cover"
+                        :alt="personName(user, user.login)"
+                      />
+                      <template v-else>
+                        <ShieldCheck
+                            v-if="isAdmin(user)"
+                            class="w-4 h-4 text-red-500"
+                        />
+                        <Building2
+                            v-else-if="user.businessOwner"
+                            class="w-4 h-4 text-violet-500"
+                        />
+                        <Users
+                            v-else
+                            class="w-4 h-4 text-slate-400"
+                        />
+                      </template>
+                    </div>
+                    <div>
+                      <p class="font-medium text-slate-800">{{ personName(user) }}</p>
+                      <p class="text-xs text-slate-400">{{ user.email || '—' }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-3.5 text-slate-600 font-mono text-xs">{{ user.login }}</td>
+                <td class="px-5 py-3.5 text-slate-500">{{ user.phone || '—' }}</td>
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span :class="[
+                        'px-2.5 py-1 rounded-full text-xs font-medium',
+                         roleColor(user)
+                         ]"
+                    >
+                      {{ roleLabel(user) }}
+                    </span>
+                    <button
+                      v-if="!isAdmin(user)"
+                      :disabled="togglingId === user.id"
+                      @click.stop="adminConfirm = { user, wasAdmin: false }"
+                      title="Admin qilish"
+                      class="text-xs px-2 py-0.5 rounded-lg border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors disabled:opacity-40"
+                    >
+                      +Admin
+                    </button>
+                    <button
+                      v-else
+                      :disabled="togglingId === user.id"
+                      @click.stop="adminConfirm = { user, wasAdmin: true }"
+                      title="Admin huquqini olish"
+                      class="text-xs px-2 py-0.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                    >
+                      −Admin
+                    </button>
+                  </div>
+                </td>
+                <td class="px-5 py-3.5 text-center">
+                  <button
+                    :disabled="togglingId === user.id"
+                    @click.stop="activeConfirm = user"
+                    :title="user.active ? 'Bloklash' : 'Aktivlashtirish'"
+                    class="inline-flex items-center justify-center transition-opacity disabled:opacity-40"
+                  >
+                    <ToggleRight
+                        v-if="user.active"
+                        class="w-7 h-7 text-emerald-500"
+                    />
+                    <ToggleLeft
+                        v-else
+                        class="w-7 h-7 text-slate-300"
+                    />
+                  </button>
+                </td>
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center justify-end gap-1">
+                    <button
+                      class="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      @click.stop="openEdit(user)"
+                      title="Tahrirlash"
+                    >
+                      <Edit2 class="w-4 h-4" />
+                    </button>
+                    <button
+                      class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      @click.stop="deleteConfirm = user.id"
+                      title="O'chirish"
+                    >
+                      <Trash2 class="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </template>
+
+    <AppModal
+        v-if="showModal && !editingUser"
+        title="Yangi foydalanuvchi"
+        @close="showModal = false"
+    >
+      <form
+          @submit.prevent="save"
+          class="space-y-4"
+      >
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Login *
+            </label>
+            <input
+                v-model="createForm.login"
+                type="text"
+                placeholder="username"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Parol *
+            </label>
+            <input
+                v-model="createForm.password"
+                type="password"
+                placeholder="Kamida 8 belgi"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Ism *
+            </label>
+            <input
+                v-model="createForm.firstName"
+                type="text"
+                placeholder="Ism"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Familiya
+            </label>
+            <input
+                v-model="createForm.lastName"
+                type="text"
+                placeholder="Familiya"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Email
+            </label>
+            <input
+                v-model="createForm.email"
+                type="email"
+                placeholder="email@example.com"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Telefon
+            </label>
+            <input
+                v-model="createForm.phone"
+                type="tel"
+                placeholder="+998901234567"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-1">
+          <button type="button"
+            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
+            @click="showModal = false"
+          >
+            Bekor qilish
+          </button>
+          <button
+              type="submit"
+              :disabled="saving || !createForm.login || !createForm.password || !createForm.firstName?.trim()"
+              class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors">
+            {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
+          </button>
+        </div>
+      </form>
+    </AppModal>
+    <AppModal
+        v-if="showModal && editingUser"
+        :title="`Tahrirlash: ${editingUser.login}`"
+        @close="showModal = false"
+    >
+      <form
+          @submit.prevent="save"
+          class="space-y-4"
+      >
+        <div class="flex items-center gap-4 pb-2 border-b border-slate-100">
+          <div class="relative w-16 h-16 flex-shrink-0">
+            <img
+                v-if="avatarPreview"
+                :src="avatarPreview"
+                alt=""
+                class="w-16 h-16 rounded-full object-cover border-2 border-slate-200" />
+            <div
+                v-else
+                class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200"
+            >
+              <Users class="w-7 h-7 text-slate-400" />
+            </div>
+            <label class="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-700 transition-colors">
+              <Camera class="w-3.5 h-3.5 text-white" />
+              <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="hidden"
+                  @change="onAvatarChange"
+              />
+            </label>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-slate-700">
+              {{ personName(editingUser) }}
+            </p>
+            <p class="text-xs text-slate-400 mt-0.5">
+              JPG, PNG, WEBP · max 5MB
+            </p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Ism
+            </label>
+            <input
+                v-model="editForm.firstName"
+                type="text"
+                placeholder="Ism"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Familiya
+            </label>
+            <input
+                v-model="editForm.lastName"
+                type="text"
+                placeholder="Familiya"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Email
+            </label>
+            <input
+                v-model="editForm.email"
+                type="email"
+                placeholder="email@example.com"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">
+              Telefon
+            </label>
+            <input
+                v-model="editForm.phone"
+                type="tel"
+                placeholder="+998901234567"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">
+            Yangi parol
+            <span class="text-slate-400 font-normal">
+              (o'zgartirmasangiz bo'sh qoldiring)
+            </span>
+          </label>
+          <input
+              v-model="editForm.password"
+              type="password"
+              placeholder="Kamida 8 belgi"
+              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+        </div>
+        <div class="flex gap-3 pt-1">
+          <button type="button"
+            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
+            @click="showModal = false"
+          >
+            Bekor qilish
+          </button>
+          <button
+              type="submit"
+              :disabled="saving"
+              class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors">
+            {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
+          </button>
+        </div>
+      </form>
+    </AppModal>
+    <AppModal
+      v-if="adminConfirm"
+      :title="adminConfirm.wasAdmin ? 'Admin huquqini olish' : 'Admin huquqi berish'"
+      size="sm"
+      @close="adminConfirm = null"
+    >
+      <p class="text-slate-600 text-sm mb-5">
+        <template
+            v-if="adminConfirm?.wasAdmin"
+        >
+          <span class="font-semibold">
+            {{ personName(adminConfirm.user, adminConfirm.user.login) }}
+          </span>
+          foydalanuvchidan admin huquqini olmoqchisiz. Tasdiqlaysizmi?
+        </template>
+        <template
+            v-else
+        >
+          <span class="font-semibold">
+            {{ personName(adminConfirm.user, adminConfirm.user.login) }}
+          </span>
+          foydalanuvchiga admin huquqi bermoqchisiz. Tasdiqlaysizmi?
+        </template>
+      </p>
+      <div class="flex gap-3">
+        <button
+            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm"
+            @click="adminConfirm = null"
+        >
+          Bekor
+        </button>
+        <button
+            class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700"
+            @click="confirmToggleAdmin"
+        >
+          {{ adminConfirm.wasAdmin ? 'Olish' : 'Berish' }}
+        </button>
+      </div>
+    </AppModal>
+    <AppModal
+      v-if="activeConfirm"
+      :title="activeConfirm.active ? 'Foydalanuvchini bloklash' : 'Foydalanuvchini aktivlashtirish'"
+      size="sm"
+      @close="activeConfirm = null"
+    >
+      <p class="text-slate-600 text-sm mb-5">
+        <span class="font-semibold">
+          {{ personName(activeConfirm, activeConfirm.login) }}
+        </span>
+        foydalanuvchini
+        <span class="font-semibold">
+          {{ activeConfirm.active ? 'bloklashni' : 'aktivlashtirishni' }}
+        </span>
+        tasdiqlaysizmi?
+      </p>
+      <div class="flex gap-3">
+        <button
+            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm"
+            @click="activeConfirm = null"
+        >
+          Bekor
+        </button>
+        <button
+          class="flex-1 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
+          :class="activeConfirm?.active ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'"
+          @click="confirmToggleActive"
+        >
+          {{ activeConfirm.active ? 'Bloklash' : 'Aktivlashtirish' }}
+        </button>
+      </div>
+    </AppModal>
+
+    <ConfirmModal
+      v-if="deleteConfirm"
+      title="Foydalanuvchini o'chirish"
+      message="Bu foydalanuvchini o'chirishni tasdiqlaysizmi? Ushbu amal qaytarib bo'lmaydi."
+      confirm-label="O'chirish"
+      icon="trash"
+      variant="danger"
+      @confirm="confirmDelete(deleteConfirm!)"
+      @cancel="deleteConfirm = null"
+    />
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { Plus, Search, Trash2, Edit2, Users, ShieldCheck, Building2, ToggleLeft, ToggleRight, Download, Camera } from 'lucide-vue-next'
@@ -58,9 +645,9 @@ const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (!q) return list
   return list.filter(u =>
-    u.login.toLowerCase().includes(q) ||
-    personName(u, '').toLowerCase().includes(q) ||
-    u.email?.toLowerCase().includes(q)
+      u.login.toLowerCase().includes(q) ||
+      personName(u, '').toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q)
   )
 })
 
@@ -168,8 +755,8 @@ async function confirmToggleAdmin() {
   togglingId.value = user.id
   try {
     const newRoles = wasAdmin
-      ? (user.roles ?? []).filter(r => r !== 'ROLE_ADMIN')
-      : [...(user.roles ?? []), 'ROLE_ADMIN']
+        ? (user.roles ?? []).filter(r => r !== 'ROLE_ADMIN')
+        : [...(user.roles ?? []), 'ROLE_ADMIN']
     const { data } = await usersApi.update(user.id, { roles: newRoles })
     const idx = users.value.findIndex(u => u.id === user.id)
     if (idx !== -1) users.value[idx] = data
@@ -247,388 +834,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<template>
-  <div>
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800">Foydalanuvchilar</h1>
-        <p class="text-slate-500 text-sm mt-1">{{ users.length }} ta foydalanuvchi</p>
-      </div>
-      <div class="flex gap-2">
-        <button
-          @click="exportCsv"
-          class="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-        >
-          <Download class="w-4 h-4" />
-          CSV
-        </button>
-        <button
-          @click="openAdd"
-          class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-        >
-          <Plus class="w-4 h-4" />
-          Qo'shish
-        </button>
-      </div>
-    </div>
-
-    <!-- Search + Filter -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-5">
-      <div class="relative flex-1">
-        <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          v-model="search"
-          type="text"
-          placeholder="Login, ism yoki email bo'yicha qidirish..."
-          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-        />
-      </div>
-      <div class="flex w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 sm:w-auto sm:self-start">
-        <button
-          v-for="tab in filterTabs"
-          :key="tab.key"
-          @click="roleFilter = tab.key"
-          :class="[
-            'shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-            roleFilter === tab.key ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700',
-          ]"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
-    </div>
-
-    <SkeletonTable v-if="loading" :rows="6" :cols="6" />
-
-    <template v-else>
-      <EmptyState
-        v-if="filtered.length === 0"
-        title="Foydalanuvchi topilmadi"
-        description="Qidiruv so'zini o'zgartiring yoki yangi foydalanuvchi qo'shing"
-      >
-        <template #icon><Users class="w-8 h-8 text-slate-400" /></template>
-      </EmptyState>
-
-      <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="px-5 py-3 border-b border-slate-100 text-xs text-slate-500">
-          {{ filtered.length }} ta natija
-        </div>
-        <div class="divide-y divide-slate-100 sm:hidden">
-          <article v-for="user in filtered" :key="user.id" :class="['p-4', !user.active && 'opacity-60']">
-            <div class="flex items-start gap-3">
-              <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100">
-                <img v-if="mediaUrl(user.avatarUrl)" :src="mediaUrl(user.avatarUrl)!" class="h-full w-full object-cover" :alt="personName(user, user.login)" />
-                <ShieldCheck v-else-if="isAdmin(user)" class="h-4 w-4 text-red-500" /><Building2 v-else-if="user.businessOwner" class="h-4 w-4 text-violet-500" /><Users v-else class="h-4 w-4 text-slate-400" />
-              </div>
-              <button class="min-w-0 flex-1 text-left" @click="openUser(user)"><p class="truncate text-sm font-semibold text-slate-800">{{ personName(user) }}</p><p class="truncate text-xs text-slate-500">{{ user.login }} · {{ user.phone || 'Telefon yo‘q' }}</p></button>
-              <button :disabled="togglingId === user.id" @click="activeConfirm = user" :aria-label="user.active ? 'Bloklash' : 'Aktivlashtirish'" class="shrink-0"><ToggleRight v-if="user.active" class="h-7 w-7 text-emerald-500" /><ToggleLeft v-else class="h-7 w-7 text-slate-300" /></button>
-            </div>
-            <div class="mt-3 flex items-center justify-between gap-2"><span :class="['rounded-full px-2.5 py-1 text-xs font-medium', roleColor(user)]">{{ roleLabel(user) }}</span><div class="flex gap-1"><button v-if="!isAdmin(user)" :disabled="togglingId === user.id" @click="adminConfirm = { user, wasAdmin: false }" class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500">+ Admin</button><button v-else :disabled="togglingId === user.id" @click="adminConfirm = { user, wasAdmin: true }" class="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-600">− Admin</button><button @click="openEdit(user)" class="rounded-lg p-1.5 text-primary-600"><Edit2 class="h-4 w-4" /></button><button @click="deleteConfirm = user.id" class="rounded-lg p-1.5 text-red-600"><Trash2 class="h-4 w-4" /></button></div></div>
-          </article>
-        </div>
-        <div class="hidden max-h-[700px] overflow-x-auto overflow-y-auto sm:block">
-          <table class="w-full text-xs">
-            <thead>
-              <tr class="sticky z-30 top-0 bg-white border-b border-gray-50 shadow-sm text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
-                <th class="px-5 py-3 text-center font-medium">№</th>
-                <th class="px-5 py-3 text-left font-medium">Foydalanuvchi</th>
-                <th class="px-5 py-3 text-left font-medium">Login</th>
-                <th class="px-5 py-3 text-left font-medium">Telefon</th>
-                <th class="px-5 py-3 text-left font-medium">Rol</th>
-                <th class="px-5 py-3 text-center font-medium">Aktiv</th>
-                <th class="px-5 py-3 text-right font-medium">Amallar</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y">
-              <tr
-                v-for="(user, index) in filtered"
-                :key="user.id"
-                :class="[
-                  'cursor-pointer transition-colors hover:bg-slate-50/80 focus-within:bg-slate-50',
-                  !user.active && 'opacity-60',
-                ]"
-                tabindex="0"
-                @click="openUser(user)"
-                @keydown.enter="openUser(user)"
-              >
-                <td class="px-5 text-center py-3">{{index + 1}}</td>
-                <td class="px-5 py-3">
-                  <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-slate-100 flex items-center justify-center">
-                      <img
-                        v-if="mediaUrl(user.avatarUrl)"
-                        :src="mediaUrl(user.avatarUrl)!"
-                        class="w-full h-full object-cover"
-                        :alt="personName(user, user.login)"
-                      />
-                      <template v-else>
-                        <ShieldCheck v-if="isAdmin(user)" class="w-4 h-4 text-red-500" />
-                        <Building2 v-else-if="user.businessOwner" class="w-4 h-4 text-violet-500" />
-                        <Users v-else class="w-4 h-4 text-slate-400" />
-                      </template>
-                    </div>
-                    <div>
-                      <p class="font-medium text-slate-800">{{ personName(user) }}</p>
-                      <p class="text-xs text-slate-400">{{ user.email || '—' }}</p>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-5 py-3.5 text-slate-600 font-mono text-xs">{{ user.login }}</td>
-                <td class="px-5 py-3.5 text-slate-500">{{ user.phone || '—' }}</td>
-                <td class="px-5 py-3.5">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span :class="['px-2.5 py-1 rounded-full text-xs font-medium', roleColor(user)]">
-                      {{ roleLabel(user) }}
-                    </span>
-                    <button
-                      v-if="!isAdmin(user)"
-                      :disabled="togglingId === user.id"
-                      @click.stop="adminConfirm = { user, wasAdmin: false }"
-                      title="Admin qilish"
-                      class="text-xs px-2 py-0.5 rounded-lg border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors disabled:opacity-40"
-                    >
-                      +Admin
-                    </button>
-                    <button
-                      v-else
-                      :disabled="togglingId === user.id"
-                      @click.stop="adminConfirm = { user, wasAdmin: true }"
-                      title="Admin huquqini olish"
-                      class="text-xs px-2 py-0.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
-                    >
-                      −Admin
-                    </button>
-                  </div>
-                </td>
-                <td class="px-5 py-3.5 text-center">
-                  <button
-                    :disabled="togglingId === user.id"
-                    @click.stop="activeConfirm = user"
-                    :title="user.active ? 'Bloklash' : 'Aktivlashtirish'"
-                    class="inline-flex items-center justify-center transition-opacity disabled:opacity-40"
-                  >
-                    <ToggleRight v-if="user.active" class="w-7 h-7 text-emerald-500" />
-                    <ToggleLeft v-else class="w-7 h-7 text-slate-300" />
-                  </button>
-                </td>
-                <td class="px-5 py-3.5">
-                  <div class="flex items-center justify-end gap-1">
-                    <button
-                      class="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                      @click.stop="openEdit(user)"
-                      title="Tahrirlash"
-                    >
-                      <Edit2 class="w-4 h-4" />
-                    </button>
-                    <button
-                      class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      @click.stop="deleteConfirm = user.id"
-                      title="O'chirish"
-                    >
-                      <Trash2 class="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </template>
-
-    <!-- Add Modal -->
-    <AppModal v-if="showModal && !editingUser" title="Yangi foydalanuvchi" @close="showModal = false">
-      <form @submit.prevent="save" class="space-y-4">
-
-        <!-- Login + Parol -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Login *</label>
-            <input v-model="createForm.login" type="text" placeholder="username"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Parol *</label>
-            <input v-model="createForm.password" type="password" placeholder="Kamida 8 belgi"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-        </div>
-
-        <!-- Ism + Familiya -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Ism *</label>
-            <input v-model="createForm.firstName" type="text" placeholder="Ism"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Familiya</label>
-            <input v-model="createForm.lastName" type="text" placeholder="Familiya"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-        </div>
-
-        <!-- Email + Telefon -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Email</label>
-            <input v-model="createForm.email" type="email" placeholder="email@example.com"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Telefon</label>
-            <input v-model="createForm.phone" type="tel" placeholder="+998901234567"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-        </div>
-
-        <div class="flex gap-3 pt-1">
-          <button type="button"
-            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
-            @click="showModal = false">
-            Bekor qilish
-          </button>
-          <button type="submit" :disabled="saving || !createForm.login || !createForm.password || !createForm.firstName?.trim()"
-            class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors">
-            {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
-          </button>
-        </div>
-      </form>
-    </AppModal>
-
-    <!-- Edit Modal -->
-    <AppModal v-if="showModal && editingUser" :title="`Tahrirlash: ${editingUser.login}`" @close="showModal = false">
-      <form @submit.prevent="save" class="space-y-4">
-
-        <!-- Avatar -->
-        <div class="flex items-center gap-4 pb-2 border-b border-slate-100">
-          <div class="relative w-16 h-16 flex-shrink-0">
-            <img v-if="avatarPreview" :src="avatarPreview" alt=""
-              class="w-16 h-16 rounded-full object-cover border-2 border-slate-200" />
-            <div v-else class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200">
-              <Users class="w-7 h-7 text-slate-400" />
-            </div>
-            <label class="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-700 transition-colors">
-              <Camera class="w-3.5 h-3.5 text-white" />
-              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onAvatarChange" />
-            </label>
-          </div>
-          <div>
-            <p class="text-sm font-medium text-slate-700">{{ personName(editingUser) }}</p>
-            <p class="text-xs text-slate-400 mt-0.5">JPG, PNG, WEBP · max 5MB</p>
-          </div>
-        </div>
-
-        <!-- Ism Familiya -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Ism</label>
-            <input v-model="editForm.firstName" type="text" placeholder="Ism"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Familiya</label>
-            <input v-model="editForm.lastName" type="text" placeholder="Familiya"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-        </div>
-
-        <!-- Email + Telefon -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Email</label>
-            <input v-model="editForm.email" type="email" placeholder="email@example.com"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Telefon</label>
-            <input v-model="editForm.phone" type="tel" placeholder="+998901234567"
-              class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          </div>
-        </div>
-
-        <!-- Yangi parol -->
-        <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Yangi parol <span class="text-slate-400 font-normal">(o'zgartirmasangiz bo'sh qoldiring)</span></label>
-          <input v-model="editForm.password" type="password" placeholder="Kamida 8 belgi"
-            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-        </div>
-
-        <div class="flex gap-3 pt-1">
-          <button type="button"
-            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
-            @click="showModal = false">
-            Bekor qilish
-          </button>
-          <button type="submit" :disabled="saving"
-            class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors">
-            {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
-          </button>
-        </div>
-      </form>
-    </AppModal>
-
-    <!-- Admin toggle Confirm -->
-    <AppModal
-      v-if="adminConfirm"
-      :title="adminConfirm.wasAdmin ? 'Admin huquqini olish' : 'Admin huquqi berish'"
-      size="sm"
-      @close="adminConfirm = null"
-    >
-      <p class="text-slate-600 text-sm mb-5">
-        <template v-if="adminConfirm?.wasAdmin">
-          <span class="font-semibold">{{ personName(adminConfirm.user, adminConfirm.user.login) }}</span>
-          foydalanuvchidan admin huquqini olmoqchisiz. Tasdiqlaysizmi?
-        </template>
-        <template v-else>
-          <span class="font-semibold">{{ personName(adminConfirm.user, adminConfirm.user.login) }}</span>
-          foydalanuvchiga admin huquqi bermoqchisiz. Tasdiqlaysizmi?
-        </template>
-      </p>
-      <div class="flex gap-3">
-        <button class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm" @click="adminConfirm = null">Bekor</button>
-        <button class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700" @click="confirmToggleAdmin">
-          {{ adminConfirm.wasAdmin ? 'Olish' : 'Berish' }}
-        </button>
-      </div>
-    </AppModal>
-
-    <!-- Active toggle Confirm -->
-    <AppModal
-      v-if="activeConfirm"
-      :title="activeConfirm.active ? 'Foydalanuvchini bloklash' : 'Foydalanuvchini aktivlashtirish'"
-      size="sm"
-      @close="activeConfirm = null"
-    >
-      <p class="text-slate-600 text-sm mb-5">
-        <span class="font-semibold">{{ personName(activeConfirm, activeConfirm.login) }}</span>
-        foydalanuvchini
-        <span class="font-semibold">{{ activeConfirm.active ? 'bloklashni' : 'aktivlashtirishni' }}</span>
-        tasdiqlaysizmi?
-      </p>
-      <div class="flex gap-3">
-        <button class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm" @click="activeConfirm = null">Bekor</button>
-        <button
-          class="flex-1 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-          :class="activeConfirm?.active ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'"
-          @click="confirmToggleActive"
-        >
-          {{ activeConfirm.active ? 'Bloklash' : 'Aktivlashtirish' }}
-        </button>
-      </div>
-    </AppModal>
-
-    <ConfirmModal
-      v-if="deleteConfirm"
-      title="Foydalanuvchini o'chirish"
-      message="Bu foydalanuvchini o'chirishni tasdiqlaysizmi? Ushbu amal qaytarib bo'lmaydi."
-      confirm-label="O'chirish"
-      icon="trash"
-      variant="danger"
-      @confirm="confirmDelete(deleteConfirm!)"
-      @cancel="deleteConfirm = null"
-    />
-  </div>
-</template>

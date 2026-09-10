@@ -3,8 +3,12 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Navbatlar</h2>
-        <p class="text-slate-500 text-sm mt-1">Jami {{ totalElements }} ta navbat</p>
+        <h2 class="text-2xl font-bold text-slate-800">
+          Navbatlar
+        </h2>
+        <p class="text-slate-500 text-sm mt-1">
+          Jami {{ totalElements }} ta navbat
+        </p>
       </div>
       <button
         v-if="!businessStore.isReadOnly"
@@ -91,7 +95,12 @@
             <p class="text-xs text-slate-500 mb-3">
               <span class="font-medium">Xodim:</span> {{ staffNameById(booking.staffId) }}
             </p>
-            <p v-if="booking.customerNote" class="text-xs text-slate-500 mb-3 truncate">{{ booking.customerNote }}</p>
+            <p
+                v-if="booking.customerNote"
+                class="text-xs text-slate-500 mb-3 truncate"
+            >
+              {{ booking.customerNote }}
+            </p>
             <div class="flex items-center justify-between pt-3 border-t border-slate-100">
               <select
                 :value="booking.status"
@@ -156,9 +165,16 @@
                   <td class="px-5 py-4 text-slate-700">{{index + 1}}</td>
                   <td class="px-5 py-4 text-slate-700">
                     <div>{{ bookingCustomerName(booking, '—') }}</div>
-                    <div v-if="booking.customerPhone" class="text-xs text-slate-400">{{ booking.customerPhone }}</div>
+                    <div
+                        v-if="booking.customerPhone"
+                        class="text-xs text-slate-400"
+                    >
+                      {{ booking.customerPhone }}
+                    </div>
                   </td>
-                  <td class="px-5 py-4 text-slate-700 whitespace-nowrap">{{ formatDate(booking.startAt) }}</td>
+                  <td class="px-5 py-4 text-slate-700 whitespace-nowrap">
+                    {{ formatDate(booking.startAt) }}
+                  </td>
                   <td class="px-5 py-4 text-slate-500 whitespace-nowrap">
                     <span class="flex items-center gap-1">
                       <Clock class="w-3.5 h-3.5" />
@@ -246,13 +262,22 @@
       :title="editingBookingId ? 'Navbatni yangilash' : 'Yangi navbat qo\'shish'"
       @close="showCreateModal = false"
     >
-      <form @submit.prevent="saveBooking" class="space-y-4 text-gray-600">
-        <p v-if="createError" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ createError }}</p>
-
+      <form
+          @submit.prevent="saveBooking"
+          class="space-y-4 text-gray-600"
+      >
+        <p
+            v-if="createError"
+            class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2"
+        >
+          {{ createError }}
+        </p>
         <div class="flex flex-col p-4 gap-3 overflow-y-auto max-h-[68vh]">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Mijoz ismi *</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                Mijoz ismi *
+              </label>
               <input
                   v-model="form.customerFirstName"
                   type="text"
@@ -261,7 +286,9 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Telefon (ixtiyoriy)</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                Telefon (ixtiyoriy)
+              </label>
               <input
                   v-model="form.customerPhone"
                   type="tel"
@@ -270,10 +297,10 @@
               />
             </div>
           </div>
-
-          <!-- Service -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Xizmat *</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">
+              Xizmat *
+            </label>
             <select
                 v-model="form.offeredServiceId"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
@@ -288,20 +315,20 @@
               </option>
             </select>
           </div>
-
-          <!-- Date -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Sana *</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">
+              Sana *
+            </label>
             <input
                 v-model="bookingDate"
                 type="date"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
-
-          <!-- Staff -->
           <div v-if="selectedService">
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Xodim (ixtiyoriy)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">
+              Xodim (ixtiyoriy)
+            </label>
             <div class="grid grid-cols-2 gap-2">
               <button
                   type="button"
@@ -324,26 +351,40 @@
               ]"
               >
                 <span class="">{{ personName(st) }}</span>
-                <span :class="['text-[10px] mt-0.5', form.staffId === st.id ? 'text-white/80' : 'text-slate-400']">
+                <span
+                    :class="['text-[10px] mt-0.5',
+                     form.staffId === st.id ? 'text-white/80' : 'text-slate-400']"
+                >
                 {{ slotsLoading ? '...' : (freeSlotCount(st.id) > 0 ? `${freeSlotCount(st.id)} ta bo'sh` : "To'liq band") }}
               </span>
               </button>
             </div>
           </div>
-
-          <!-- Time slots -->
           <div v-if="selectedService">
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
               Boshlanish vaqti *
-              <span class="text-slate-400 font-normal ml-1">({{ selectedService.durationMinutes }} daqiqa)</span>
+              <span
+                  class="text-slate-400 font-normal ml-1"
+              >
+                ({{ selectedService.durationMinutes }} daqiqa)
+              </span>
             </label>
-            <p v-if="!todaysHoursForBooking || todaysHoursForBooking.closed" class="text-xs text-slate-400">
+            <p
+                v-if="!todaysHoursForBooking || todaysHoursForBooking.closed"
+                class="text-xs text-slate-400"
+            >
               Bu kunda ish vaqti belgilanmagan yoki dam olish kuni
             </p>
-            <p v-else-if="possibleStarts.length === 0" class="text-xs text-slate-400">
+            <p
+                v-else-if="possibleStarts.length === 0"
+                class="text-xs text-slate-400"
+            >
               Bu kun uchun bo'sh vaqt yo'q
             </p>
-            <div v-else class="grid grid-cols-5 gap-1.5 shadow max-h-60 overflow-y-auto">
+            <div
+                v-else
+                class="grid grid-cols-5 gap-1.5 shadow max-h-60 overflow-y-auto"
+            >
               <button
                   v-for="start in possibleStarts"
                   :key="start"
@@ -363,10 +404,10 @@
               </button>
             </div>
           </div>
-
-          <!-- Note -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Izoh (ixtiyoriy)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">
+              Izoh (ixtiyoriy)
+            </label>
             <textarea
                 v-model="form.customerNote"
                 rows="2"
@@ -375,7 +416,6 @@
             />
           </div>
         </div>
-
         <div class="flex gap-3 pt-2">
           <button
             type="button"
@@ -398,15 +438,15 @@
         </div>
       </form>
     </AppModal>
-
-    <!-- Delete confirmation modal -->
     <AppModal
       v-if="deleteConfirm"
       title="Navbatni o'chirish"
       size="sm"
       @close="deleteConfirm = null"
     >
-      <p class="text-slate-600 flex items-center justify-center text-sm mb-5">Ushbu navbatni o'chirishni tasdiqlaysizmi?</p>
+      <p class="text-slate-600 flex items-center justify-center text-sm mb-5">
+        Ushbu navbatni o'chirishni tasdiqlaysizmi?
+      </p>
       <div class="flex gap-3">
         <button
           class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50"

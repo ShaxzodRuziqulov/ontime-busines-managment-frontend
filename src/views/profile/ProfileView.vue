@@ -11,7 +11,12 @@
         <div class="flex lg:flex-col items-center lg:text-center gap-4">
           <div class="relative w-[72px] h-[72px] flex-shrink-0">
             <div class="w-[72px] h-[72px] rounded-full overflow-hidden bg-primary-100 flex items-center justify-center ring-4 ring-slate-50">
-              <img v-if="mediaUrl(profile.avatarUrl)" :src="mediaUrl(profile.avatarUrl)!" class="w-full h-full object-cover" alt="avatar" />
+              <img
+                  v-if="mediaUrl(profile.avatarUrl)"
+                  :src="mediaUrl(profile.avatarUrl)!"
+                  class="w-full h-full object-cover"
+                  alt="avatar"
+              />
               <UserIcon v-else class="w-8 h-8 text-primary-400" />
             </div>
             <label
@@ -19,7 +24,12 @@
               :class="{ 'opacity-60 pointer-events-none': uploadingAvatar }"
             >
               <Camera class="w-3.5 h-3.5 text-white" />
-              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onAvatarChange" />
+              <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="hidden"
+                  @change="onAvatarChange"
+              />
             </label>
           </div>
           <div class="min-w-0">
@@ -54,7 +64,10 @@
       </aside>
 
       <div class="space-y-4">
-        <form @submit.prevent="save" class="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
+        <form
+            @submit.prevent="save"
+            class="bg-white rounded-xl border border-slate-100 shadow-sm p-5"
+        >
           <div class="flex items-center justify-between gap-3 mb-4">
             <h3 class="text-sm font-semibold text-slate-800">Shaxsiy ma'lumotlar</h3>
             <span class="text-xs text-slate-400">Profil</span>
@@ -116,7 +129,10 @@
           </div>
         </form>
 
-        <form @submit.prevent="changePassword" class="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
+        <form
+            @submit.prevent="changePassword"
+            class="bg-white rounded-xl border border-slate-100 shadow-sm p-5"
+        >
           <div class="flex items-center justify-between gap-3 mb-4">
             <h3 class="text-sm font-semibold text-slate-800">Parolni o'zgartirish</h3>
             <span class="text-xs text-slate-400">Xavfsizlik</span>

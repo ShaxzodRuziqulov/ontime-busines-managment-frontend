@@ -1,3 +1,247 @@
+<template>
+  <div>
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">Audit Log</h1>
+        <p class="text-slate-500 text-sm mt-1">Barcha admin harakatlari tarixi</p>
+      </div>
+      <div class="flex gap-2">
+        <button
+          @click="exportCsv"
+          class="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+        >
+          <Download class="w-4 h-4" />
+          CSV
+        </button>
+        <button
+          @click="load"
+          :class="['flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors', loading && 'opacity-60 pointer-events-none']"
+        >
+          <RefreshCw class="w-4 h-4" :class="loading && 'animate-spin'" />
+          Yangilash
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex flex-wrap gap-3 mb-5">
+      <!-- Admin login search -->
+      <div class="relative flex-1 min-w-48">
+        <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          v-model="filterAdmin"
+          type="text"
+          placeholder="Admin logini..."
+          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+        />
+      </div>
+
+      <!-- Entity type -->
+      <select
+        v-model="filterEntityType"
+        class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-slate-700"
+      >
+        <option value="">Barcha turlar</option>
+        <option
+            v-for="t in entityTypes"
+            :key="t"
+            :value="t"
+        >
+          {{ entityTypeLabel(t) }}
+        </option>
+      </select>
+
+      <!-- Action -->
+      <select
+        v-model="filterAction"
+        class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-slate-700 max-w-56"
+      >
+        <option value="">Barcha harakatlar</option>
+        <option
+            v-for="a in allActions"
+            :key="a"
+            :value="a"
+        >
+          {{ actionLabels[a] }}
+        </option>
+      </select>
+
+      <button
+        v-if="filterEntityType || filterAction || filterAdmin"
+        @click="resetFilters"
+        class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-500 hover:bg-slate-50 transition-colors"
+      >
+        Tozalash
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="text-xs text-slate-500 mb-3">
+      Jami {{ totalElements }} ta yozuv
+    </div>
+
+    <SkeletonTable v-if="loading" :rows="8" :cols="5" />
+
+    <template v-else>
+      <EmptyState
+        v-if="logs.length === 0"
+        title="Yozuv topilmadi"
+        description="Filtrlarni o'zgartirib ko'ring"
+      >
+        <template #icon>
+          <ShieldCheck class="w-8 h-8 text-slate-400" />
+        </template>
+      </EmptyState>
+
+      <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="divide-y divide-slate-100 sm:hidden">
+          <article
+              v-for="log in logs"
+              :key="log.id"
+              class="p-4"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-slate-800">
+                  {{ entityDisplayName(log) }}
+                </p>
+                <p class="mt-1 text-xs text-slate-500">
+                  {{ formatDate(log.createdAt) }} · {{ log.adminLogin }}
+                </p>
+              </div>
+              <span
+                  :class="['shrink-0 rounded-full px-2 py-1 text-[11px] font-medium',
+                   actionColors[log.action] ?? 'bg-slate-100 text-slate-600']"
+              >
+                {{ actionLabels[log.action] ?? log.action }}
+              </span>
+            </div>
+            <p
+                v-if="log.details"
+                class="mt-3 line-clamp-2 text-xs leading-5 text-slate-500"
+            >
+              {{ log.details }}
+            </p>
+            <p class="mt-2 text-[11px] text-slate-400">
+              {{ entityTypeLabel(log.entityType) }} · {{ shortEntityId(log.entityId) }}
+            </p>
+          </article>
+        </div>
+        <div class="hidden overflow-x-auto sm:block">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
+                <th class="px-5 py-3 text-left font-medium">Vaqt</th>
+                <th class="px-5 py-3 text-left font-medium">Admin</th>
+                <th class="px-5 py-3 text-left font-medium">Harakat</th>
+                <th class="px-5 py-3 text-left font-medium">Obyekt</th>
+                <th class="px-5 py-3 text-left font-medium">Tafsilot</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              <tr
+                v-for="log in logs"
+                :key="log.id"
+                class="hover:bg-slate-50/50 transition-colors"
+              >
+                <td class="px-5 py-3 text-slate-500 text-xs whitespace-nowrap">
+                  {{ formatDate(log.createdAt) }}
+                </td>
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <ShieldCheck class="w-3 h-3 text-red-600" />
+                    </div>
+                    <span class="font-mono text-xs text-slate-700">{{ log.adminLogin }}</span>
+                  </div>
+                </td>
+                <td class="px-5 py-3">
+                  <span
+                      :class="['px-2.5 py-1 rounded-full text-xs font-medium',
+                       actionColors[log.action] ?? 'bg-slate-100 text-slate-600']"
+                  >
+                    {{ actionLabels[log.action] ?? log.action }}
+                  </span>
+                </td>
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-1.5">
+                    <Building2
+                        v-if="log.entityType === 'BUSINESS'"
+                        class="w-3.5 h-3.5 text-primary-500 flex-shrink-0"
+                    />
+                    <Users
+                        v-else
+                        class="w-3.5 h-3.5 text-violet-500 flex-shrink-0"
+                    />
+                    <div class="min-w-0">
+                      <p
+                          class="text-xs font-medium text-slate-700 truncate max-w-[180px]"
+                          :title="entityDisplayName(log)"
+                      >
+                        {{ entityDisplayName(log) }}
+                      </p>
+                      <p
+                          class="text-[11px] text-slate-400 font-mono truncate max-w-[180px]"
+                          :title="log.entityId"
+                      >
+                        {{ entityTypeLabel(log.entityType) }} · {{ shortEntityId(log.entityId) }}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td
+                    class="px-5 py-3 text-slate-500 text-xs max-w-xs truncate"
+                    :title="log.details ?? ''"
+                >
+                  {{ log.details || '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div
+            v-if="totalPages > 1"
+            class="flex flex-col gap-3 border-t border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+        >
+          <span class="text-xs text-slate-500">
+            {{ page * PAGE_SIZE + 1 }}–{{ Math.min((page + 1) * PAGE_SIZE, totalElements) }} / {{ totalElements }}
+          </span>
+          <div class="flex max-w-full gap-1 overflow-x-auto">
+            <button
+              :disabled="page === 0"
+              @click="page--"
+              class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft class="w-4 h-4" />
+            </button>
+            <button
+              v-for="p in Math.min(totalPages, 7)"
+              :key="p - 1"
+              @click="page = p - 1"
+              :class="[
+                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                page === p - 1 ? 'bg-primary-600 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50',
+              ]"
+            >
+              {{ p }}
+            </button>
+            <button
+              :disabled="page >= totalPages - 1"
+              @click="page++"
+              class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { Search, ShieldCheck, Building2, Users, RefreshCw, ChevronLeft, ChevronRight, Download } from 'lucide-vue-next'
@@ -131,186 +375,3 @@ function exportCsv() {
 
 onMounted(load)
 </script>
-
-<template>
-  <div>
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800">Audit Log</h1>
-        <p class="text-slate-500 text-sm mt-1">Barcha admin harakatlari tarixi</p>
-      </div>
-      <div class="flex gap-2">
-        <button
-          @click="exportCsv"
-          class="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-        >
-          <Download class="w-4 h-4" />
-          CSV
-        </button>
-        <button
-          @click="load"
-          :class="['flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors', loading && 'opacity-60 pointer-events-none']"
-        >
-          <RefreshCw class="w-4 h-4" :class="loading && 'animate-spin'" />
-          Yangilash
-        </button>
-      </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="flex flex-wrap gap-3 mb-5">
-      <!-- Admin login search -->
-      <div class="relative flex-1 min-w-48">
-        <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          v-model="filterAdmin"
-          type="text"
-          placeholder="Admin logini..."
-          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-        />
-      </div>
-
-      <!-- Entity type -->
-      <select
-        v-model="filterEntityType"
-        class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-slate-700"
-      >
-        <option value="">Barcha turlar</option>
-        <option v-for="t in entityTypes" :key="t" :value="t">{{ entityTypeLabel(t) }}</option>
-      </select>
-
-      <!-- Action -->
-      <select
-        v-model="filterAction"
-        class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-slate-700 max-w-56"
-      >
-        <option value="">Barcha harakatlar</option>
-        <option v-for="a in allActions" :key="a" :value="a">{{ actionLabels[a] }}</option>
-      </select>
-
-      <button
-        v-if="filterEntityType || filterAction || filterAdmin"
-        @click="resetFilters"
-        class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-500 hover:bg-slate-50 transition-colors"
-      >
-        Tozalash
-      </button>
-    </div>
-
-    <!-- Stats -->
-    <div class="text-xs text-slate-500 mb-3">
-      Jami {{ totalElements }} ta yozuv
-    </div>
-
-    <SkeletonTable v-if="loading" :rows="8" :cols="5" />
-
-    <template v-else>
-      <EmptyState
-        v-if="logs.length === 0"
-        title="Yozuv topilmadi"
-        description="Filtrlarni o'zgartirib ko'ring"
-      >
-        <template #icon><ShieldCheck class="w-8 h-8 text-slate-400" /></template>
-      </EmptyState>
-
-      <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="divide-y divide-slate-100 sm:hidden">
-          <article v-for="log in logs" :key="log.id" class="p-4">
-            <div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="truncate text-sm font-semibold text-slate-800">{{ entityDisplayName(log) }}</p><p class="mt-1 text-xs text-slate-500">{{ formatDate(log.createdAt) }} · {{ log.adminLogin }}</p></div><span :class="['shrink-0 rounded-full px-2 py-1 text-[11px] font-medium', actionColors[log.action] ?? 'bg-slate-100 text-slate-600']">{{ actionLabels[log.action] ?? log.action }}</span></div>
-            <p v-if="log.details" class="mt-3 line-clamp-2 text-xs leading-5 text-slate-500">{{ log.details }}</p>
-            <p class="mt-2 text-[11px] text-slate-400">{{ entityTypeLabel(log.entityType) }} · {{ shortEntityId(log.entityId) }}</p>
-          </article>
-        </div>
-        <div class="hidden overflow-x-auto sm:block">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
-                <th class="px-5 py-3 text-left font-medium">Vaqt</th>
-                <th class="px-5 py-3 text-left font-medium">Admin</th>
-                <th class="px-5 py-3 text-left font-medium">Harakat</th>
-                <th class="px-5 py-3 text-left font-medium">Obyekt</th>
-                <th class="px-5 py-3 text-left font-medium">Tafsilot</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-50">
-              <tr
-                v-for="log in logs"
-                :key="log.id"
-                class="hover:bg-slate-50/50 transition-colors"
-              >
-                <td class="px-5 py-3 text-slate-500 text-xs whitespace-nowrap">
-                  {{ formatDate(log.createdAt) }}
-                </td>
-                <td class="px-5 py-3">
-                  <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <ShieldCheck class="w-3 h-3 text-red-600" />
-                    </div>
-                    <span class="font-mono text-xs text-slate-700">{{ log.adminLogin }}</span>
-                  </div>
-                </td>
-                <td class="px-5 py-3">
-                  <span :class="['px-2.5 py-1 rounded-full text-xs font-medium', actionColors[log.action] ?? 'bg-slate-100 text-slate-600']">
-                    {{ actionLabels[log.action] ?? log.action }}
-                  </span>
-                </td>
-                <td class="px-5 py-3">
-                  <div class="flex items-center gap-1.5">
-                    <Building2 v-if="log.entityType === 'BUSINESS'" class="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
-                    <Users v-else class="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
-                    <div class="min-w-0">
-                      <p class="text-xs font-medium text-slate-700 truncate max-w-[180px]" :title="entityDisplayName(log)">
-                        {{ entityDisplayName(log) }}
-                      </p>
-                      <p class="text-[11px] text-slate-400 font-mono truncate max-w-[180px]" :title="log.entityId">
-                        {{ entityTypeLabel(log.entityType) }} · {{ shortEntityId(log.entityId) }}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-5 py-3 text-slate-500 text-xs max-w-xs truncate" :title="log.details ?? ''">
-                  {{ log.details || '—' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div v-if="totalPages > 1" class="flex flex-col gap-3 border-t border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <span class="text-xs text-slate-500">
-            {{ page * PAGE_SIZE + 1 }}–{{ Math.min((page + 1) * PAGE_SIZE, totalElements) }} / {{ totalElements }}
-          </span>
-          <div class="flex max-w-full gap-1 overflow-x-auto">
-            <button
-              :disabled="page === 0"
-              @click="page--"
-              class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft class="w-4 h-4" />
-            </button>
-            <button
-              v-for="p in Math.min(totalPages, 7)"
-              :key="p - 1"
-              @click="page = p - 1"
-              :class="[
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                page === p - 1 ? 'bg-primary-600 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50',
-              ]"
-            >
-              {{ p }}
-            </button>
-            <button
-              :disabled="page >= totalPages - 1"
-              @click="page++"
-              class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight class="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </template>
-  </div>
-</template>

@@ -93,7 +93,10 @@
 
             <!-- Footer -->
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 mt-auto">
-              <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', service.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500']">
+              <span
+                  :class="['text-xs font-medium px-2.5 py-1 rounded-full',
+                   service.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500']"
+              >
                 {{ service.active ? 'Faol' : 'Nofaol' }}
               </span>
               <div class="flex gap-1">
@@ -171,8 +174,15 @@
           <label class="block text-sm font-medium text-slate-700 mb-1.5">Reklama rasmi (ixtiyoriy)</label>
 
           <!-- Preview -->
-          <div v-if="imagePreview" class="relative rounded-xl overflow-hidden mb-2 h-32">
-            <img :src="imagePreview" alt="preview" class="w-full h-full object-cover" />
+          <div
+              v-if="imagePreview"
+              class="relative rounded-xl overflow-hidden mb-2 h-32"
+          >
+            <img
+                :src="imagePreview"
+                alt="preview"
+                class="w-full h-full object-cover"
+            />
             <button
               type="button"
               @click="removeImage"

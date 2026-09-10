@@ -174,7 +174,7 @@
     >
       <form
           @submit.prevent="save"
-          class="space-y-4"
+          class="space-y-4 p-4"
       >
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -378,10 +378,10 @@
                   v-if="editingStaff"
                   class="group bg-slate-50 rounded-xl mt-3"
               >
-                <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-xs font-semibold text-slate-600">
+                <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-semibold text-slate-600">
                   Hisob ma'lumotlarini o'zgartirish
                   <span class="text-slate-400 transition-transform group-open:rotate-180">
-                    v
+                    <ChevronDown class="w-4 h-4" />
                   </span>
                 </summary>
                 <div class="space-y-3 border-t border-slate-100 px-4 pb-4 pt-3">
@@ -513,7 +513,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Plus, Users, Trash2, Edit2, ToggleLeft, ToggleRight, Briefcase, Star, Search, X as XIcon, CheckCircle2 } from 'lucide-vue-next'
+import { Plus, Users, Trash2, Edit2, ToggleLeft, ToggleRight, Briefcase, Star, Search, ChevronDown, X as XIcon, CheckCircle2 } from 'lucide-vue-next'
 import { staffApi } from '@/api/staff'
 import { servicesApi } from '@/api/services'
 import { reviewsApi } from '@/api/reviews'

@@ -48,11 +48,25 @@
             </strong>
             <StatusBadge class="shrink-0" :status="t.status" />
           </span>
-          <span class="mt-1.5 truncate text-sm text-slate-500">{{ t.subject }}</span>
-          <span class="mt-3 text-xs text-slate-400">{{ date(t.updatedAt) }}</span>
+          <span class="mt-1.5 truncate text-sm text-slate-500">
+            {{ t.subject }}
+          </span>
+          <span class="mt-3 text-xs text-slate-400">
+            {{ date(t.updatedAt) }}
+          </span>
         </button>
-        <p v-if="loading" class="py-12 text-center text-sm text-slate-400">Yuklanmoqda...</p>
-        <p v-else-if="!tickets.length" class="py-12 text-center text-sm text-slate-400">Murojaatlar yo‘q</p>
+        <p
+            v-if="loading"
+            class="py-12 text-center text-sm text-slate-400"
+        >
+          Yuklanmoqda...
+        </p>
+        <p
+            v-else-if="!tickets.length"
+            class="py-12 text-center text-sm text-slate-400"
+        >
+          Murojaatlar yo‘q
+        </p>
       </div>
     </section>
 
@@ -78,22 +92,34 @@
             <ArrowLeft class="h-5 w-5" />
           </button>
           <div class="min-w-0 flex-1">
-            <h2 class="truncate font-semibold text-slate-900 dark:text-white">{{ selected.requesterName }}</h2>
-            <p class="truncate text-xs text-slate-300">{{ selected.requesterLogin || 'Telegram user' }}</p>
+            <h2 class="truncate font-semibold text-slate-900 dark:text-white">
+              {{ selected.requesterName }}
+            </h2>
+            <p class="truncate text-xs text-slate-300">
+              {{ selected.requesterLogin || 'Telegram user' }}
+            </p>
           </div>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-2">
-          <label class="text-xs font-medium text-slate-300">Muhimlik
+          <label class="text-xs font-medium text-slate-300">
+            Muhimlik
             <select
                 :value="selected.priority"
                 @change="save({ priority: ($event.target as HTMLSelectElement).value })"
                 class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
             >
-              <option v-for="p in priorities" :key="p" :value="p">{{ priorityLabel[p] }}</option>
+              <option
+                  v-for="p in priorities"
+                  :key="p"
+                  :value="p"
+              >
+                {{ priorityLabel[p] }}
+              </option>
             </select>
           </label>
-          <label class="text-xs font-medium text-slate-300">Holati
+          <label class="text-xs font-medium text-slate-300">
+            Holati
             <select
                 :value="selected.status"
                 @change="save({ status: ($event.target as HTMLSelectElement).value })"
@@ -119,14 +145,18 @@
                 : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-white'
                 ]"
           >
-            <p class="break-words">{{ m.content }}</p>
+            <p class="break-words">
+              {{ m.content }}
+            </p>
             <p
                 v-if="m.mediaType"
                 class="mt-1 text-xs opacity-60"
             >
               {{ m.mediaType }}
             </p>
-            <p class="mt-1 text-[11px] opacity-50">{{ date(m.createdAt) }}</p>
+            <p class="mt-1 text-[11px] opacity-50">
+              {{ date(m.createdAt) }}
+            </p>
           </div>
         </div>
 

@@ -7,15 +7,22 @@
 
     <LoadingSpinner v-if="businessStore.loading" />
 
-    <div v-else-if="!businessStore.business" class="bg-white rounded-2xl p-10 text-center border border-slate-100">
+    <div
+        v-else-if="!businessStore.business"
+        class="bg-white rounded-2xl p-10 text-center border border-slate-100"
+    >
       <Building2 class="w-12 h-12 text-slate-300 mx-auto mb-3" />
-      <p class="text-slate-500">Biznes topilmadi</p>
+      <p class="text-slate-500">
+        Biznes topilmadi
+      </p>
     </div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-5">
       <div class="space-y-4">
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-          <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Holat</h3>
+          <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">
+            Holat
+          </h3>
           <div class="space-y-3">
             <div class="flex items-center justify-between gap-3">
               <span class="text-sm text-slate-600">Status</span>
@@ -23,9 +30,14 @@
             </div>
             <div class="flex items-center justify-between gap-3">
               <span class="text-sm text-slate-600">Xizmat turi</span>
-              <span class="text-sm font-medium text-slate-800 text-right">{{ categoryLabel(businessStore.business.category) }}</span>
+              <span class="text-sm font-medium text-slate-800 text-right">
+                {{ categoryLabel(businessStore.business.category) }}
+              </span>
             </div>
-            <div v-if="businessStore.business.trialEndDate" class="flex items-center justify-between gap-3">
+            <div
+                v-if="businessStore.business.trialEndDate"
+                class="flex items-center justify-between gap-3"
+            >
               <span class="text-sm text-slate-600">Sinov tugashi</span>
               <span class="text-sm font-medium text-slate-800">{{ formatDate(businessStore.business.trialEndDate) }}</span>
             </div>
@@ -131,7 +143,10 @@
             <span>{{ readOnlyNotice }}</span>
           </div>
 
-          <form @submit.prevent="saveChanges" class="space-y-4">
+          <form
+              @submit.prevent="saveChanges"
+              class="space-y-4"
+          >
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
                 <Building2 class="w-4 h-4 inline mr-1.5" />
@@ -155,7 +170,11 @@
                 :disabled="businessStore.isReadOnly"
                 class="w-full px-4 py-2.5 rounded-xl text-gray-600 cursor-pointer border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
               >
-                <option v-for="category in categoryOptions" :key="category.value" :value="category.value">
+                <option
+                    v-for="category in categoryOptions"
+                    :key="category.value"
+                    :value="category.value"
+                >
                   {{ category.label }}
                 </option>
               </select>

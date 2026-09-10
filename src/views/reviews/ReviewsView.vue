@@ -9,7 +9,10 @@
 
     <template v-else>
       <!-- Rating overview -->
-      <div v-if="reviews.length > 0" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
+      <div
+          v-if="reviews.length > 0"
+          class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4"
+      >
         <div class="flex flex-col sm:flex-row gap-8 items-start sm:items-center">
           <!-- Big rating -->
           <div class="text-center flex-shrink-0">

@@ -13,11 +13,17 @@
     </div>
 
     <LoadingSpinner v-if="businessStore.loading" />
-    <div v-else-if="!businessStore.business" class="rounded-2xl border border-slate-100 bg-white p-10 text-center text-slate-500">
+    <div
+        v-else-if="!businessStore.business"
+        class="rounded-2xl border border-slate-100 bg-white p-10 text-center text-slate-500"
+    >
       QR-kod yaratish uchun avval biznes ma'lumotlarini to'ldiring.
     </div>
 
-    <div v-else-if="businessStore.isReadOnly" class="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
+    <div
+        v-else-if="businessStore.isReadOnly"
+        class="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center"
+    >
       <QrCode class="mx-auto h-10 w-10 text-amber-600" />
       <h3 class="mt-3 font-semibold text-amber-900">QR-kod hozir faol emas</h3>
       <p class="mt-1 text-sm text-amber-800">Obunani faollashtirgach, mijozlar uchun QR-kod yaratishingiz mumkin.</p>
@@ -28,10 +34,22 @@
         <p class="text-sm font-semibold text-slate-800">{{ businessStore.business.name }}</p>
         <p class="mt-1 text-xs text-slate-500">Onlayn navbat olish</p>
         <div class="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-          <img v-if="qrImageUrl" :src="qrImageUrl" :alt="`${businessStore.business.name} uchun QR-kod`" class="w-full max-w-[320px] rounded-xl bg-white" />
-          <div v-else class="grid h-72 w-72 place-items-center text-sm text-slate-400">QR-kod yaratilmoqda...</div>
+          <img
+              v-if="qrImageUrl"
+              :src="qrImageUrl"
+              :alt="`${businessStore.business.name} uchun QR-kod`"
+              class="w-full max-w-[320px] rounded-xl bg-white"
+          />
+          <div
+              v-else
+              class="grid h-72 w-72 place-items-center text-sm text-slate-400"
+          >
+            QR-kod yaratilmoqda...
+          </div>
         </div>
-        <p class="mt-5 max-w-sm text-center text-sm leading-6 text-slate-500">QR-kodni chop etib, kirish joyiga yoki kutish zaliga qo‘ying.</p>
+        <p class="mt-5 max-w-sm text-center text-sm leading-6 text-slate-500">
+          QR-kodni chop etib, kirish joyiga yoki kutish zaliga qo‘ying.
+        </p>
       </section>
 
       <section class="rounded-2xl border border-slate-100 bg-white shadow-sm p-6">
@@ -39,25 +57,59 @@
         <p class="mt-1 text-sm text-slate-500">Kerakli usulni tanlang.</p>
 
         <div class="mt-5 space-y-3">
-          <button type="button" :disabled="sharingQr" class="action-button share-mobile bg-sky-500 text-white hover:bg-sky-600 disabled:opacity-60" @click="shareQrImage">
+          <button
+              type="button"
+              :disabled="sharingQr"
+              class="action-button share-mobile bg-sky-500 text-white hover:bg-sky-600 disabled:opacity-60"
+              @click="shareQrImage"
+          >
             <Send class="w-5 h-5" />
-            <span><b>{{ sharingQr ? 'Tayyorlanmoqda...' : 'QR rasmni ulashish' }}</b><small>Telefonda Telegram’ni tanlang</small></span>
+            <span>
+              <b>{{ sharingQr ? 'Tayyorlanmoqda...' : 'QR rasmni ulashish' }}</b>
+              <small>Telefonda Telegram’ni tanlang</small>
+            </span>
           </button>
-          <button type="button" class="action-button border border-slate-200 text-slate-700 hover:bg-slate-50" @click="printQrCode">
+          <button
+              type="button"
+              class="action-button border border-slate-200 text-slate-700 hover:bg-slate-50"
+              @click="printQrCode"
+          >
             <Printer class="w-5 h-5 text-slate-500" />
-            <span><b>Chop etish</b><small>Print uchun tayyor sahifani ochadi</small></span>
+            <span>
+              <b>Chop etish</b>
+              <small>Print uchun tayyor sahifani ochadi</small>
+            </span>
           </button>
-          <button type="button" class="action-button border border-slate-200 text-slate-700 hover:bg-slate-50" @click="downloadQrCode">
+          <button
+              type="button"
+              class="action-button border border-slate-200 text-slate-700 hover:bg-slate-50"
+              @click="downloadQrCode"
+          >
             <Download class="w-5 h-5 text-slate-500" />
-            <span><b>QR-kodni yuklash</b><small>PNG rasm sifatida saqlanadi</small></span>
+            <span>
+              <b>QR-kodni yuklash</b>
+              <small>PNG rasm sifatida saqlanadi</small>
+            </span>
           </button>
         </div>
 
         <div class="mt-6 border-t border-slate-100 pt-5">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Mijozlar havolasi</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Mijozlar havolasi
+          </p>
           <div class="mt-2 flex gap-2">
-            <input :value="publicBookingUrl" readonly class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-600 outline-none" />
-            <button type="button" class="rounded-xl border border-primary-200 px-3 text-primary-700 hover:bg-primary-50" title="Linkni nusxalash" @click="copyBookingUrl"><Copy class="w-4 h-4" /></button>
+            <input
+                :value="publicBookingUrl"
+                readonly class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-600 outline-none"
+            />
+            <button
+                type="button"
+                class="rounded-xl border border-primary-200 px-3 text-primary-700 hover:bg-primary-50"
+                title="Linkni nusxalash"
+                @click="copyBookingUrl"
+            >
+              <Copy class="w-4 h-4" />
+            </button>
           </div>
         </div>
       </section>
@@ -159,10 +211,18 @@ function printQrCode() {
 </script>
 
 <style scoped>
-.action-button { @apply w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors; }
-.action-button span { @apply flex min-w-0 flex-col; }
-.action-button b { @apply text-sm font-semibold; }
-.action-button small { @apply mt-0.5 text-xs opacity-75; }
+.action-button {
+  @apply w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors;
+}
+.action-button span {
+  @apply flex min-w-0 flex-col;
+}
+.action-button b {
+  @apply text-sm font-semibold;
+}
+.action-button small {
+  @apply mt-0.5 text-xs opacity-75;
+}
 @media (min-width: 1024px) {
   .share-mobile { display: none; }
 }

@@ -14,8 +14,6 @@
         Mijoz qo'shish
       </button>
     </div>
-
-    <!-- Qidiruv -->
     <div class="relative mb-5">
       <span class="absolute inset-y-0 left-3 flex items-center text-slate-400">
         <Search class="w-4 h-4" />
@@ -29,7 +27,12 @@
     </div>
 
     <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <SkeletonCard v-for="i in 6" :key="i" :lines="2" show-avatar />
+      <SkeletonCard
+          v-for="i in 6"
+          :key="i"
+          :lines="2"
+          show-avatar
+      />
     </div>
 
     <template v-else>
@@ -73,10 +76,17 @@
               {{ getInitials(customerName(c)) }}
             </div>
             <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-slate-800 truncate">{{ customerName(c) }}</h3>
-              <div v-if="c.visitCount > 0" class="flex items-center gap-1 mt-0.5">
+              <h3 class="font-semibold text-slate-800 truncate">
+                {{ customerName(c) }}
+              </h3>
+              <div
+                  v-if="c.visitCount > 0"
+                  class="flex items-center gap-1 mt-0.5"
+              >
                 <Repeat class="w-3.5 h-3.5 text-emerald-500" />
-                <span class="text-xs font-medium text-emerald-600">{{ c.visitCount }} marta tashrif</span>
+                <span class="text-xs font-medium text-emerald-600">
+                  {{ c.visitCount }} marta tashrif
+                </span>
               </div>
             </div>
           </div>
@@ -144,8 +154,6 @@
         </button>
       </div>
     </template>
-
-    <!-- Add/Edit Modal -->
     <AppModal
       v-if="showModal"
       :title="editing ? 'Mijozni tahrirlash' : 'Yangi mijoz'"
