@@ -205,7 +205,29 @@ function printQrCode() {
   if (!popup) { toast.error("Chop etish oynasini ochib bo'lmadi"); return }
   const businessName = escapeHtml(businessStore.business?.name || 'Biznes')
   const bookingUrl = escapeHtml(publicBookingUrl.value)
-  popup.document.write(`<!doctype html><html><head><title>${businessName} — QR-kod</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:36px;color:#0f172a}img{width:360px;max-width:100%;margin:24px auto;display:block}p{word-break:break-all;color:#475569;font-size:14px}.hint{font-size:16px;color:#334155}</style></head><body><h1>${businessName}</h1><p class="hint">Navbat olish uchun QR-kodni skanerlang</p><img src="${qrImageUrl.value}" alt="QR-kod"><p>${bookingUrl}</p><script>window.onload=()=>window.print()<\/script></body></html>`)
+  popup.document.write(`
+<!doctype html>
+<html lang="uz">
+<head>
+<title>
+${businessName} — QR-kod
+</title>
+<style>
+body{font-family:Arial,sans-serif;text-align:center;padding:36px;color:#0f172a}
+img{width:360px;max-width:100%;margin:24px auto;display:block}
+p{word-break:break-all;color:#475569;font-size:14px}
+.hint{font-size:16px;color:#334155}
+</style>
+</head>
+<body>
+<h1>${businessName}</h1>
+<p class="hint">Navbat olish uchun QR-kodni skanerlang</p>
+<img src="${qrImageUrl.value}" alt="QR-kod">
+<p>${bookingUrl}</p>
+<script>window.onload=()=>window.print()<\/script>
+</body>
+</html>
+`)
   popup.document.close()
 }
 </script>
