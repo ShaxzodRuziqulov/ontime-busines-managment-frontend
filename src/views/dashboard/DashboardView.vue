@@ -115,7 +115,7 @@
               v-for="stat in bookingStats"
               :key="stat.label"
               to="/bookings"
-              class="group rounded-xl bg-slate-50 px-4 py-3 hover:bg-primary-50 transition-colors"
+              class="group relative rounded-xl bg-slate-50 px-4 py-3 hover:bg-primary-50 transition-colors"
             >
               <div class="flex items-center justify-between gap-3">
                 <div>
@@ -131,6 +131,11 @@
                   :class="['h-full rounded-full', stat.barClass]"
                   :style="{ width: `${bookingPercent(stat.value)}%` }"
                 />
+              </div>
+              <div class="css-hover-tooltip opacity-0 invisible
+                 group-hover:opacity-100
+                 group-hover:visible">
+                <span>Sahifaga utish</span>
               </div>
             </RouterLink>
           </div>
@@ -158,7 +163,7 @@
             v-for="step in setupSteps"
             :key="step.label"
             :to="step.to"
-            class="flex items-center justify-between gap-4 px-6 py-3.5 hover:bg-primary-50/40 transition-colors"
+            class="flex group relative items-center justify-between gap-4 px-6 py-3.5 hover:bg-primary-50/40 transition-colors"
           >
             <div class="flex items-start gap-3">
               <div
@@ -175,6 +180,11 @@
               </div>
             </div>
             <span class="text-xs font-medium text-primary-600 flex-shrink-0">Ochish</span>
+            <div class="css-hover-tooltip opacity-0 invisible
+                 group-hover:opacity-100
+                 group-hover:visible">
+              <span>{{step.label}} sahifasiga utish</span>
+            </div>
           </RouterLink>
         </div>
       </div>
@@ -405,3 +415,41 @@ onMounted(async () => {
   }
 })
 </script>
+<style scoped>
+.css-hover-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  margin-top: 8px;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  max-width: 280px;
+  width: max-content;
+  white-space: normal;
+  word-break: break-word;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  z-index: 30;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #1e293b transparent;
+  }
+}
+</style>

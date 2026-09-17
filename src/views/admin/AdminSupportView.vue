@@ -11,22 +11,22 @@
         <button
             aria-label="Yangilash"
             @click="load"
-            class="min-h-11 min-w-11 rounded-xl border border-slate-200 bg-white p-3 text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            class="min-h-11 min-w-11 hover:bg-primary-600 rounded-xl bg-primary-500 p-3 text-white shadow-sm"
         >
           <RefreshCw :class="['h-5 w-5', loading && 'animate-spin']" />
         </button>
       </div>
 
-      <div class="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+      <div class="-mx-1 mb-4 flex flex-wrap gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
         <button
             v-for="s in ['' as SupportStatus, ...statuses]"
             :key="s || 'all'"
             @click="filter = s;
             load()"
-            :class="['min-h-10 shrink-0 whitespace-nowrap rounded-xl px-3 text-xs font-semibold transition',
+            :class="['shrink-0 border whitespace-nowrap rounded-xl px-3 py-1 text-sm font-semibold transition',
              filter === s
-             ? 'bg-primary-600 text-white shadow-sm'
-             : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+             ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+             : 'text-slate-600 border-slate-300 dark:text-slate-500'
              ]"
         >
           {{ s ? label[s] : 'Barchasi' }}
@@ -38,11 +38,11 @@
             v-for="t in tickets"
             :key="t.id"
             @click="open(t.id)"
-            class="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-primary-400 hover:shadow-md active:scale-[.99] dark:border-slate-700 dark:bg-slate-800"
+            class="w-full dark:hover:border-primary-500 rounded-2xl border border-slate-300 bg-white p-4 text-left transition-all duration-200 shadow-sm transition hover:border-primary-500 hover:dark:border-primary-500 hover:shadow-md"
         >
           <span class="flex items-start justify-between gap-3">
             <strong
-                class="min-w-0 truncate text-sm text-slate-800 dark:text-white"
+                class="min-w-0 truncate text-sm text-slate-700"
             >
               {{ t.requesterName }}
             </strong>
