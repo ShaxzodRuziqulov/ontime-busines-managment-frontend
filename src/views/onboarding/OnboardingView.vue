@@ -262,7 +262,7 @@ function applyMapAddress(address: { addressLine: string; city: string }) {
 }
 
 const categoryOptions: { value: BusinessCategory; label: string }[] = [
-  { value: 'BARBER', label: 'Sartarosh' },
+  { value: 'BARBER', label: 'Sartaroshlik' },
   { value: 'BEAUTY', label: "Go'zallik" },
   { value: 'MEDICAL', label: 'Tibbiyot' },
   { value: 'REPAIR', label: "Ta'mirlash" },
