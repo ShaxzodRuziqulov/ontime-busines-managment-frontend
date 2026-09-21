@@ -1,5 +1,5 @@
 <template>
-  <div class="grid w-full min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(280px,.82fr)_minmax(420px,1.18fr)]">
+  <div class="grid w-full min-w-0 max-w-full gap-5 lg:p-0 p-4 lg:grid-cols-[minmax(280px,.82fr)_minmax(420px,1.18fr)]">
     <section
         :class="selected ? 'hidden lg:block' : 'block'" class="min-w-0 max-w-full"
     >
