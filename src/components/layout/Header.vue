@@ -1,21 +1,22 @@
 <template>
-  <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 flex-shrink-0">
+  <header class="h-16 bg-slate-700 border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 flex-shrink-0">
     <!-- Left -->
     <div class="flex items-center gap-3">
-      <button
-        aria-label="Menyu"
-        class="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-        @click="$emit('toggleSidebar')"
-      >
-        <Menu class="w-5 h-5" />
-      </button>
+      <AppLogo class="lg:hidden" label="OnTime" size="sm" />
+<!--      <button-->
+<!--        aria-label="Menyu"-->
+<!--        class="lg:hidden p-2 rounded-lg text-slate-200 hover:bg-slate-100 transition-colors"-->
+<!--        @click="$emit('toggleSidebar')"-->
+<!--      >-->
+<!--        <Menu class="w-5 h-5" />-->
+<!--      </button>-->
 
       <!-- Business badge (non-admin) -->
       <div
           v-if="!authStore.isAdmin && businessStore.business"
           class="flex items-center gap-2"
       >
-        <span class="font-semibold text-slate-800 text-sm hidden sm:block">
+        <span class="font-semibold text-slate-200 text-sm hidden sm:block">
           {{ businessStore.business.name }}
         </span>
         <span
@@ -53,7 +54,7 @@
         type="button"
         :aria-label="darkMode ? 'Kun rejimi' : 'Tun rejimi'"
         :title="darkMode ? 'Kun rejimi' : 'Tun rejimi'"
-        class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+        class="p-2 rounded-lg text-slate-200 hover:bg-slate-800 transition-colors"
         @click="toggleTheme"
       >
         <Sun v-if="darkMode" class="w-5 h-5" />
@@ -63,7 +64,7 @@
       <!-- User dropdown -->
       <div class="relative profile-dropdown">
         <button
-          class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors"
           @click="dropdownOpen = !dropdownOpen"
         >
           <span class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
@@ -77,7 +78,7 @@
               <User class="w-4 h-4 text-white" />
             </span>
           </span>
-          <span class="text-sm font-medium text-slate-700 hidden sm:block">
+          <span class="text-sm font-medium text-slate-200 hidden sm:block">
             {{ personName(authStore.user, authStore.user?.login) }}
           </span>
           <ChevronDown class="w-4 h-4 text-slate-400" />
@@ -90,7 +91,7 @@
         >
           <RouterLink
             to="/profile"
-            class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+            class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
             @click="dropdownOpen = false"
           >
             <UserCog class="w-4 h-4" />
@@ -142,6 +143,7 @@ import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatu
 import type { BusinessStatus } from '@/types'
 import { usePwaInstall } from '@/composables/usePwaInstall'
 import { useToast } from '@/composables/useToast'
+import AppLogo from "@/components/common/AppLogo.vue";
 
 const toast = useToast()
 

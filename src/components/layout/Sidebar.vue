@@ -92,6 +92,7 @@
     <!-- Footer -->
     <div class="px-3 py-3 border-t border-slate-700/50">
       <RouterLink
+          v-if="!authStore.isAdmin"
         to="/help"
         @click="$emit('close')"
         :class="[

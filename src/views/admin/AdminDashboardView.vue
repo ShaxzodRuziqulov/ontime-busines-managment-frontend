@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Admin Panel</h1>
@@ -33,7 +33,7 @@
           :key="item.label"
           :to="item.to"
           :class="[
-              'rounded-2xl border p-3 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-5',
+              'rounded-2xl group relative border p-3 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-5',
                item.tone
                ]"
         >
@@ -47,6 +47,11 @@
               </p>
             </div>
             <component :is="item.icon" class="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
+          </div>
+          <div class="css-hover-tooltip opacity-0 invisible
+                 group-hover:opacity-100
+                 group-hover:visible">
+            <span>Sahifaga utish</span>
           </div>
         </RouterLink>
       </div>
@@ -118,7 +123,7 @@
             v-for="card in statusCards"
             :key="card.status"
             :to="{ name: 'admin-businesses', query: { status: card.status } }"
-            class="rounded-xl border border-slate-100 p-3 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-4"
+            class="rounded-xl group relative border border-slate-100 p-3 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-4"
             :class="card.color"
           >
             <div class="flex items-center mb-2 gap-2">
@@ -132,6 +137,11 @@
             </div>
             <div class="text-2xl font-bold" :class="card.textColor">
               {{ card.value }}
+            </div>
+            <div class="css-hover-tooltip opacity-0 invisible
+                 group-hover:opacity-100
+                 group-hover:visible">
+              <span>Bizneslar sahifasiga utish</span>
             </div>
           </RouterLink>
         </div>
@@ -262,7 +272,7 @@
             </div>
           </button>
         </div>
-        <div class="hidden overflow-x-auto sm:block">
+        <div class="hidden overflow-x-auto min-h-0 sm:block">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-500">
@@ -276,7 +286,7 @@
               <tr
                 v-for="biz in recentBusinesses"
                 :key="biz.id"
-                class="cursor-pointer transition hover:bg-slate-50"
+                class="cursor-pointer group relative transition hover:bg-slate-50"
                 @click="router.push(`/admin/businesses/${biz.id}`)"
               >
                 <td class="px-5 py-3 font-semibold text-slate-800">
@@ -293,6 +303,13 @@
                 </td>
                 <td class="px-5 py-3 text-xs text-slate-500">
                   {{ new Date(biz.createdAt).toLocaleDateString('uz-UZ') }}
+                </td>
+                <td>
+                  <div class="css-hover-tooltip opacity-0 invisible
+                     group-hover:opacity-100
+                     group-hover:visible">
+                    <span>Biznes holatini ko'rish</span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -432,3 +449,41 @@ onMounted(async () => {
   }
 })
 </script>
+<style scoped>
+.css-hover-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  margin-top: 8px;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  max-width: 280px;
+  width: max-content;
+  white-space: normal;
+  word-break: break-word;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  z-index: 30;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #1e293b transparent;
+  }
+}
+</style>

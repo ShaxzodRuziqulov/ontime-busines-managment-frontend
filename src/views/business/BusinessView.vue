@@ -106,7 +106,7 @@
               v-for="section in profileSections"
               :key="section.to"
               :to="section.to"
-              class="group rounded-xl border border-slate-100 p-4 hover:border-primary-200 hover:bg-primary-50/40 transition-colors"
+              class="group relative rounded-xl border border-slate-100 p-4 hover:border-primary-200 hover:bg-primary-50/40 transition-colors"
             >
               <div class="flex items-start justify-between gap-3">
                 <div class="flex items-start gap-3 min-w-0">
@@ -124,6 +124,11 @@
               <div class="mt-4 flex items-end gap-1">
                 <span class="text-2xl font-bold text-slate-900">{{ section.value }}</span>
                 <span class="text-xs text-slate-400 mb-1">{{ section.suffix }}</span>
+              </div>
+              <div class="css-hover-tooltip opacity-0 invisible
+                 group-hover:opacity-100
+                 group-hover:visible">
+                <span>{{section.label}} sahifasiga utish</span>
               </div>
             </RouterLink>
           </div>
@@ -502,3 +507,41 @@ onMounted(async () => {
   if (reviews.status === 'fulfilled') sectionCounts.value.reviews = reviews.value.data.length
 })
 </script>
+<style scoped>
+.css-hover-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  margin-top: 8px;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  max-width: 280px;
+  width: max-content;
+  white-space: normal;
+  word-break: break-word;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  z-index: 30;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #1e293b transparent;
+  }
+}
+</style>
