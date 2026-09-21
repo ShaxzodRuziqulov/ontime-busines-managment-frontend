@@ -208,7 +208,7 @@
         <!-- Pagination -->
         <div
             v-if="totalPages > 1"
-            class="flex justify-end items-center gap-6 border-t border-slate-100 px-4 py-4"
+            class="flex flex-col sm:flex-row sm:items-center justify-end items-center gap-4 border-t border-slate-100 px-4 py-4"
         >
           <span class="text-sm font-semibold text-slate-500">
             {{ page * PAGE_SIZE + 1 }}–{{ Math.min((page + 1) * PAGE_SIZE, totalElements) }} / {{ totalElements }}
