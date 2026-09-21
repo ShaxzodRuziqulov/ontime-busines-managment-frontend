@@ -3,7 +3,7 @@
       class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 pb-[env(safe-area-inset-bottom)]"
   >
     <div
-        class="grid h-20 items-center pb-6"
+        class="grid h-16 items-center pb-2"
         :style="{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }"
     >
       <RouterLink
@@ -52,7 +52,7 @@
     >
       <div
           v-if="moreOpen"
-          class="absolute bottom-20 z-20 inset-x-0 max-h-[70vh] overflow-y-auto bg-white border-t border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] rounded-t-2xl"
+          class="absolute bottom-16 z-20 inset-x-0 max-h-[70vh] overflow-y-auto bg-white border-t border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] rounded-t-2xl"
       >
         <RouterLink
             v-for="item in moreItems"

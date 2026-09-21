@@ -33,7 +33,7 @@
           :key="item.label"
           :to="item.to"
           :class="[
-              'rounded-2xl group relative border p-3 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-5',
+              'rounded-2xl group relative border p-3 transition hover:-translate-y-0.5 hover:shadow-sm hover:z-20 sm:p-5',
                item.tone
                ]"
         >
@@ -123,7 +123,7 @@
             v-for="card in statusCards"
             :key="card.status"
             :to="{ name: 'admin-businesses', query: { status: card.status } }"
-            class="rounded-xl group relative border border-slate-100 p-3 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-4"
+            class="rounded-xl group relative border border-slate-100 p-3 transition hover:-translate-y-0.5 hover:shadow-sm hover:z-20 sm:p-4"
             :class="card.color"
           >
             <div class="flex items-center mb-2 gap-2">
