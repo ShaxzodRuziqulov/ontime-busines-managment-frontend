@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-3xl mx-auto space-y-6">
+  <div class="max-w-3xl mx-auto space-y-6 lg:p-0 p-4">
     <div>
       <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-600">Yordam va qo‘llab-quvvatlash</h1>
       <p

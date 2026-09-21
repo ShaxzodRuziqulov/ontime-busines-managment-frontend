@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between flex-wrap gap-4 mb-6">
-      <div class="flex w-full items-center justify-between">
+      <div class="flex w-full items-center justify-between lg:p-0 p-4">
         <div class="flex flex-col">
           <h2 class="font-bold text-slate-800">Jadval</h2>
 <!--          <p class="text-slate-500 text-sm">{{ formatDate() }}</p>-->

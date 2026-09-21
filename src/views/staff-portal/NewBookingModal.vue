@@ -1,6 +1,6 @@
 <template>
   <AppModal title="Yangi bron" size="md" @close="emit('close')">
-    <div class="space-y-4 text-gray-600">
+    <div class="space-y-4 text-gray-600 lg:p-0 p-4">
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-1.5">Mijoz telefoni</label>
         <div class="flex gap-2">

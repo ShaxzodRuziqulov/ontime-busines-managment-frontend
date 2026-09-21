@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6 lg:p-0 p-4">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Dashboard</h2>
+        <h2 class="text-2xl font-bold text-slate-800">Bosh sahifa</h2>
         <p class="text-slate-500 text-sm mt-1">Biznesingizning umumiy ko'rinishi</p>
       </div>
       <div v-if="!loading" class="flex items-center gap-2">

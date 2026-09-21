@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="lg:p-0 p-4">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h2 class="text-2xl font-bold text-slate-800">Mijozlar</h2>

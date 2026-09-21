@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-5xl">
+  <div class="max-w-5xl lg:p-0 p-4">
     <div class="mb-5">
       <h2 class="text-xl font-bold text-slate-800">Mening profilim</h2>
     </div>

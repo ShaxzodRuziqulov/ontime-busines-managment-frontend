@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 lg:p-0 p-4">
     <!-- Header -->
     <div class="flex items-center gap-4 flex-wrap">
       <div class="w-14 h-14 rounded-2xl bg-primary-100 text-primary-700 flex items-center justify-center flex-shrink-0">

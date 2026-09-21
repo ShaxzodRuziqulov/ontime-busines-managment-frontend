@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="lg:p-0 p-4">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
@@ -132,6 +132,7 @@
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
+                <th class="px-5 py-3 text-left font-medium"></th>
                 <th class="px-5 py-3 text-left font-medium">Vaqt</th>
                 <th class="px-5 py-3 text-left font-medium">Admin</th>
                 <th class="px-5 py-3 text-left font-medium">Harakat</th>
@@ -141,10 +142,13 @@
             </thead>
             <tbody class="divide-y divide-slate-50">
               <tr
-                v-for="log in logs"
+                v-for="(log, index) in logs"
                 :key="log.id"
                 class="hover:bg-slate-50/50 transition-colors"
               >
+                <td class="px-5 py-3 text-left font-medium">
+                  {{ page * PAGE_SIZE + index + 1}}
+                </td>
                 <td class="px-5 py-3 text-slate-500 text-xs whitespace-nowrap">
                   {{ formatDate(log.createdAt) }}
                 </td>
@@ -204,9 +208,9 @@
         <!-- Pagination -->
         <div
             v-if="totalPages > 1"
-            class="flex flex-col gap-3 border-t border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+            class="flex justify-end items-center gap-6 border-t border-slate-100 px-4 py-4"
         >
-          <span class="text-xs text-slate-500">
+          <span class="text-sm font-semibold text-slate-500">
             {{ page * PAGE_SIZE + 1 }}–{{ Math.min((page + 1) * PAGE_SIZE, totalElements) }} / {{ totalElements }}
           </span>
           <div class="flex max-w-full gap-1 overflow-x-auto">
@@ -217,17 +221,33 @@
             >
               <ChevronLeft class="w-4 h-4" />
             </button>
-            <button
-              v-for="p in Math.min(totalPages, 7)"
-              :key="p - 1"
-              @click="page = p - 1"
-              :class="[
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                page === p - 1 ? 'bg-primary-600 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50',
-              ]"
+            <template
+                v-for="(item, index) in visiblePages"
+                :key="item === 'ellipsis' ? `ellipsis-${index}` : item"
             >
-              {{ p }}
-            </button>
+              <!-- Ellipsis -->
+              <span
+                  v-if="item === 'ellipsis'"
+                  class="px-2 text-slate-400 select-none"
+              >
+                ...
+              </span>
+
+              <!-- Page -->
+              <button
+                  v-else
+                  type="button"
+                  @click="page = item"
+                  :class="[
+                'min-w-9 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                page === item
+                  ? 'bg-primary-600 text-white'
+                  : 'border border-slate-200 text-slate-600 hover:bg-slate-100'
+                ]"
+              >
+                {{ item + 1 }}
+              </button>
+            </template>
             <button
               :disabled="page >= totalPages - 1"
               @click="page++"
@@ -254,7 +274,7 @@ const loading = ref(true)
 const totalPages = ref(0)
 const totalElements = ref(0)
 const page = ref(0)
-const PAGE_SIZE = 50
+const PAGE_SIZE = 20
 
 const filterEntityType = ref('')
 const filterAction = ref('')
@@ -308,6 +328,54 @@ function shortEntityId(id: string) {
 function entityDisplayName(log: AuditLog) {
   return log.entityName || shortEntityId(log.entityId)
 }
+
+const visiblePages = computed(() => {
+  const total = totalPages.value
+  const current = page.value
+
+  // 7 yoki undan kam bo'lsa, hammasini ko'rsatamiz
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i)
+  }
+
+  const pages: (number | 'ellipsis')[] = []
+
+  // Birinchi page
+  pages.push(0)
+
+  // Current page boshida bo'lsa
+  if (current <= 3) {
+    pages.push(1, 2, 3, 4, 5, 'ellipsis', total - 1)
+    return pages
+  }
+
+  // Current page oxirida bo'lsa
+  if (current >= total - 4) {
+    pages.push(
+        'ellipsis',
+        total - 6,
+        total - 5,
+        total - 4,
+        total - 3,
+        total - 2,
+        total - 1
+    )
+
+    return pages
+  }
+
+  // Current page o'rtada bo'lsa
+  pages.push(
+      'ellipsis',
+      current - 1,
+      current,
+      current + 1,
+      'ellipsis',
+      total - 1
+  )
+
+  return pages
+})
 
 async function load() {
   loading.value = true

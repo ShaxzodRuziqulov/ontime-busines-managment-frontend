@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6 lg:p-0 p-4">
       <div>
         <h2 class="text-2xl font-bold text-slate-800">Xizmatlar</h2>
         <p class="text-slate-500 text-sm mt-1">{{ services.length }} ta xizmat</p>
@@ -39,7 +39,7 @@
         </template>
       </EmptyState>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 lg:p-0 p-4 gap-4">
         <div
           v-for="service in services"
           :key="service.id"

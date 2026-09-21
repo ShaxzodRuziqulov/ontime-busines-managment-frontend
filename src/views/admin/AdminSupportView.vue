@@ -38,7 +38,12 @@
             v-for="t in tickets"
             :key="t.id"
             @click="open(t.id)"
-            class="w-full dark:hover:border-primary-500 rounded-2xl border border-slate-300 bg-white p-4 text-left transition-all duration-200 shadow-sm transition hover:border-primary-500 hover:dark:border-primary-500 hover:shadow-md"
+            class="w-full dark:hover:border-primary-500 rounded-2xl border border-slate-300 bg-white p-4 text-left transition-all duration-200 shadow-sm hover:border-primary-500 hover:shadow-md"
+            :class="
+              selectedItem === t.id
+                ? 'border-primary-500 bg-primary-100/50 shadow-md ring-1 ring-primary-200'
+                : ''
+            "
         >
           <span class="flex items-start justify-between gap-3">
             <strong
@@ -191,6 +196,7 @@ import { useToast } from '@/composables/useToast'
 
 const tickets = ref<SupportTicket[]>([]);
 const selected = ref<SupportTicket | null>(null);
+const selectedItem = ref<string | null>(null)
 const loading = ref(false);
 const filter = ref<SupportStatus | ''>('');
 const reply = ref('');
@@ -225,6 +231,7 @@ async function load() {
 async function open(id:string) {
   selected.value=(await supportApi.adminGet(id))
       .data; reply.value=''
+  selectedItem.value = id
 }
 
 function closeTicket() {

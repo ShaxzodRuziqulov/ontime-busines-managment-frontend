@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 lg:p-0 p-4">
     <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Admin Panel</h1>

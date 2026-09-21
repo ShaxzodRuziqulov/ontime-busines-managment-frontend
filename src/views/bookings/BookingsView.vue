@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between lg:p-0 p-4 gap-4 mb-6">
       <div>
         <h2 class="text-2xl font-bold text-slate-800">
           Navbatlar
@@ -21,7 +21,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-5">
+    <div class="flex flex-col sm:flex-row gap-3 lg:p-0 p-4 mb-5">
       <div class="relative flex-1">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
@@ -72,7 +72,7 @@
 
       <template v-else>
         <!-- Mobile: cards -->
-        <div class="sm:hidden space-y-3">
+        <div class="sm:hidden space-y-3 lg:p-0 p-4">
           <div
             v-for="booking in filtered"
             :key="booking.id"

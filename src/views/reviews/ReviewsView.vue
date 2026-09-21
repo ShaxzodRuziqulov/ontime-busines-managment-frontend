@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="lg:p-0 p-4">
     <div class="mb-4">
       <h2 class="text-lg font-bold text-slate-800">Sharhlar</h2>
       <p class="text-slate-500 text-sm font-semibold">Mijozlar fikrlari</p>
