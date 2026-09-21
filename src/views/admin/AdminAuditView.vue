@@ -132,7 +132,7 @@
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
-                <th class="px-5 py-3 text-left font-medium"></th>
+                <th class="px-5 py-3 text-left font-medium">№</th>
                 <th class="px-5 py-3 text-left font-medium">Vaqt</th>
                 <th class="px-5 py-3 text-left font-medium">Admin</th>
                 <th class="px-5 py-3 text-left font-medium">Harakat</th>
