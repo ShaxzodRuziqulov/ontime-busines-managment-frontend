@@ -117,7 +117,7 @@ const adminMore: NavItem[] = [
 
 /* ---------------------------------------------------------- Business */
 const businessMain: NavItem[] = [
-  { label: 'Dashboard', to: '/', icon: LayoutDashboard },
+  { label: 'Bosh sahifa', to: '/', icon: LayoutDashboard },
   { label: 'Navbatlar', to: '/bookings', icon: CalendarCheck },
   { label: 'Jadval', to: '/schedule', icon: CalendarDays },
   { label: 'Xizmatlar', to: '/services', icon: Briefcase },
