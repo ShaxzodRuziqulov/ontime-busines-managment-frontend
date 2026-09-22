@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Audit Log</h1>
+        <h1 class="text-2xl font-bold text-slate-800">Audit jurnali</h1>
         <p class="text-slate-500 text-sm mt-1">Barcha admin harakatlari tarixi</p>
       </div>
       <div class="flex gap-2">
@@ -146,7 +146,7 @@
                 :key="log.id"
                 class="hover:bg-slate-50/50 transition-colors"
               >
-                <td class="px-5 py-3 text-left font-medium">
+                <td class="px-5 py-3 text-left font-medium text-xs text-slate-500">
                   {{ page * PAGE_SIZE + index + 1}}
                 </td>
                 <td class="px-5 py-3 text-slate-500 text-xs whitespace-nowrap">
@@ -198,7 +198,37 @@
                     class="px-5 py-3 text-slate-500 text-xs max-w-xs truncate"
                     :title="log.details ?? ''"
                 >
-                  {{ log.details || '—' }}
+                  <template v-if="translateStatusDetails(log.details).type === 'status'">
+                    <span>
+                      {{translateStatusDetails(log.details).from}}
+                    </span>
+                    <span class="font-semibold text-xs text-slate-700">
+                      dan
+                    </span>
+                    <span class="mx-1 text-slate-400">
+                      →
+                    </span>
+                    <span>
+                      {{translateStatusDetails(log.details).to}}
+                    </span>
+                    <span class="font-semibold text-xs text-slate-700">
+                      ga
+                    </span>
+                  </template>
+                  <template v-else-if="translateStatusDetails(log.details).type === 'action'">
+                    <span>
+                      {{translateStatusDetails(log.details).action}}
+                    </span>
+                    <span class="text-gray-400">
+                      :
+                    </span>
+                    <span>
+                      {{translateStatusDetails(log.details).message}}
+                    </span>
+                  </template>
+                  <template v-else>
+                    {{translateStatusDetails(log.details).text}}
+                  </template>
                 </td>
               </tr>
             </tbody>
@@ -327,6 +357,44 @@ function shortEntityId(id: string) {
 
 function entityDisplayName(log: AuditLog) {
   return log.entityName || shortEntityId(log.entityId)
+}
+
+const allStatusName: Record<string, string> = {
+  EXPIRED: "Muddati tugagan",
+  DRAFT: "Qoralama",
+  PENDING_REVIEW: "Ko'rib chiqilmoqda",
+  SUSPENDED: "To'xtatilgan",
+  TRIAL: "Sinov muddati",
+  ACTIVE: "Faol",
+  REJECT: "Rad etish",
+  APPROVE: "Tasdiqlash",
+}
+
+const translateStatusDetails = (details: string) => {
+  if (details.includes('→')){
+    const [from, to] = details.split('→')
+
+    return {
+      type: 'status',
+      from: allStatusName[from?.trim()] || from?.trim(),
+      to: allStatusName[to?.trim()] || to?.trim(),
+    }
+  }
+
+  if (details.includes(':')) {
+    const [action, ...message] = details.split(':')
+
+    return {
+      type: 'action',
+      action: allStatusName[action.trim()] || action.trim(),
+      message: message.join(':').trim(),
+    }
+  }
+
+  return {
+    type: 'text',
+    text: details,
+  }
 }
 
 const visiblePages = computed(() => {
