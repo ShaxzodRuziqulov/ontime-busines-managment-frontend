@@ -177,18 +177,21 @@
           <table v-else class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
+                <th class="px-5 py-3 text-left font-medium">№</th>
                 <th class="px-5 py-3 text-left font-medium">Xizmat nomi</th>
+                <th class="px-5 py-3 text-left font-medium">Rasm</th>
                 <th class="px-5 py-3 text-left font-medium">Narx</th>
                 <th class="px-5 py-3 text-left font-medium">Davomiyligi</th>
                 <th class="px-5 py-3 text-left font-medium">Holat</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50">
+            <tbody class="divide-y divide-slate-100">
               <tr
-                  v-for="svc in services"
+                  v-for="(svc, index) in services"
                   :key="svc.id"
                   class="hover:bg-slate-50/50"
               >
+                <td class="px-5 py-3.5">{{index + 1}}</td>
                 <td class="px-5 py-3.5">
                   <p class="font-medium text-slate-800">{{ svc.name }}</p>
                   <p
@@ -197,6 +200,9 @@
                   >
                     {{ svc.description }}
                   </p>
+                </td>
+                <td class="px-5 py-3 text-left">
+                  <img v-if="svc.imageUrl" class="w-10 h-10 rounded-md" :src="getAvatarUrl(svc.imageUrl)" alt="">
                 </td>
                 <td class="px-5 py-3.5 text-slate-700 font-medium">
                   {{ svc.basePrice.toLocaleString('uz-UZ') }} so'm
@@ -230,26 +236,36 @@
           <table v-else class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
+                <th class="px-5 py-3 text-left font-medium">№</th>
                 <th class="px-5 py-3 text-left font-medium">Xodim</th>
+                <th class="px-5 py-3 text-left font-medium">Tajriba yili</th>
                 <th class="px-5 py-3 text-left font-medium">Holat</th>
                 <th class="px-5 py-3 text-left font-medium">Qo'shilgan</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50">
+            <tbody class="divide-y divide-slate-100">
               <tr
-                  v-for="s in staff"
+                  v-for="(s, index) in staff"
                   :key="s.id"
                   class="hover:bg-slate-50/50"
               >
                 <td class="px-5 py-3.5">
+                  {{index + 1}}
+                </td>
+                <td class="px-5 py-3.5">
                   <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Users class="w-3.5 h-3.5 text-slate-400" />
+                    <div class="flex gap-2 items-center justify-center flex-shrink-0">
+                      <img v-if="s.avatarUrl" :src="getAvatarUrl(s.avatarUrl)" class="rounded-full bg-slate-100 w-6 h-6" alt="">
+                      <Users v-else class="w-4 h-4 text-slate-400 bg-slate-100 rounded-full" />
                     </div>
                     <span class="font-medium text-slate-800">
                       {{ personName(s) }}
+                      <p v-if="s.avgRating" class="text-[12px] text-yellow-500">⭐{{s.avgRating}}</p>
                     </span>
                   </div>
+                </td>
+                <td class="px-5 py-3 text-left font-medium">
+                  {{s.experienceYears || '---'}}
                 </td>
                 <td class="px-5 py-3.5">
                   <span
@@ -327,37 +343,57 @@
           </div>
           <div
               v-else
-              class="divide-y divide-slate-50"
+              class="divide-y divide-slate-200"
           >
             <div
-                v-for="r in reviews"
+                v-for="(r, index) in reviews"
                 :key="r.id"
-                class="px-5 py-4"
+                class="px-4 py-2.5"
             >
-              <div class="flex items-center gap-2 mb-1">
-                <div class="flex gap-0.5">
-                  <Star
-                    v-for="i in 5" :key="i"
-                    class="w-3.5 h-3.5"
-                    :class="i <= r.stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'"
-                  />
-                </div>
-                <span class="text-xs text-slate-400">
+              <div class="flex items-center gap-4">
+                <p class="text-sm font-semibold">{{index + 1}}</p>
+                <div>
+                  <p
+                     class="flex text-slate-700 font-semibold items-center gap-2"
+                  >
+                    <span class="text-sm">Mijoz:</span>
+                    <Users class="w-3 h-3"/>
+                    <span v-if="r.customerFirstName">{{r.customerFirstName}} {{r.customerLastName}}</span>
+                    <span v-else class="text-xs text-slate-400">Mijoz topilmadi!</span>
+                  </p>
+                  <p class="flex text-slate-500 items-center gap-2 text-xs font-semibold">
+                    Xodim:
+                    <Users class="w-3 h-3"/>
+                    {{r.staffFirstName}}
+                  </p>
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="flex gap-0.5">
+                      <Star
+                          v-for="i in 5" :key="i"
+                          class="w-3.5 h-3.5"
+                          :class="i <= r.stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'"
+                      />
+                    </div>
+                    <span class="text-xs text-slate-400">
                   {{ new Date(r.createdAt).toLocaleDateString('uz-UZ') }}
                 </span>
+                  </div>
+                  <p
+                      v-if="r.comment"
+                      class="text-sm text-slate-700"
+                  >
+                <span class="text-sm text-slate-500">
+                  Izoh:
+                </span> {{ r.comment }}
+                  </p>
+                  <p
+                      v-else
+                      class="text-sm text-slate-400 italic"
+                  >
+                    Izoh yo'q
+                  </p>
+                </div>
               </div>
-              <p
-                  v-if="r.comment"
-                  class="text-sm text-slate-600"
-              >
-                {{ r.comment }}
-              </p>
-              <p
-                  v-else
-                  class="text-sm text-slate-400 italic"
-              >
-                Izoh yo'q
-              </p>
             </div>
           </div>
         </template>
@@ -587,6 +623,24 @@ const avgRating = computed(() => {
   if (!reviews.value.length) return null
   return (reviews.value.reduce((s, r) => s + r.stars, 0) / reviews.value.length).toFixed(1)
 })
+
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string)
+    .replace(/\/api\/v1\/?$/, '');
+
+const getAvatarUrl = (url: string | undefined): string => {
+  if (!url) return "";
+  if (url.startsWith("https")) return url;
+  return `${BASE_URL}${url}`;
+};
+
+function getInitials(name: string) {
+  return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+}
 
 const weekdayLabels: Record<string, string> = {
   MONDAY: 'Dushanba', TUESDAY: 'Seshanba', WEDNESDAY: 'Chorshanba',

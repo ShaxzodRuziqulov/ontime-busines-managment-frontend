@@ -186,6 +186,8 @@ export interface StaffMember {
   avatarUrl?: string
   createdAt: string
   updatedAt: string
+  avgRating?: number
+  experienceYears?: number
 }
 
 export interface StaffCreateRequest {
