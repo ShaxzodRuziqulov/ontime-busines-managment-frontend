@@ -312,3 +312,11 @@ html.dark .animate-pulse .bg-slate-200 {
 html.dark .bg-black\/50 {
   background-color: rgb(0 0 0 / 0.7) !important;
 }
+
+html.dark header.bg-slate-700 {
+  background-color: #1e293b !important;
+}
+
+html.dark header.bg-slate-700 .hover\:bg-slate-800:hover {
+  background-color: #334155 !important;
+}

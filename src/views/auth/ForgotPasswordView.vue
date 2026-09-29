@@ -94,25 +94,30 @@
           >
             <div>
               <label
-                  for="reset-code"
+                  for="reset-code-0"
                   class="block text-sm font-medium text-slate-700 mb-1.5"
               >
                 Kod
               </label>
-              <input
-                id="reset-code"
-                v-model="form.code"
-                type="text"
-                inputmode="numeric"
-                autocomplete="one-time-code"
-                maxlength="6"
-                pattern="[0-9]{6}"
-                placeholder="6 xonali kod"
-                required
-                :disabled="loading"
-                @input="normalizeCode"
-                class="w-full px-4 py-3 rounded-xl border text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white border-slate-200 focus:ring-primary-500"
-              />
+              <div class="flex justify-between gap-2">
+                <input
+                  v-for="(_, index) in codeDigits"
+                  :id="`reset-code-${index}`"
+                  :key="index"
+                  :ref="el => setCodeInput(el, index)"
+                  :value="codeDigits[index]"
+                  type="text"
+                  inputmode="numeric"
+                  :autocomplete="index === 0 ? 'one-time-code' : 'off'"
+                  :aria-label="`Kodning ${index + 1}-raqami`"
+                  :disabled="loading"
+                  class="w-12 h-14 sm:w-14 text-center text-2xl font-semibold rounded-xl border text-slate-800 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white border-slate-200 focus:ring-primary-500"
+                  @input="onCodeInput($event, index)"
+                  @keydown="onCodeKeydown($event, index)"
+                  @paste.prevent="onCodePaste($event, index)"
+                  @focus="($event.target as HTMLInputElement).select()"
+                />
+              </div>
             </div>
 
             <div>
@@ -219,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { nextTick, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole, MailCheck } from 'lucide-vue-next'
 import { authApi } from '@/api/auth'
@@ -237,6 +242,16 @@ const form = reactive({
   code: '',
   newPassword: '',
   confirmPassword: '',
+})
+
+const CODE_LENGTH = 6
+const codeDigits = ref<string[]>(Array(CODE_LENGTH).fill(''))
+const codeInputs: HTMLInputElement[] = []
+
+watch(step, async (value) => {
+  if (value !== 'confirm') return
+  await nextTick()
+  focusCodeInput(0)
 })
 
 async function sendCode() {
@@ -261,14 +276,87 @@ async function sendCode() {
   }
 }
 
-function normalizeCode() {
-  form.code = form.code.replace(/\D/g, '').slice(0, 6)
+function setCodeInput(el: unknown, index: number) {
+  if (el instanceof HTMLInputElement) codeInputs[index] = el
+}
+
+function focusCodeInput(index: number) {
+  codeInputs[Math.max(0, Math.min(CODE_LENGTH - 1, index))]?.focus()
+}
+
+function syncCode() {
+  form.code = codeDigits.value.join('')
+}
+
+function clearCode() {
+  codeDigits.value = Array(CODE_LENGTH).fill('')
+  syncCode()
+}
+
+// Bir nechta raqamni (paste yoki SMS/email autofill) index'dan boshlab joylaydi
+function fillCodeFrom(index: number, value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, CODE_LENGTH - index).split('')
+  digits.forEach((digit, i) => {
+    codeDigits.value[index + i] = digit
+  })
+  syncCode()
+  return digits.length
+}
+
+function onCodeInput(event: Event, index: number) {
+  const target = event.target as HTMLInputElement
+  const digits = target.value.replace(/\D/g, '')
+
+  if (!digits) {
+    codeDigits.value[index] = ''
+    target.value = ''
+    syncCode()
+    return
+  }
+
+  if (digits.length > 1) {
+    const filled = fillCodeFrom(index, digits)
+    target.value = codeDigits.value[index]
+    focusCodeInput(index + filled)
+    return
+  }
+
+  codeDigits.value[index] = digits
+  target.value = digits
+  syncCode()
+  if (index < CODE_LENGTH - 1) focusCodeInput(index + 1)
+}
+
+function onCodeKeydown(event: KeyboardEvent, index: number) {
+  if (event.key === 'Backspace') {
+    if (codeDigits.value[index]) {
+      codeDigits.value[index] = ''
+      syncCode()
+    } else if (index > 0) {
+      codeDigits.value[index - 1] = ''
+      syncCode()
+      focusCodeInput(index - 1)
+    }
+    event.preventDefault()
+  } else if (event.key === 'ArrowLeft') {
+    event.preventDefault()
+    focusCodeInput(index - 1)
+  } else if (event.key === 'ArrowRight') {
+    event.preventDefault()
+    focusCodeInput(index + 1)
+  }
+}
+
+function onCodePaste(event: ClipboardEvent, index: number) {
+  const text = event.clipboardData?.getData('text') ?? ''
+  const filled = fillCodeFrom(index, text)
+  if (filled) focusCodeInput(index + filled)
 }
 
 function changeLogin() {
   error.value = ''
   message.value = ''
-  form.code = ''
+  clearCode()
   form.newPassword = ''
   form.confirmPassword = ''
   showNewPassword.value = false
@@ -300,7 +388,7 @@ async function resetPassword() {
       code: form.code.trim(),
       newPassword: form.newPassword,
     })
-    form.code = ''
+    clearCode()
     form.newPassword = ''
     form.confirmPassword = ''
     await router.push({name: 'login', query: {reset: 'success'}})
