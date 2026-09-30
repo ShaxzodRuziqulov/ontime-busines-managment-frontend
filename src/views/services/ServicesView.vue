@@ -125,7 +125,7 @@
       :title="editingService ? 'Xizmatni tahrirlash' : 'Yangi xizmat'"
       @close="showModal = false"
     >
-      <form @submit.prevent="save" class="space-y-4">
+      <form @submit.prevent="save" class="space-y-4 p-2">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">Xizmat nomi *</label>
           <input

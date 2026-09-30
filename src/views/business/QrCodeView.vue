@@ -131,7 +131,7 @@ const sharingQr = ref(false)
 const clientAppUrl = (import.meta.env.VITE_CLIENT_APP_URL || 'https://salonqueue.netlify.app').replace(/\/$/, '')
 const publicBookingUrl = computed(() => {
   const id = businessStore.business?.id
-  return id ? `${clientAppUrl}/businesses/${id}` : clientAppUrl
+  return id ? `${clientAppUrl}/business/${id}` : clientAppUrl
 })
 const qrImageUrl = ref('')
 
