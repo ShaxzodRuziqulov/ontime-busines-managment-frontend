@@ -1,13 +1,7 @@
 import type { BusinessStatus } from '@/types'
+import { translatedRecord } from '@/i18n'
 
-export const businessStatusLabels: Record<BusinessStatus, string> = {
-  TRIAL: 'Sinov',
-  ACTIVE: 'Faol',
-  EXPIRED: "Muddati o'tgan",
-  SUSPENDED: "To'xtatilgan",
-  DRAFT: 'Qoralama',
-  PENDING_REVIEW: 'Tekshiruvda',
-}
+export const businessStatusLabels = translatedRecord<BusinessStatus>('status.business')
 
 const businessStatusColors: Record<BusinessStatus, string> = {
   ACTIVE: 'bg-emerald-100 text-emerald-700',

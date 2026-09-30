@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
+  <div class="relative min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
+    <div class="absolute right-4 top-4 z-10">
+      <LanguageSwitcher />
+    </div>
     <div class="w-full max-w-lg">
       <!-- Logo -->
       <AppLogo size="md" class="justify-center mb-8" />
@@ -9,8 +12,8 @@
         <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
           <CheckCircle2 class="w-8 h-8 text-emerald-600" />
         </div>
-        <h2 class="text-2xl font-bold text-slate-800 mb-2">Biznes yaratildi!</h2>
-        <p class="text-slate-500 text-sm">Panel ochilmoqda...</p>
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">{{ t('onboarding.created') }}</h2>
+        <p class="text-slate-500 text-sm">{{ t('onboarding.openingPanel') }}</p>
       </div>
 
       <!-- Re-login loading state -->
@@ -18,8 +21,8 @@
         <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-5">
           <Loader2 class="w-8 h-8 text-primary-600 animate-spin" />
         </div>
-        <h2 class="text-xl font-bold text-slate-800 mb-2">Hisob yangilanmoqda...</h2>
-        <p class="text-slate-500 text-sm">Biznes egasi huquqlari berilmoqda</p>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">{{ t('onboarding.updatingAccount') }}</h2>
+        <p class="text-slate-500 text-sm">{{ t('onboarding.grantingRights') }}</p>
       </div>
 
       <!-- Form -->
@@ -29,9 +32,9 @@
           <div class="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Building2 class="w-7 h-7 text-primary-600" />
           </div>
-          <h2 class="text-2xl font-bold text-slate-800">Biznesingizni yarating</h2>
+          <h2 class="text-2xl font-bold text-slate-800">{{ t('onboarding.title') }}</h2>
           <p class="text-slate-500 text-sm mt-1.5">
-            Ma'lumotlarni kiriting — 14 kun bepul sinov boshlanadi
+            {{ t('onboarding.subtitle') }}
           </p>
         </div>
 
@@ -41,12 +44,12 @@
             <div class="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
               <CheckCircle2 class="w-3 h-3 text-white" />
             </div>
-            Ro'yxatdan o'tish
+            {{ t('onboarding.stepRegister') }}
           </div>
           <div class="flex-1 h-px bg-primary-200 mx-1" />
           <div class="flex items-center gap-1.5 text-xs text-primary-600 font-medium">
             <div class="w-5 h-5 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-bold">2</div>
-            Biznes ma'lumotlari
+            {{ t('onboarding.stepBusiness') }}
           </div>
         </div>
 
@@ -54,12 +57,11 @@
         <div class="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5 text-sm">
           <Info class="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
           <div class="text-blue-700">
-            <p>Bu forma faqat <strong>o'zingiz biznes ochmoqchi</strong> bo'lsangiz kerak.</p>
+            <p v-html="t('onboarding.noteOwnerHtml')" />
             <p class="mt-1">
-              Agar sizni kimdir <strong>xodim</strong> sifatida taklif qilgan bo'lsa — hech narsa qilish shart emas.
-              Biznes egasi loginingizni bog'lashini kuting, so'ng
+              <span v-html="t('onboarding.noteStaffHtml')" />
               <button type="button" class="underline font-medium hover:text-blue-800" @click="logoutAndWait">
-                tizimdan chiqib qayta kiring
+                {{ t('onboarding.relogin') }}
               </button>.
             </p>
           </div>
@@ -78,14 +80,14 @@
           <!-- Business name -->
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Biznes nomi *
+              {{ t('onboarding.name') }} *
             </label>
             <div class="relative">
               <Building2 class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 v-model="form.name"
                 type="text"
-                placeholder="Masalan: Baraka Servis"
+                :placeholder="t('onboarding.namePlaceholder')"
                 autofocus
                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white"
               />
@@ -95,7 +97,7 @@
           <!-- Business category -->
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Xizmat turi *
+              {{ t('onboarding.category') }} *
             </label>
             <div class="relative">
               <Tag class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -113,14 +115,14 @@
           <!-- Description -->
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Tavsif
-              <span class="text-slate-400 font-normal">(ixtiyoriy)</span>
+              {{ t('onboarding.description') }}
+              <span class="text-slate-400 font-normal">{{ t('onboarding.optional') }}</span>
             </label>
             <div class="relative">
               <FileText class="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
               <textarea
                 v-model="form.description"
-                placeholder="Biznesingiz haqida qisqacha..."
+                :placeholder="t('onboarding.descriptionPlaceholder')"
                 rows="2"
                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white resize-none text-sm"
               />
@@ -131,8 +133,8 @@
             <!-- Phone -->
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
-                Telefon
-                <span class="text-slate-400 font-normal">(ixtiyoriy)</span>
+                {{ t('onboarding.phone') }}
+                <span class="text-slate-400 font-normal">{{ t('onboarding.optional') }}</span>
               </label>
               <div class="relative">
                 <Phone class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -148,15 +150,15 @@
             <!-- Address -->
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
-                Manzil
-                <span class="text-slate-400 font-normal">(ixtiyoriy)</span>
+                {{ t('onboarding.address') }}
+                <span class="text-slate-400 font-normal">{{ t('onboarding.optional') }}</span>
               </label>
               <div class="relative">
                 <MapPin class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   v-model="form.address"
                   type="text"
-                  placeholder="Chilonzor tumani"
+                  :placeholder="t('onboarding.addressPlaceholder')"
                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white text-sm"
                 />
               </div>
@@ -166,15 +168,15 @@
           <!-- City -->
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Shahar
-              <span class="text-slate-400 font-normal">(ixtiyoriy)</span>
+              {{ t('onboarding.city') }}
+              <span class="text-slate-400 font-normal">{{ t('onboarding.optional') }}</span>
             </label>
             <div class="relative">
               <MapPin class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 v-model="form.city"
                 type="text"
-                placeholder="Toshkent"
+                :placeholder="t('onboarding.cityPlaceholder')"
                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-slate-50 focus:bg-white text-sm"
               />
             </div>
@@ -182,8 +184,8 @@
 
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Xaritadagi joylashuv
-              <span class="text-slate-400 font-normal">(ixtiyoriy)</span>
+              {{ t('onboarding.mapLocation') }}
+              <span class="text-slate-400 font-normal">{{ t('onboarding.optional') }}</span>
             </label>
             <MapPicker
               v-model="mapPoint"
@@ -196,9 +198,7 @@
           <!-- Trial info -->
           <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
             <Clock class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-            <p class="text-xs text-amber-700">
-              Biznes yaratilgandan so'ng <strong>14 kunlik bepul sinov</strong> davri boshlanadi. Karta ma'lumotlari talab qilinmaydi.
-            </p>
+            <p class="text-xs text-amber-700" v-html="t('onboarding.trialInfoHtml')" />
           </div>
 
           <!-- Submit -->
@@ -208,12 +208,12 @@
             class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 mt-2"
           >
             <Loader2 v-if="loading" class="w-5 h-5 animate-spin" />
-            {{ loading ? 'Yaratilmoqda...' : 'Biznes yaratish' }}
+            {{ loading ? t('onboarding.creating') : t('onboarding.create') }}
           </button>
         </form>
 
         <p class="mt-5 text-center text-xs text-slate-400">
-          Keyinroq to'ldirish mumkin — biznes yaratilgandan keyin sozlamalar sahifasida tahrirlash imkoni bor
+          {{ t('onboarding.laterHint') }}
         </p>
       </div>
     </div>
@@ -228,9 +228,12 @@ import { businessesApi } from '@/api/businesses'
 import { useAuthStore } from '@/stores/auth'
 import MapPicker from '@/components/common/MapPicker.vue'
 import AppLogo from '@/components/common/AppLogo.vue'
+import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
+import { useI18n } from 'vue-i18n'
 import type { BusinessCategory } from '@/types'
 
 const router = useRouter()
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const form = reactive({
@@ -261,18 +264,8 @@ function applyMapAddress(address: { addressLine: string; city: string }) {
   if (address.city) form.city = address.city
 }
 
-const categoryOptions: { value: BusinessCategory; label: string }[] = [
-  { value: 'BARBER', label: 'Sartaroshlik' },
-  { value: 'BEAUTY', label: "Go'zallik" },
-  { value: 'MEDICAL', label: 'Tibbiyot' },
-  { value: 'REPAIR', label: "Ta'mirlash" },
-  { value: 'CONSULTING', label: 'Konsultatsiya' },
-  { value: 'EDUCATION', label: "Ta'lim" },
-  { value: 'FITNESS', label: 'Sport' },
-  { value: 'AUTO', label: 'Avto xizmat' },
-  { value: 'LEGAL', label: 'Yuridik xizmat' },
-  { value: 'OTHER', label: 'Boshqa' },
-]
+const CATEGORIES: BusinessCategory[] = ['BARBER', 'BEAUTY', 'MEDICAL', 'REPAIR', 'CONSULTING', 'EDUCATION', 'FITNESS', 'AUTO', 'LEGAL', 'OTHER']
+const categoryOptions = computed(() => CATEGORIES.map((value) => ({ value, label: t(`category.${value}`) })))
 
 const loading = ref(false)
 const error = ref('')
@@ -285,7 +278,7 @@ function logoutAndWait() {
 
 async function handleCreate() {
   if (!form.name.trim()) {
-    error.value = 'Biznes nomi kiritilishi shart'
+    error.value = t('onboarding.nameRequired')
     return
   }
 
@@ -321,7 +314,7 @@ async function handleCreate() {
       }, 2000)
     }
   } catch (e: any) {
-    error.value = e.response?.data?.message || 'Biznes yaratishda xatolik yuz berdi'
+    error.value = e.response?.data?.message || t('onboarding.createError')
     step.value = 'form'
   } finally {
     loading.value = false

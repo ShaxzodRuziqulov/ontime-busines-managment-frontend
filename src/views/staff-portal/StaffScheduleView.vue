@@ -6,7 +6,7 @@
         <CalendarDays class="w-5 h-5" />
       </div>
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Jadval</h2>
+        <h2 class="text-2xl font-bold text-slate-800">{{ t('schedule.title') }}</h2>
         <p class="text-slate-500 text-sm flex items-center gap-1.5">
           <User class="w-3.5 h-3.5" />
           {{ personName(profile, '...') }}
@@ -18,7 +18,7 @@
         @click="showNewBooking = true"
       >
         <Plus class="w-4 h-4" />
-        <span class="hidden sm:inline">Yangi bron</span>
+        <span class="hidden sm:inline">{{ t('booking.newBooking') }}</span>
       </button>
     </div>
     <div class="flex flex-col-reverse sm:flex-col-reverse md:flex-col-reverse lg:flex-row sm:items-center justify-between flex-wrap lg:flex-nowrap gap-4 mb-6">
@@ -27,37 +27,37 @@
       >
         <div class="flex text-slate-800  bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
-          Mijoz
+          {{ t('schedule.legendCustomer') }}
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-          <span class="text-slate-400">Bekor:</span> <span class="text-slate-700">Mijoz</span>
+          <span class="text-slate-400">{{ t('schedule.legendCancelled') }}</span> <span class="text-slate-700">{{ t('schedule.legendCustomer') }}</span>
         </div>
         <div class="flex bg-white border border-gray-200 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-red-400 rounded-full"></span>
-          <span class="text-slate-400">Bekor:</span><span class="text-slate-700">Xodim</span>
+          <span class="text-slate-400">{{ t('schedule.legendCancelled') }}</span><span class="text-slate-700">{{ t('schedule.legendStaff') }}</span>
         </div>
         <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
-          Kelmadi
+          {{ t('schedule.legendNoShow') }}
         </div>
         <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-          Tasdiqlandi
+          {{ t('schedule.legendConfirmed') }}
         </div>
         <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
-          Jarayonda
+          {{ t('schedule.legendInProgress') }}
         </div>
         <div class="flex bg-white border border-gray-200 text-slate-700 px-2 py-1 rounded-lg items-center gap-1">
           <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-          Bajarildi
+          {{ t('schedule.legendCompleted') }}
         </div>
         <div class="flex text-slate-400 text-sm font-medium ml-2 gap-1">
-          Jami:
+          {{ t('schedule.total') }}
           <span class="text-slate-700 border-b border-gray-400 inline-block"
           >
-            {{ bookings.length }} ta navbat
+            {{ t('schedule.bookingsCount', { n: bookings.length }) }}
         </span>
         </div>
       </div>
@@ -76,9 +76,9 @@
               class="text-xs text-white px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 hover:underline"
               @click="selectedDate = todayIso()"
           >
-            Bugunga qaytish
+            {{ t('schedule.backToToday') }}
           </button>
-          <span v-else class="text-xs text-slate-400">Bugun</span>
+          <span v-else class="text-xs text-slate-400">{{ t('common.today') }}</span>
         </div>
 
         <button
@@ -91,16 +91,16 @@
     </div>
 
     <div v-if="loading" class="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-      <div class="animate-pulse text-slate-300">Yuklanmoqda...</div>
+      <div class="animate-pulse text-slate-300">{{ t('common.loading') }}</div>
     </div>
 
     <div v-else-if="dayClosed" class="bg-white rounded-2xl border border-slate-100 p-10 text-center">
       <CalendarX class="w-10 h-10 text-slate-200 mx-auto mb-3" />
-      <p class="text-slate-500 text-sm">Bu kun biznes ishlamaydi</p>
+      <p class="text-slate-500 text-sm">{{ t('booking.dayClosed') }}</p>
     </div>
     <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm px-4">
       <div v-if="dayBookings.length === 0" class="text-center py-6 text-sm text-slate-400">
-        Bu kun uchun bron yo'q
+        {{ t('schedule.noBookingsDay') }}
       </div>
       <div v-else class="relative" :style="{ height: gridHeight + 'px' }">
         <div
@@ -173,25 +173,25 @@
           </div>
           <div class="px-5 py-4 space-y-2 text-sm">
             <p class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1">
-              <span>Xodim:</span>
+              <span>{{ t('schedule.staffLabel') }}</span>
               {{ bookingStaffName(selectedBooking) }}
             </p>
             <p
                 class="text-slate-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
             >
-              Telefon
+              {{ t('schedule.phone') }}
               <span>{{ selectedBooking.customerPhone }}</span>
             </p>
             <p
                 class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1 text-slate-700"
             >
-              Xizmat
+              {{ t('schedule.service') }}
               <span>{{ selectedBooking.offeredServiceName || '—' }}</span>
             </p>
             <p
                 class="text-gray-600 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
             >
-              <span>Vaqt</span>
+              <span>{{ t('schedule.time') }}</span>
               <span>
                 {{ formatTime(selectedBooking.startAt) }} — {{ formatTime(selectedBooking.endAt) }}
               </span>
@@ -199,7 +199,7 @@
             <p
                 class="flex text-gray-600 items-center justify-between border-b border-dashed border-slate-300 pb-1"
             >
-              <span>Holat</span>
+              <span>{{ t('schedule.status') }}</span>
               <span
                   :class="['inline-block text-xs font-medium px-2.5 py-1 rounded-full',
                   bookingStatusBadgeColors[selectedBooking?.status]]"
@@ -210,7 +210,7 @@
             <p
                 class="flex text-gray-600 items-center justify-between border-b border-dashed border-slate-300 pb-1"
             >
-              <span>Izoh:</span>
+              <span>{{ t('schedule.noteLabel') }}</span>
               {{selectedBooking.customerNote}}
             </p>
           </div>
@@ -256,8 +256,11 @@ import { bookingCustomerName, bookingStaffName, personName } from '@/utils/names
 import NewBookingModal from './NewBookingModal.vue'
 import type {StaffMember, Booking, BusinessHours, BookingStatus} from '@/types'
 import { bookingsApi } from "@/api/bookings.ts";
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 
 const toast = useToast()
+const { t } = useI18n()
 
 const profile = ref<StaffMember | null>(null)
 const bookings = ref<Booking[]>([])
@@ -389,7 +392,7 @@ const createdDate = (dateString: string) => {
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })
 }
 
 function blockStyle(booking: Booking) {
@@ -433,7 +436,7 @@ const dateLabel = () => {
 };
 
 function timeLabel(iso: string) {
-  return new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })
 }
 
 async function reloadBookings() {
@@ -452,10 +455,10 @@ async function changeStatus(status: BookingStatus) {
   try {
     await bookingsApi.update(booking.id, { status })
     booking.status = status
-    toast.success('Holat yangilandi')
+    toast.success(t('common.statusUpdated'))
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Holatni yangilashda xatolik')
+    toast.error(msg || t('common.statusUpdateError'))
   } finally {
     updatingId.value = null
   }
@@ -472,7 +475,7 @@ onMounted(async () => {
     bookings.value = bookingsRes.data
     hours.value = hoursRes.data
   } catch {
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
+    toast.error(t('common.loadError'))
   } finally {
     loading.value = false
   }

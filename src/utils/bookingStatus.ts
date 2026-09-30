@@ -1,14 +1,7 @@
 import type { BookingStatus } from '@/types'
+import { t, translatedRecord } from '@/i18n'
 
-export const bookingStatusLabels: Record<BookingStatus, string> = {
-  PENDING: 'Kutilmoqda',
-  CONFIRMED: 'Tasdiqlangan',
-  IN_PROGRESS: 'Jarayonda',
-  COMPLETED: 'Bajarildi',
-  CANCELLED_BY_CUSTOMER: 'Bekor (mijoz)',
-  CANCELLED_BY_BUSINESS: 'Bekor (xodim)',
-  NO_SHOW: 'Kelmadi',
-}
+export const bookingStatusLabels = translatedRecord<BookingStatus>('status.booking')
 
 /** Badge (matn ustida) ranglari — bg-.../text-... */
 export const bookingStatusBadgeColors: Record<BookingStatus, string> = {
@@ -36,18 +29,18 @@ export const bookingStatusBlockColors: Record<BookingStatus, string> = {
  * Backenddagi BookingService.ALLOWED_TRANSITIONS bilan mos — xodim/biznes egasi
  * bosishi mumkin bo'lgan keyingi amallar.
  */
-export const nextBookingActions: Record<string, { status: BookingStatus; label: string; cls: string }[]> = {
+export const nextBookingActions: Record<string, { status: BookingStatus; readonly label: string; cls: string }[]> = {
   PENDING: [
-    { status: 'CONFIRMED', label: 'Tasdiqlash', cls: 'bg-blue-600 hover:bg-blue-700 text-white' },
-    { status: 'CANCELLED_BY_BUSINESS', label: 'Bekor qilish', cls: 'bg-red-50 hover:bg-red-100 text-red-600' },
+    { status: 'CONFIRMED', get label() { return t('status.action.confirm') }, cls: 'bg-blue-600 hover:bg-blue-700 text-white' },
+    { status: 'CANCELLED_BY_BUSINESS', get label() { return t('status.action.cancel') }, cls: 'bg-red-50 hover:bg-red-100 text-red-600' },
   ],
   CONFIRMED: [
-    { status: 'IN_PROGRESS', label: 'Boshlash', cls: 'bg-indigo-600 hover:bg-indigo-700 text-white' },
-    { status: 'NO_SHOW', label: 'Kelmadi', cls: 'bg-slate-100 hover:bg-slate-200 text-slate-600' },
-    { status: 'CANCELLED_BY_BUSINESS', label: 'Bekor qilish', cls: 'bg-red-50 hover:bg-red-100 text-red-600' },
+    { status: 'IN_PROGRESS', get label() { return t('status.action.start') }, cls: 'bg-indigo-600 hover:bg-indigo-700 text-white' },
+    { status: 'NO_SHOW', get label() { return t('status.action.noShow') }, cls: 'bg-slate-100 hover:bg-slate-200 text-slate-600' },
+    { status: 'CANCELLED_BY_BUSINESS', get label() { return t('status.action.cancel') }, cls: 'bg-red-50 hover:bg-red-100 text-red-600' },
   ],
   IN_PROGRESS: [
-    { status: 'COMPLETED', label: 'Yakunlash', cls: 'bg-emerald-600 hover:bg-emerald-700 text-white' },
-    { status: 'NO_SHOW', label: 'Kelmadi', cls: 'bg-slate-100 hover:bg-slate-200 text-slate-600' },
+    { status: 'COMPLETED', get label() { return t('status.action.complete') }, cls: 'bg-emerald-600 hover:bg-emerald-700 text-white' },
+    { status: 'NO_SHOW', get label() { return t('status.action.noShow') }, cls: 'bg-slate-100 hover:bg-slate-200 text-slate-600' },
   ],
 }

@@ -11,7 +11,7 @@
           :disabled="resolving"
           @click="geocodeAddress"
         >
-          Manzil bo'yicha topish
+          {{ t('map.findByAddress') }}
         </button>
         <button
           v-if="modelValue"
@@ -19,7 +19,7 @@
           class="rounded-lg border border-slate-200 px-3 py-1.5 font-semibold text-slate-600 transition hover:bg-slate-50"
           @click="clear"
         >
-          Tozalash
+          {{ t('common.clear') }}
         </button>
       </div>
     </div>
@@ -30,6 +30,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { useI18n } from 'vue-i18n'
 
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -70,6 +71,7 @@ const emit = defineEmits<{
   'address-selected': [value: MapAddress]
 }>()
 
+const { t } = useI18n()
 const mapEl = ref<HTMLDivElement | null>(null)
 const resolving = ref(false)
 const geocodeMessage = ref('')
@@ -93,7 +95,7 @@ const statusText = computed(() => {
   if (geocodeMessage.value) return geocodeMessage.value
   return props.modelValue
     ? `${props.modelValue.lat.toFixed(6)}, ${props.modelValue.lng.toFixed(6)}`
-    : 'Lokatsiya belgilanmagan'
+    : t('map.notSet')
 })
 
 function setMarker(point: MapPoint | null) {
@@ -138,7 +140,7 @@ function pickAddressLine(address: Record<string, string | undefined>, displayNam
 
 async function reverseGeocode(point: MapPoint) {
   resolving.value = true
-  geocodeMessage.value = 'Manzil aniqlanmoqda...'
+  geocodeMessage.value = t('map.resolving')
   try {
     const params = new URLSearchParams({
       format: 'jsonv2',
@@ -155,9 +157,9 @@ async function reverseGeocode(point: MapPoint) {
     const city = pickCity(address)
     skipNextAddressSearch = true
     emit('address-selected', { addressLine, city })
-    geocodeMessage.value = 'Manzil xaritadan olindi'
+    geocodeMessage.value = t('map.resolved')
   } catch {
-    geocodeMessage.value = 'Manzilni aniqlab bo\'lmadi'
+    geocodeMessage.value = t('map.resolveFailed')
   } finally {
     resolving.value = false
   }
@@ -166,7 +168,7 @@ async function reverseGeocode(point: MapPoint) {
 async function geocodeAddress() {
   if (!addressQuery.value || props.disabled) return
   resolving.value = true
-  geocodeMessage.value = 'Manzil xaritada qidirilmoqda...'
+  geocodeMessage.value = t('map.searching')
   try {
     const params = new URLSearchParams({
       format: 'jsonv2',
@@ -179,14 +181,14 @@ async function geocodeAddress() {
     if (!response.ok) throw new Error('Geocoding failed')
     const [result] = await response.json()
     if (!result) {
-      geocodeMessage.value = 'Manzil topilmadi'
+      geocodeMessage.value = t('map.notFound')
       return
     }
     const point = { lat: Number(result.lat), lng: Number(result.lon) }
     emit('update:modelValue', point)
-    geocodeMessage.value = 'Manzil xaritada belgilandi'
+    geocodeMessage.value = t('map.found')
   } catch {
-    geocodeMessage.value = 'Manzilni xaritada topib bo\'lmadi'
+    geocodeMessage.value = t('map.searchFailed')
   } finally {
     resolving.value = false
   }

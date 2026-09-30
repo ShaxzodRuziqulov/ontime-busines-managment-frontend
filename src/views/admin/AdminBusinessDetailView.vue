@@ -6,7 +6,7 @@
       class="flex items-center gap-2 text-slate-500 hover:text-slate-700 text-sm mb-6 transition-colors"
     >
       <ArrowLeft class="w-4 h-4" />
-      Bizneslar ro'yxatiga qaytish
+      {{ t('bizDetail.back') }}
     </button>
 
     <!-- Loading -->
@@ -91,7 +91,7 @@
                   class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
                 >
                   <ThumbsUp class="w-4 h-4" />
-                  Tasdiqlash
+                  {{ t('bizDetail.approve') }}
                 </button>
                 <button
                   @click="reviewForm = { action: 'REJECT', note: '', subscriptionEndDate: '' };
@@ -99,7 +99,7 @@
                   class="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
                 >
                   <ThumbsDown class="w-4 h-4" />
-                  Rad etish
+                  {{ t('bizDetail.reject') }}
                 </button>
               </template>
               <button
@@ -107,19 +107,19 @@
                 class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-medium transition-colors"
               >
                 <Settings class="w-4 h-4" />
-                Holat o'zgartirish
+                {{ t('bizDetail.changeStatus') }}
               </button>
               <div
                   v-if="business.trialEndDate"
                   class="text-xs text-slate-400 text-right"
               >
-                Trial: {{ new Date(business.trialEndDate).toLocaleDateString('uz-UZ') }}
+                {{ t('bizDetail.trialUntil', { date: new Date(business.trialEndDate).toLocaleDateString(dateLocale()) }) }}
               </div>
               <div
                   v-if="business.subscriptionEndDate"
                   class="text-xs text-slate-400 text-right"
               >
-                Obuna: {{ new Date(business.subscriptionEndDate).toLocaleDateString('uz-UZ') }}
+                {{ t('bizDetail.subscriptionUntil', { date: new Date(business.subscriptionEndDate).toLocaleDateString(dateLocale()) }) }}
               </div>
             </div>
           </div>
@@ -178,9 +178,9 @@
         <span class="font-medium">
           {{ business.reviewedBy }}
         </span>
-        tomonidan ko'rib chiqildi
+        {{ t('bizDetail.reviewedBy') }}
         <span v-if="business.reviewedAt">
-          — {{ new Date(business.reviewedAt).toLocaleDateString('uz-UZ') }}
+          — {{ new Date(business.reviewedAt).toLocaleDateString(dateLocale()) }}
         </span>
         <p
             v-if="business.reviewNote"
@@ -194,7 +194,7 @@
     <!-- Review Modal -->
     <AppModal
       v-if="reviewModal && business"
-      :title="reviewForm.action === 'APPROVE' ? 'Biznesni tasdiqlash' : 'Biznesni rad etish'"
+      :title="reviewForm.action === 'APPROVE' ? t('bizDetail.approveTitle') : t('bizDetail.rejectTitle')"
       @close="reviewModal = false"
     >
       <form
@@ -207,31 +207,31 @@
         >
           <ThumbsUp class="w-4 h-4 text-emerald-600 flex-shrink-0" />
           <p class="text-sm text-emerald-700">
-            Biznes ACTIVE holatga o'tadi va egasiga kirish ochiladi.
+            {{ t('bizDetail.approveInfo') }}
           </p>
         </div>
         <div v-else class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           <ThumbsDown class="w-4 h-4 text-red-600 flex-shrink-0" />
           <p class="text-sm text-red-700">
-            Biznes DRAFT holatga qaytadi. Sabab ko'rsatish majburiy.
+            {{ t('bizDetail.rejectInfo') }}
           </p>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">
-            {{ reviewForm.action === 'REJECT' ? 'Rad etish sababi *' : "Izoh (ixtiyoriy)" }}
+            {{ reviewForm.action === 'REJECT' ? t('bizDetail.rejectReason') : t('bizDetail.noteOptional') }}
           </label>
           <textarea
             v-model="reviewForm.note"
             rows="3"
-            :placeholder="reviewForm.action === 'REJECT' ? 'Nima sababdan rad etilmoqda...' : 'Tasdiqlash izohi...'"
+            :placeholder="reviewForm.action === 'REJECT' ? t('bizDetail.rejectPlaceholder') : t('bizDetail.approvePlaceholder')"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
           />
         </div>
 
         <div v-if="reviewForm.action === 'APPROVE'">
           <label class="block text-sm font-medium text-slate-700 mb-1.5">
-            Obuna tugash sanasi (ixtiyoriy)
+            {{ t('bizDetail.subEndOptional') }}
           </label>
           <input
             v-model="reviewForm.subscriptionEndDate"
@@ -246,7 +246,7 @@
               class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50"
               @click="reviewModal = false"
           >
-            Bekor
+            {{ t('common.cancel') }}
           </button>
           <button
             type="submit"
@@ -256,7 +256,7 @@
               reviewForm.action === 'APPROVE' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700',
             ]"
           >
-            {{ saving ? 'Saqlanmoqda...' : (reviewForm.action === 'APPROVE' ? 'Tasdiqlash' : 'Rad etish') }}
+            {{ saving ? t('common.saving') : (reviewForm.action === 'APPROVE' ? t('bizDetail.approve') : t('bizDetail.reject')) }}
           </button>
         </div>
       </form>
@@ -265,7 +265,7 @@
     <!-- Status Modal -->
     <AppModal
         v-if="statusModal && business"
-        :title="`Holat: ${business.name}`"
+        :title="t('bizDetail.statusTitle', { name: business.name })"
         @close="statusModal = false"
     >
       <form
@@ -274,7 +274,7 @@
       >
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-2">
-            Yangi holat
+            {{ t('bizDetail.newStatus') }}
           </label>
           <div class="grid grid-cols-2 gap-2">
             <button
@@ -297,7 +297,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">
-            Obuna tugash sanasi
+            {{ t('bizDetail.subEnd') }}
           </label>
           <input
               v-model="statusForm.subscriptionEndDate"
@@ -305,7 +305,7 @@
               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <p class="text-xs text-slate-400 mt-1">
-            Bo'sh qoldiring — obuna sanasi tozalanadi
+            {{ t('bizDetail.subEndHint') }}
           </p>
         </div>
         <div class="flex gap-3 pt-2">
@@ -314,14 +314,14 @@
               class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50"
               @click="statusModal = false"
           >
-            Bekor
+            {{ t('common.cancel') }}
           </button>
           <button
               type="submit"
               :disabled="saving"
               class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60"
           >
-            {{ saving ? 'Saqlanmoqda...' : 'Yangilash' }}
+            {{ saving ? t('common.saving') : t('bizDetail.update') }}
           </button>
         </div>
       </form>
@@ -348,10 +348,13 @@ import BusinessTabContent from '@/components/admin/BusinessTabContent.vue'
 import { useToast } from '@/composables/useToast'
 import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import type { Business, BusinessCategory, BusinessStatus, BusinessStatusUpdateRequest, OfferedService, StaffMember, BusinessHours, Review } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const { t } = useI18n()
 const adminStore = useAdminStore()
 
 const id = route.params.id as string
@@ -371,18 +374,6 @@ const reviewModal = ref(false)
 const reviewForm = ref<BusinessReviewRequest>({ action: 'APPROVE', note: '', subscriptionEndDate: '' })
 
 const allStatuses: BusinessStatus[] = ['TRIAL', 'ACTIVE', 'EXPIRED', 'SUSPENDED', 'DRAFT', 'PENDING_REVIEW']
-const categoryOptions: { value: BusinessCategory; label: string }[] = [
-  { value: 'BARBER', label: 'Sartarosh' },
-  { value: 'BEAUTY', label: "Go'zallik" },
-  { value: 'MEDICAL', label: 'Tibbiyot' },
-  { value: 'REPAIR', label: "Ta'mirlash" },
-  { value: 'CONSULTING', label: 'Konsultatsiya' },
-  { value: 'EDUCATION', label: "Ta'lim" },
-  { value: 'FITNESS', label: 'Sport' },
-  { value: 'AUTO', label: 'Avto xizmat' },
-  { value: 'LEGAL', label: 'Yuridik xizmat' },
-  { value: 'OTHER', label: 'Boshqa' },
-]
 const statusLabels = businessStatusLabels
 
 const statusForm = ref<BusinessStatusUpdateRequest>({ status: 'ACTIVE', subscriptionEndDate: '' })
@@ -393,10 +384,10 @@ const avgRating = computed(() => {
 })
 
 const tabs = computed(() => [
-  { key: 'services', label: 'Xizmatlar', count: services.value.length, icon: Briefcase },
-  { key: 'staff', label: 'Xodimlar', count: staff.value.length, icon: Users },
-  { key: 'hours', label: 'Ish kunlari', count: hours.value.length, icon: Clock },
-  { key: 'reviews', label: 'Sharhlar', count: reviews.value.length, icon: Star },
+  { key: 'services', label: t('bizDetail.tabServices'), count: services.value.length, icon: Briefcase },
+  { key: 'staff', label: t('bizDetail.tabStaff'), count: staff.value.length, icon: Users },
+  { key: 'hours', label: t('bizDetail.tabHours'), count: hours.value.length, icon: Clock },
+  { key: 'reviews', label: t('bizDetail.tabReviews'), count: reviews.value.length, icon: Star },
 ])
 
 const statusColor = businessStatusColor
@@ -408,7 +399,7 @@ function statusIcon(status: BusinessStatus) {
 }
 
 function categoryLabel(category?: BusinessCategory) {
-  return categoryOptions.find((item) => item.value === category)?.label ?? 'Boshqa'
+  return t(`category.${category ?? 'OTHER'}`)
 }
 
 function openStatusModal() {
@@ -454,10 +445,10 @@ async function updateStatus() {
     business.value = data
     adminStore.upsertOne({ id: data.id, status: data.status })
     statusModal.value = false
-    toast.success('Holat yangilandi')
+    toast.success(t('bizDetail.statusUpdated'))
   } catch (e) {
     const message = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(message || 'Xatolik yuz berdi')
+    toast.error(message || t('common.error'))
   } finally {
     saving.value = false
   }
@@ -466,7 +457,7 @@ async function updateStatus() {
 async function submitReview() {
   if (!business.value) return
   if (reviewForm.value.action === 'REJECT' && !reviewForm.value.note?.trim()) {
-    toast.error("Rad etish sababi majburiy")
+    toast.error(t('bizDetail.rejectReasonRequired'))
     return
   }
   saving.value = true
@@ -480,9 +471,9 @@ async function submitReview() {
     business.value = data
     adminStore.upsertOne({ id: data.id, status: data.status })
     reviewModal.value = false
-    toast.success(reviewForm.value.action === 'APPROVE' ? 'Biznes tasdiqlandi' : 'Biznes rad etildi')
+    toast.success(reviewForm.value.action === 'APPROVE' ? t('bizDetail.approved') : t('bizDetail.rejected'))
   } catch {
-    toast.error('Xatolik yuz berdi')
+    toast.error(t('common.error'))
   } finally {
     saving.value = false
   }

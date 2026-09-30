@@ -7,11 +7,11 @@
       </div>
       <div>
         <h2 class="text-2xl font-bold text-slate-800">
-          Salom, {{ personName(profile, '...') }}!
+          {{ t('staffPortal.hello', { name: personName(profile, '...') }) }}
         </h2>
         <p class="text-slate-500 text-sm mt-0.5 flex items-center gap-1.5">
           <Briefcase class="w-3.5 h-3.5" />
-          Xodim portali
+          {{ t('staffPortal.portal') }}
         </p>
       </div>
 
@@ -21,7 +21,7 @@
         @click="showNewBooking = true"
       >
         <Plus class="w-4 h-4" />
-        <span class="hidden sm:inline">Yangi bron</span>
+        <span class="hidden sm:inline">{{ t('booking.newBooking') }}</span>
       </button>
     </div>
 
@@ -49,7 +49,7 @@
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div class="flex items-center gap-2 text-slate-500 text-sm mb-2">
             <CalendarCheck class="w-4 h-4 text-primary-500" />
-            Jami navbatlar
+            {{ t('staffPortal.totalBookings') }}
           </div>
           <p class="text-3xl font-bold text-slate-800">{{ stats?.totalBookings ?? 0 }}</p>
         </div>
@@ -57,7 +57,7 @@
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div class="flex items-center gap-2 text-slate-500 text-sm mb-2">
             <CheckCircle2 class="w-4 h-4 text-emerald-500" />
-            Bajarilgan
+            {{ t('staffPortal.completed') }}
           </div>
           <p class="text-3xl font-bold text-slate-800">{{ stats?.completedBookings ?? 0 }}</p>
         </div>
@@ -65,7 +65,7 @@
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div class="flex items-center gap-2 text-slate-500 text-sm mb-2">
             <Clock class="w-4 h-4 text-amber-500" />
-            Kutilmoqda
+            {{ t('staffPortal.pending') }}
           </div>
           <p class="text-3xl font-bold text-slate-800">{{ stats?.pendingBookings ?? 0 }}</p>
         </div>
@@ -73,7 +73,7 @@
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div class="flex items-center gap-2 text-slate-500 text-sm mb-2">
             <Star class="w-4 h-4 text-amber-400" />
-            O'rtacha reyting
+            {{ t('staffPortal.avgRating') }}
           </div>
           <div class="flex items-end gap-2">
             <p class="text-3xl font-bold text-slate-800">
@@ -88,7 +88,7 @@
             </div>
           </div>
           <p v-if="stats?.reviewCount" class="text-xs text-slate-500 mt-1">
-            {{ stats.reviewCount }} ta sharh
+            {{ t('staffPortal.reviewCount', { n: stats.reviewCount }) }}
           </p>
         </div>
       </div>
@@ -107,7 +107,7 @@
           >
             <span class="flex items-center gap-2">
               <TrendingUp class="w-4 h-4" />
-              Joriy bronlar
+              {{ t('staffPortal.currentBookings') }}
             </span>
           </button>
           <button
@@ -121,7 +121,7 @@
           >
             <span class="flex items-center gap-2">
               <CalendarCheck class="w-4 h-4" />
-              Barcha bronlar
+              {{ t('staffPortal.allBookings') }}
               <span v-if="bookings.length" class="bg-slate-100 text-slate-600 text-xs px-1.5 py-0.5 rounded-full">
                 {{ bookings.length }}
               </span>
@@ -134,7 +134,7 @@
       <div v-if="activeTab === 'overview'">
         <div v-if="upcomingBookings.length === 0" class="bg-white rounded-2xl border border-slate-100 p-10 text-center">
           <CalendarCheck class="w-10 h-10 text-slate-200 mx-auto mb-3" />
-          <p class="text-slate-500 text-sm">Hozircha faol bron yo'q</p>
+          <p class="text-slate-500 text-sm">{{ t('staffPortal.noActive') }}</p>
         </div>
 
         <div v-else class="space-y-3">
@@ -150,7 +150,7 @@
               <div class="flex-1 min-w-0">
                 <p class="font-medium text-slate-800 text-sm flex items-center gap-2">
                   {{ bookingCustomerName(booking) }}
-                  <span v-if="isToday(booking.startAt)" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary-100 text-primary-700">BUGUN</span>
+                  <span v-if="isToday(booking.startAt)" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary-100 text-primary-700">{{ t('common.todayBadge') }}</span>
                 </p>
                 <p class="text-xs text-slate-500 mt-0.5 truncate">
                   {{ formatDate(booking.startAt) }}<span v-if="booking.customerPhone"> · {{ booking.customerPhone }}</span>
@@ -179,18 +179,18 @@
       <div v-else>
         <div v-if="bookings.length === 0" class="bg-white rounded-2xl border border-slate-100 p-10 text-center">
           <CalendarCheck class="w-10 h-10 text-slate-200 mx-auto mb-3" />
-          <p class="text-slate-500 text-sm">Bronlar mavjud emas</p>
+          <p class="text-slate-500 text-sm">{{ t('staffPortal.noBookings') }}</p>
         </div>
 
         <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <table class="w-full text-sm">
             <thead class="border-b border-slate-100 bg-slate-50">
               <tr>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mijoz</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Boshlanish</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tugash</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Holat</th>
-                <th class="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Amal</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ t('common.customer') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ t('booking.start') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ t('booking.end') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">{{ t('common.status') }}</th>
+                <th class="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ t('booking.action') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
@@ -225,13 +225,13 @@
 
       <!-- Recent completed -->
       <template v-if="activeTab === 'overview' && recentBookings.length > 0">
-        <h2 class="text-base font-semibold text-slate-700 mt-2">So'nggi bajarilgan bronlar</h2>
+        <h2 class="text-base font-semibold text-slate-700 mt-2">{{ t('staffPortal.recentCompleted') }}</h2>
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <table class="w-full text-sm">
             <thead class="border-b border-slate-100 bg-slate-50">
               <tr>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Sana</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Holat</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ t('booking.date') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">{{ t('common.status') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
@@ -271,8 +271,10 @@ import { todayIso } from '@/utils/scheduling'
 import { bookingCustomerName, personName } from '@/utils/names'
 import NewBookingModal from './NewBookingModal.vue'
 import type { StaffMember, Booking, BookingStatus, StaffStats } from '@/types'
+import { useI18n } from 'vue-i18n'
 
 const toast = useToast()
+const { t } = useI18n()
 
 const profile = ref<StaffMember | null>(null)
 const bookings = ref<Booking[]>([])
@@ -302,10 +304,10 @@ async function changeStatus(booking: Booking, status: BookingStatus) {
   try {
     await bookingsApi.update(booking.id, { status })
     booking.status = status
-    toast.success('Holat yangilandi')
+    toast.success(t('common.statusUpdated'))
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Holatni yangilashda xatolik')
+    toast.error(msg || t('common.statusUpdateError'))
   } finally {
     updatingId.value = null
   }
@@ -353,7 +355,7 @@ onMounted(async () => {
     if (bookingsRes.status === 'fulfilled') bookings.value = bookingsRes.value.data
     if (statsRes.status === 'fulfilled') stats.value = statsRes.value.data
   } catch {
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
+    toast.error(t('common.loadError'))
   } finally {
     loading.value = false
   }

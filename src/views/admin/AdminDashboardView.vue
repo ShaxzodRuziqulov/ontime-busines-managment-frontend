@@ -2,8 +2,8 @@
   <div class="space-y-4 lg:p-0 p-4">
     <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Admin Panel</h1>
-        <p class="mt-1 text-sm text-slate-500">Tekshiruv, biznes statuslari va foydalanuvchilar nazorati.</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ t('adminDash.title') }}</h1>
+        <p class="mt-1 text-sm text-slate-500">{{ t('adminDash.subtitle') }}</p>
       </div>
       <button
         type="button"
@@ -11,7 +11,7 @@
         @click="router.push('/admin/businesses')"
       >
         <Search class="h-4 w-4" />
-        Biznes qidirish
+        {{ t('adminDash.searchBusiness') }}
       </button>
     </div>
 
@@ -51,7 +51,7 @@
           <div class="css-hover-tooltip opacity-0 invisible
                  group-hover:opacity-100
                  group-hover:visible">
-            <span>Sahifaga utish</span>
+            <span>{{ t('adminDash.goToPage') }}</span>
           </div>
         </RouterLink>
       </div>
@@ -60,7 +60,7 @@
         <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Foydalanuvchilar
+              {{ t('adminDash.users') }}
             </span>
             <Users class="h-5 w-5 text-blue-600" />
           </div>
@@ -71,7 +71,7 @@
         <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Bizneslar
+              {{ t('adminDash.businesses') }}
             </span>
             <Building2 class="h-5 w-5 text-emerald-600" />
           </div>
@@ -82,7 +82,7 @@
         <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Biznes egalari
+              {{ t('adminDash.owners') }}
             </span>
             <Building2 class="h-5 w-5 text-violet-600" />
           </div>
@@ -93,7 +93,7 @@
         <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Adminlar
+              {{ t('adminDash.admins') }}
             </span>
             <ShieldCheck class="h-5 w-5 text-slate-600" />
           </div>
@@ -107,14 +107,14 @@
         <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <div>
             <h2 class="font-semibold text-slate-800">
-              Bizneslar holati
+              {{ t('adminDash.businessStatus') }}
             </h2>
             <p class="mt-0.5 text-xs text-slate-500">
-              Kartani bosish ro'yxatni shu status bo'yicha ochadi.
+              {{ t('adminDash.businessStatusDesc') }}
             </p>
           </div>
           <RouterLink to="/admin/businesses" class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700">
-            Barchasi
+            {{ t('adminDash.all') }}
             <ArrowRight class="h-3.5 w-3.5" />
           </RouterLink>
         </div>
@@ -141,7 +141,7 @@
             <div class="css-hover-tooltip opacity-0 invisible
                  group-hover:opacity-100
                  group-hover:visible">
-              <span>Bizneslar sahifasiga utish</span>
+              <span>{{ t('adminDash.goToBusinesses') }}</span>
             </div>
           </RouterLink>
         </div>
@@ -151,20 +151,20 @@
         <div class="rounded-2xl border border-violet-100 bg-white shadow-sm">
           <div class="flex items-center justify-between border-b border-violet-100 px-5 py-4">
             <h2 class="font-semibold text-slate-800">
-              Tekshiruv kutayotgan bizneslar
+              {{ t('adminDash.pendingReview') }}
             </h2>
             <RouterLink
                 :to="{ name: 'admin-businesses', query: { status: 'PENDING_REVIEW' } }"
                 class="text-sm font-semibold text-violet-600 hover:text-violet-700"
             >
-              Ko'rish
+              {{ t('adminDash.view') }}
             </RouterLink>
           </div>
           <div
               v-if="pendingReviewList.length === 0"
               class="px-5 py-10 text-center text-sm text-slate-500"
           >
-            Tekshiruv kutayotgan biznes yo'q
+            {{ t('adminDash.noPending') }}
           </div>
           <div v-else class="divide-y divide-slate-50">
             <button
@@ -188,19 +188,19 @@
 
         <div class="rounded-2xl border border-amber-100 bg-white shadow-sm">
           <div class="flex items-center justify-between border-b border-amber-100 px-5 py-4">
-            <h2 class="font-semibold text-slate-800">Trial muddati tugayotganlar</h2>
+            <h2 class="font-semibold text-slate-800">{{ t('adminDash.trialsEnding') }}</h2>
             <RouterLink
                 :to="{ name: 'admin-businesses', query: { status: 'TRIAL' } }"
                 class="text-sm font-semibold text-amber-600 hover:text-amber-700"
             >
-              Ko'rish
+              {{ t('adminDash.view') }}
             </RouterLink>
           </div>
           <div
               v-if="trialsEndingSoon.length === 0"
               class="px-5 py-10 text-center text-sm text-slate-500"
           >
-            Yaqin 3 kunda tugaydigan trial yo'q
+            {{ t('adminDash.noTrialsEnding') }}
           </div>
           <div v-else class="divide-y divide-slate-50">
             <button
@@ -222,7 +222,7 @@
                 </p>
               </div>
               <span class="whitespace-nowrap text-xs font-semibold text-amber-600">
-                {{ trialDaysLeft(biz.trialEndDate!) }} kun
+                {{ t('adminDash.daysCount', { n: trialDaysLeft(biz.trialEndDate!) }) }}
               </span>
             </button>
           </div>
@@ -231,17 +231,17 @@
 
       <div class="rounded-2xl border border-slate-100 bg-white shadow-sm">
         <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <h2 class="font-semibold text-slate-800">So'nggi bizneslar</h2>
+          <h2 class="font-semibold text-slate-800">{{ t('adminDash.recentBusinesses') }}</h2>
           <RouterLink
               to="/admin/businesses"
               class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700"
           >
-            Barchasi <ArrowRight class="h-3.5 w-3.5" />
+            {{ t('adminDash.all') }} <ArrowRight class="h-3.5 w-3.5" />
           </RouterLink>
         </div>
 
         <div v-if="recentBusinesses.length === 0" class="px-5 py-10 text-center text-sm text-slate-500">
-          Biznes yo'q
+          {{ t('adminDash.noBusinesses') }}
         </div>
 
         <div v-else class="divide-y divide-slate-50 sm:hidden">
@@ -267,7 +267,7 @@
                    statusColor(biz.status)]">{{ statusLabels[biz.status] }}
               </span>
               <p class="mt-1 text-[11px] text-slate-400">
-                {{ new Date(biz.createdAt).toLocaleDateString('uz-UZ') }}
+                {{ new Date(biz.createdAt).toLocaleDateString(dateLocale()) }}
               </p>
             </div>
           </button>
@@ -276,10 +276,10 @@
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-500">
-                <th class="px-5 py-3 text-left font-medium">Biznes</th>
-                <th class="px-5 py-3 text-left font-medium">Manzil</th>
-                <th class="px-5 py-3 text-left font-medium">Holat</th>
-                <th class="px-5 py-3 text-left font-medium">Yaratilgan</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('adminDash.colBusiness') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('adminDash.colAddress') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('adminDash.colStatus') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('adminDash.colCreated') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
@@ -302,13 +302,13 @@
                   </span>
                 </td>
                 <td class="px-5 py-3 text-xs text-slate-500">
-                  {{ new Date(biz.createdAt).toLocaleDateString('uz-UZ') }}
+                  {{ new Date(biz.createdAt).toLocaleDateString(dateLocale()) }}
                 </td>
                 <td>
                   <div class="css-hover-tooltip opacity-0 invisible
                      group-hover:opacity-100
                      group-hover:visible">
-                    <span>Biznes holatini ko'rish</span>
+                    <span>{{ t('adminDash.viewBusinessStatus') }}</span>
                   </div>
                 </td>
               </tr>
@@ -333,9 +333,12 @@ import { useAdminStore } from '@/stores/admin'
 import SkeletonTable from '@/components/common/SkeletonTable.vue'
 import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import type { User, Business, BusinessStatus } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 
 const adminStore = useAdminStore()
 const router = useRouter()
+const { t } = useI18n()
 
 const users = ref<User[]>([])
 const businesses = ref<Business[]>([])
@@ -361,12 +364,12 @@ interface StatusCard {
 }
 
 const statusCards = computed<StatusCard[]>(() => [
-  { label: 'Faol', value: statusCounts.value.ACTIVE ?? 0, color: 'bg-emerald-50', textColor: 'text-emerald-600', icon: CheckCircle2, status: 'ACTIVE' },
-  { label: 'Sinov', value: statusCounts.value.TRIAL ?? 0, color: 'bg-amber-50', textColor: 'text-amber-600', icon: Clock, status: 'TRIAL' },
-  { label: "Muddati o'tgan", value: statusCounts.value.EXPIRED ?? 0, color: 'bg-red-50', textColor: 'text-red-600', icon: XCircle, status: 'EXPIRED' },
-  { label: "To'xtatilgan", value: statusCounts.value.SUSPENDED ?? 0, color: 'bg-slate-50', textColor: 'text-slate-500', icon: PauseCircle, status: 'SUSPENDED' },
-  { label: 'Qoralama', value: statusCounts.value.DRAFT ?? 0, color: 'bg-blue-50', textColor: 'text-blue-600', icon: FileEdit, status: 'DRAFT' },
-  { label: 'Tekshiruvda', value: pendingReviewCount.value, color: 'bg-violet-50', textColor: 'text-violet-600', icon: AlertCircle, status: 'PENDING_REVIEW' },
+  { label: t('status.business.ACTIVE'), value: statusCounts.value.ACTIVE ?? 0, color: 'bg-emerald-50', textColor: 'text-emerald-600', icon: CheckCircle2, status: 'ACTIVE' },
+  { label: t('status.business.TRIAL'), value: statusCounts.value.TRIAL ?? 0, color: 'bg-amber-50', textColor: 'text-amber-600', icon: Clock, status: 'TRIAL' },
+  { label: t('status.business.EXPIRED'), value: statusCounts.value.EXPIRED ?? 0, color: 'bg-red-50', textColor: 'text-red-600', icon: XCircle, status: 'EXPIRED' },
+  { label: t('status.business.SUSPENDED'), value: statusCounts.value.SUSPENDED ?? 0, color: 'bg-slate-50', textColor: 'text-slate-500', icon: PauseCircle, status: 'SUSPENDED' },
+  { label: t('status.business.DRAFT'), value: statusCounts.value.DRAFT ?? 0, color: 'bg-blue-50', textColor: 'text-blue-600', icon: FileEdit, status: 'DRAFT' },
+  { label: t('status.business.PENDING_REVIEW'), value: pendingReviewCount.value, color: 'bg-violet-50', textColor: 'text-violet-600', icon: AlertCircle, status: 'PENDING_REVIEW' },
 ])
 
 const pendingReviewList = computed(() =>
@@ -390,21 +393,21 @@ const recentBusinesses = computed(() =>
 
 const priorityItems = computed(() => [
   {
-    label: 'Tekshiruv kutmoqda',
+    label: t('adminDash.awaitingReview'),
     value: pendingReviewCount.value,
     icon: ClipboardList,
     to: { name: 'admin-businesses', query: { status: 'PENDING_REVIEW' } },
     tone: 'bg-violet-50 text-violet-700 border-violet-200',
   },
   {
-    label: 'Trial tugayapti',
+    label: t('adminDash.trialEnding'),
     value: trialsEndingSoon.value.length,
     icon: TimerReset,
     to: { name: 'admin-businesses', query: { status: 'TRIAL' } },
     tone: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   {
-    label: 'Bloklangan foydalanuvchi',
+    label: t('adminDash.blockedUsers'),
     value: inactiveUsers.value.length,
     icon: UserX,
     to: { name: 'admin-users' },
@@ -418,7 +421,7 @@ function trialDaysLeft(dateStr: string) {
 }
 
 function businessLocation(biz: Business) {
-  return biz.city || biz.addressLine || 'Manzil kiritilmagan'
+  return biz.city || biz.addressLine || t('adminDash.noAddress')
 }
 
 const statusColor = businessStatusColor

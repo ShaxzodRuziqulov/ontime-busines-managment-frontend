@@ -1,8 +1,8 @@
 <template>
-  <AppModal title="Yangi bron" size="md" @close="emit('close')">
+  <AppModal :title="t('booking.newBooking')" size="md" @close="emit('close')">
     <div class="space-y-4 text-gray-600 lg:p-0 p-4">
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1.5">Mijoz telefoni</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('booking.customerPhone') }}</label>
         <div class="flex gap-2">
           <input
             v-model="phone"
@@ -29,11 +29,11 @@
           class="mt-2 flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2"
         >
           <CheckCircle2 class="w-4 h-4 flex-shrink-0" />
-          <span>Ro'yxatdagi mijoz: <b>{{ personName(matched, matched.login) }}</b></span>
+          <span>{{ t('booking.existingCustomer') }} <b>{{ personName(matched, matched.login) }}</b></span>
         </div>
 
         <div v-else-if="candidates.length" class="mt-2 space-y-1.5">
-          <p class="text-xs text-slate-500">Bir nechta mijoz topildi — birini tanlang:</p>
+          <p class="text-xs text-slate-500">{{ t('booking.multipleFound') }}</p>
           <button
             v-for="c in candidates"
             :key="c.id"
@@ -50,29 +50,29 @@
       <div>
         <label class="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
           <UserPlus class="w-3.5 h-3.5 text-slate-400" />
-          Mijoz ismi
+          {{ t('booking.customerName') }}
         </label>
         <input
           v-model="customerFirstName"
           type="text"
-          placeholder="Ism familiya"
+          :placeholder="t('booking.fullNamePlaceholder')"
           class="w-full px-2 py-1.5 text-gray-600 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500"
         />
       </div>
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1.5">Xizmat</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('booking.service') }}</label>
         <select
           v-model="serviceId"
           class="w-full px-2 py-1.5 text-gray-600 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 bg-white"
         >
-          <option value="" disabled>Xizmatni tanlang</option>
+          <option value="" disabled>{{ t('booking.selectService') }}</option>
           <option v-for="s in services" :key="s.id" :value="s.id">
-            {{ s.name }} · {{ s.durationMinutes }} daq · {{ s.basePrice.toLocaleString('uz-UZ') }} so'm
+            {{ s.name }} · {{ s.durationMinutes }} {{ t('common.minShort') }} · {{ s.basePrice.toLocaleString(dateLocale()) }} {{ t('common.currency') }}
           </option>
         </select>
       </div>
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1.5">Sana</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('booking.date') }}</label>
         <input
           v-model="date"
           type="date"
@@ -81,13 +81,13 @@
         />
       </div>
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1.5">Bo'sh vaqt</label>
-        <p v-if="!serviceId" class="text-sm text-slate-400 py-2">Avval xizmatni tanlang</p>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('booking.freeTime') }}</label>
+        <p v-if="!serviceId" class="text-sm text-slate-400 py-2">{{ t('booking.selectServiceFirst') }}</p>
         <div v-else-if="dayClosed" class="flex items-center gap-2 text-sm text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5">
           <CalendarX class="w-4 h-4" />
-          Bu kun biznes ishlamaydi
+          {{ t('booking.dayClosed') }}
         </div>
-        <p v-else-if="possibleStarts.length === 0" class="text-sm text-slate-400 py-2">Bu kun uchun vaqt yo'q</p>
+        <p v-else-if="possibleStarts.length === 0" class="text-sm text-slate-400 py-2">{{ t('booking.noSlots') }}</p>
         <div v-else class="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto px-2">
           <button
             v-for="min in possibleStarts"
@@ -109,11 +109,11 @@
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1.5">Izoh <span class="text-slate-400 font-normal">(ixtiyoriy)</span></label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('booking.note') }} <span class="text-slate-400 font-normal">{{ t('common.optional') }}</span></label>
         <textarea
           v-model="note"
           rows="2"
-          placeholder="Qo'shimcha ma'lumot"
+          :placeholder="t('booking.notePlaceholder')"
           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-none"
         />
       </div>
@@ -124,7 +124,7 @@
         class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
         @click="emit('close')"
       >
-        Bekor qilish
+        {{ t('common.cancel') }}
       </button>
       <button
         type="button"
@@ -133,7 +133,7 @@
         @click="submit"
       >
         <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
-        {{ saving ? 'Saqlanmoqda...' : 'Navbatga qo\'yish' }}
+        {{ saving ? t('common.saving') : t('booking.addToQueue') }}
       </button>
     </div>
   </AppModal>
@@ -158,6 +158,8 @@ import {
 } from '@/utils/scheduling'
 import { personName } from '@/utils/names'
 import type { OfferedService, Booking, BusinessHours } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 
 const props = defineProps<{
   businessId: string
@@ -172,6 +174,7 @@ const emit = defineEmits<{
 }>()
 
 const toast = useToast()
+const { t } = useI18n()
 
 const SLOT_INTERVAL = 15
 
@@ -229,7 +232,7 @@ function tashkentNow(): { dateIso: string; minutes: number } {
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', hour12: false,
   }).formatToParts(new Date())
-  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '00'
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00'
   return { dateIso: `${get('year')}-${get('month')}-${get('day')}`, minutes: Number(get('hour')) * 60 + Number(get('minute')) }
 }
 const now = tashkentNow()
@@ -312,12 +315,12 @@ async function submit() {
       customerPhone: phone.value.trim() || undefined,
     })
 
-    toast.success('Bron yaratildi')
+    toast.success(t('booking.created'))
     emit('created', data)
     emit('close')
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Bron yaratishda xatolik')
+    toast.error(msg || t('booking.createError'))
   } finally {
     saving.value = false
   }
@@ -333,7 +336,7 @@ onMounted(async () => {
     hours.value = hoursRes.data
     if (services.value.length === 1) serviceId.value = services.value[0].id
   } catch {
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
+    toast.error(t('common.loadError'))
   }
 })
 </script>

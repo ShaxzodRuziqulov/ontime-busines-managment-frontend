@@ -3,10 +3,10 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">
-          Foydalanuvchilar
+          {{ t('nav.users') }}
         </h1>
         <p class="text-slate-500 text-sm mt-1">
-          {{ users.length }} ta foydalanuvchi
+          {{ t('adminUsers.count', { n: users.length }) }}
         </p>
       </div>
       <div class="flex gap-2">
@@ -22,7 +22,7 @@
           class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
         >
           <Plus class="w-4 h-4" />
-          Qo'shish
+          {{ t('adminUsers.add') }}
         </button>
       </div>
     </div>
@@ -34,7 +34,7 @@
         <input
           v-model="search"
           type="text"
-          placeholder="Login, ism yoki email bo'yicha qidirish..."
+          :placeholder="t('adminUsers.searchPlaceholder')"
           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
         />
       </div>
@@ -58,8 +58,8 @@
     <template v-else>
       <EmptyState
         v-if="filtered.length === 0"
-        title="Foydalanuvchi topilmadi"
-        description="Qidiruv so'zini o'zgartiring yoki yangi foydalanuvchi qo'shing"
+        :title="t('adminUsers.emptyTitle')"
+        :description="t('adminUsers.emptyDesc')"
       >
         <template #icon>
           <Users class="w-8 h-8 text-slate-400" />
@@ -68,7 +68,7 @@
 
       <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-5 py-3 border-b border-slate-100 text-xs text-slate-500">
-          {{ filtered.length }} ta natija
+          {{ t('adminUsers.results', { n: filtered.length }) }}
         </div>
         <div class="divide-y divide-slate-100 sm:hidden">
           <article
@@ -102,13 +102,13 @@
                   {{ personName(user) }}
                 </p>
                 <p class="truncate text-xs text-slate-500">
-                  {{ user.login }} · {{ user.phone || 'Telefon yo‘q' }}
+                  {{ user.login }} · {{ user.phone || t('adminUsers.noPhone') }}
                 </p>
               </button>
               <button
                   :disabled="togglingId === user.id"
                   @click="activeConfirm = user"
-                  :aria-label="user.active ? 'Bloklash' : 'Aktivlashtirish'"
+                  :aria-label="user.active ? t('adminUsers.block') : t('adminUsers.activate')"
                   class="shrink-0"
               >
                 <ToggleRight
@@ -170,12 +170,12 @@
             <thead>
               <tr class="sticky z-30 top-0 bg-white border-b border-gray-50 shadow-sm text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
                 <th class="px-5 py-3 text-center font-medium">№</th>
-                <th class="px-5 py-3 text-left font-medium">Foydalanuvchi</th>
-                <th class="px-5 py-3 text-left font-medium">Login</th>
-                <th class="px-5 py-3 text-left font-medium">Telefon</th>
-                <th class="px-5 py-3 text-left font-medium">Rol</th>
-                <th class="px-5 py-3 text-center font-medium">Aktiv</th>
-                <th class="px-5 py-3 text-right font-medium">Amallar</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('adminUsers.colUser') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('adminUsers.colLogin') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('adminUsers.colPhone') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('adminUsers.colRole') }}</th>
+                <th class="px-5 py-3 text-center font-medium">{{ t('adminUsers.colActive') }}</th>
+                <th class="px-5 py-3 text-right font-medium">{{ t('adminUsers.colActions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y">
@@ -236,7 +236,7 @@
                       v-if="!isAdmin(user)"
                       :disabled="togglingId === user.id"
                       @click.stop="adminConfirm = { user, wasAdmin: false }"
-                      title="Admin qilish"
+                      :title="t('adminUsers.makeAdmin')"
                       class="text-xs px-2 py-0.5 rounded-lg border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors disabled:opacity-40"
                     >
                       +Admin
@@ -245,7 +245,7 @@
                       v-else
                       :disabled="togglingId === user.id"
                       @click.stop="adminConfirm = { user, wasAdmin: true }"
-                      title="Admin huquqini olish"
+                      :title="t('adminUsers.revokeAdmin')"
                       class="text-xs px-2 py-0.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
                     >
                       −Admin
@@ -256,7 +256,7 @@
                   <button
                     :disabled="togglingId === user.id"
                     @click.stop="activeConfirm = user"
-                    :title="user.active ? 'Bloklash' : 'Aktivlashtirish'"
+                    :title="user.active ? t('adminUsers.block') : t('adminUsers.activate')"
                     class="inline-flex items-center justify-center transition-opacity disabled:opacity-40"
                   >
                     <ToggleRight
@@ -274,14 +274,14 @@
                     <button
                       class="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                       @click.stop="openEdit(user)"
-                      title="Tahrirlash"
+                      :title="t('common.edit')"
                     >
                       <Edit2 class="w-4 h-4" />
                     </button>
                     <button
                       class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       @click.stop="deleteConfirm = user.id"
-                      title="O'chirish"
+                      :title="t('common.delete')"
                     >
                       <Trash2 class="w-4 h-4" />
                     </button>
@@ -296,7 +296,7 @@
 
     <AppModal
         v-if="showModal && !editingUser"
-        title="Yangi foydalanuvchi"
+        :title="t('adminUsers.newUser')"
         @close="showModal = false"
     >
       <form
@@ -306,7 +306,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Login *
+              {{ t('adminUsers.login') }}
             </label>
             <input
                 v-model="createForm.login"
@@ -316,41 +316,41 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Parol *
+              {{ t('adminUsers.password') }}
             </label>
             <input
                 v-model="createForm.password"
                 type="password"
-                placeholder="Kamida 8 belgi"
+                :placeholder="t('adminUsers.min8')"
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Ism *
+              {{ t('adminUsers.firstNameReq') }}
             </label>
             <input
                 v-model="createForm.firstName"
                 type="text"
-                placeholder="Ism"
+                :placeholder="t('adminUsers.firstName')"
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Familiya
+              {{ t('adminUsers.lastName') }}
             </label>
             <input
                 v-model="createForm.lastName"
                 type="text"
-                placeholder="Familiya"
+                :placeholder="t('adminUsers.lastName')"
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Email
+              {{ t('adminUsers.email') }}
             </label>
             <input
                 v-model="createForm.email"
@@ -360,7 +360,7 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Telefon
+              {{ t('adminUsers.phone') }}
             </label>
             <input
                 v-model="createForm.phone"
@@ -375,20 +375,20 @@
             class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
             @click="showModal = false"
           >
-            Bekor qilish
+            {{ t('common.cancel') }}
           </button>
           <button
               type="submit"
               :disabled="saving || !createForm.login || !createForm.password || !createForm.firstName?.trim()"
               class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors">
-            {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
+            {{ saving ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </form>
     </AppModal>
     <AppModal
         v-if="showModal && editingUser"
-        :title="`Tahrirlash: ${editingUser.login}`"
+        :title="t('adminUsers.editTitle', { login: editingUser.login })"
         @close="showModal = false"
     >
       <form
@@ -430,29 +430,29 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Ism
+              {{ t('adminUsers.firstName') }}
             </label>
             <input
                 v-model="editForm.firstName"
                 type="text"
-                placeholder="Ism"
+                :placeholder="t('adminUsers.firstName')"
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Familiya
+              {{ t('adminUsers.lastName') }}
             </label>
             <input
                 v-model="editForm.lastName"
                 type="text"
-                placeholder="Familiya"
+                :placeholder="t('adminUsers.lastName')"
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Email
+              {{ t('adminUsers.email') }}
             </label>
             <input
                 v-model="editForm.email"
@@ -462,7 +462,7 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">
-              Telefon
+              {{ t('adminUsers.phone') }}
             </label>
             <input
                 v-model="editForm.phone"
@@ -473,15 +473,15 @@
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-500 mb-1">
-            Yangi parol
+            {{ t('adminUsers.newPassword') }}
             <span class="text-slate-400 font-normal">
-              (o'zgartirmasangiz bo'sh qoldiring)
+              {{ t('adminUsers.keepEmpty') }}
             </span>
           </label>
           <input
               v-model="editForm.password"
               type="password"
-              placeholder="Kamida 8 belgi"
+              :placeholder="t('adminUsers.min8')"
               class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
         <div class="flex gap-3 pt-1">
@@ -489,94 +489,88 @@
             class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
             @click="showModal = false"
           >
-            Bekor qilish
+            {{ t('common.cancel') }}
           </button>
           <button
               type="submit"
               :disabled="saving"
               class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors">
-            {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
+            {{ saving ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </form>
     </AppModal>
     <AppModal
       v-if="adminConfirm"
-      :title="adminConfirm.wasAdmin ? 'Admin huquqini olish' : 'Admin huquqi berish'"
+      :title="adminConfirm.wasAdmin ? t('adminUsers.revokeAdmin') : t('adminUsers.grantAdmin')"
       size="sm"
       @close="adminConfirm = null"
     >
-      <p class="text-slate-600 text-sm mb-5">
-        <template
-            v-if="adminConfirm?.wasAdmin"
-        >
+      <i18n-t
+          :keypath="adminConfirm.wasAdmin ? 'adminUsers.revokeConfirm' : 'adminUsers.grantConfirm'"
+          tag="p"
+          class="text-slate-600 text-sm mb-5"
+      >
+        <template #name>
           <span class="font-semibold">
             {{ personName(adminConfirm.user, adminConfirm.user.login) }}
           </span>
-          foydalanuvchidan admin huquqini olmoqchisiz. Tasdiqlaysizmi?
         </template>
-        <template
-            v-else
-        >
-          <span class="font-semibold">
-            {{ personName(adminConfirm.user, adminConfirm.user.login) }}
-          </span>
-          foydalanuvchiga admin huquqi bermoqchisiz. Tasdiqlaysizmi?
-        </template>
-      </p>
+      </i18n-t>
       <div class="flex gap-3">
         <button
             class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm"
             @click="adminConfirm = null"
         >
-          Bekor
+          {{ t('common.cancel') }}
         </button>
         <button
             class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700"
             @click="confirmToggleAdmin"
         >
-          {{ adminConfirm.wasAdmin ? 'Olish' : 'Berish' }}
+          {{ adminConfirm.wasAdmin ? t('adminUsers.revoke') : t('adminUsers.grant') }}
         </button>
       </div>
     </AppModal>
     <AppModal
       v-if="activeConfirm"
-      :title="activeConfirm.active ? 'Foydalanuvchini bloklash' : 'Foydalanuvchini aktivlashtirish'"
+      :title="activeConfirm.active ? t('adminUsers.blockTitle') : t('adminUsers.activateTitle')"
       size="sm"
       @close="activeConfirm = null"
     >
-      <p class="text-slate-600 text-sm mb-5">
-        <span class="font-semibold">
-          {{ personName(activeConfirm, activeConfirm.login) }}
-        </span>
-        foydalanuvchini
-        <span class="font-semibold">
-          {{ activeConfirm.active ? 'bloklashni' : 'aktivlashtirishni' }}
-        </span>
-        tasdiqlaysizmi?
-      </p>
+      <i18n-t
+          :keypath="activeConfirm.active ? 'adminUsers.blockConfirm' : 'adminUsers.activateConfirm'"
+          tag="p"
+          class="text-slate-600 text-sm mb-5"
+      >
+        <template #name>
+          <span class="font-semibold">
+            {{ personName(activeConfirm, activeConfirm.login) }}
+          </span>
+        </template>
+      </i18n-t>
       <div class="flex gap-3">
         <button
             class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm"
             @click="activeConfirm = null"
         >
-          Bekor
+          {{ t('common.cancel') }}
         </button>
         <button
           class="flex-1 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
           :class="activeConfirm?.active ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'"
           @click="confirmToggleActive"
         >
-          {{ activeConfirm.active ? 'Bloklash' : 'Aktivlashtirish' }}
+          {{ activeConfirm.active ? t('adminUsers.block') : t('adminUsers.activate') }}
         </button>
       </div>
     </AppModal>
 
     <ConfirmModal
       v-if="deleteConfirm"
-      title="Foydalanuvchini o'chirish"
-      message="Bu foydalanuvchini o'chirishni tasdiqlaysizmi? Ushbu amal qaytarib bo'lmaydi."
-      confirm-label="O'chirish"
+      :title="t('adminUsers.deleteTitle')"
+      :message="t('adminUsers.deleteMessage')"
+      :confirm-label="t('common.delete')"
       icon="trash"
       variant="danger"
       @confirm="confirmDelete(deleteConfirm!)"
@@ -600,8 +594,11 @@ import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { personName } from '@/utils/names'
 import type { User, UserCreateRequest, UserUpdateRequest } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 
 const toast = useToast()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -651,12 +648,12 @@ const filtered = computed(() => {
   )
 })
 
-const filterTabs: { key: typeof roleFilter.value; label: string }[] = [
-  { key: 'all', label: 'Barchasi' },
-  { key: 'admin', label: 'Adminlar' },
-  { key: 'owner', label: 'Biznes egalari' },
-  { key: 'user', label: 'Foydalanuvchilar' },
-]
+const filterTabs = computed<{ key: typeof roleFilter.value; label: string }[]>(() => [
+  { key: 'all', label: t('adminUsers.tabAll') },
+  { key: 'admin', label: t('adminUsers.tabAdmins') },
+  { key: 'owner', label: t('adminUsers.tabOwners') },
+  { key: 'user', label: t('adminUsers.tabUsers') },
+])
 
 function openAdd() {
   editingUser.value = null
@@ -686,12 +683,12 @@ function onAvatarChange(e: Event) {
   const file = input.files?.[0]
   if (!file) return
   if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-    toast.error('Faqat JPEG, PNG yoki WEBP formatidagi rasm yuklang')
+    toast.error(t('profile.imageType'))
     input.value = ''
     return
   }
   if (file.size > MAX_AVATAR_SIZE) {
-    toast.error('Rasm hajmi 5MB dan oshmasligi kerak')
+    toast.error(t('common.imageSize'))
     input.value = ''
     return
   }
@@ -722,9 +719,9 @@ async function save() {
       users.value.unshift(data)
     }
     showModal.value = false
-    toast.success('Saqlandi')
+    toast.success(t('common.saved'))
   } catch {
-    toast.error('Xatolik yuz berdi')
+    toast.error(t('common.error'))
   } finally {
     saving.value = false
   }
@@ -739,9 +736,9 @@ async function confirmToggleActive() {
     const { data } = await usersApi.update(user.id, { active: !user.active })
     const idx = users.value.findIndex(u => u.id === user.id)
     if (idx !== -1) users.value[idx] = data
-    toast.success(data.active ? 'Aktivlashtirildi' : 'Bloklandi')
+    toast.success(data.active ? t('adminUsers.activated') : t('adminUsers.blocked'))
   } catch {
-    toast.error('Xatolik yuz berdi')
+    toast.error(t('common.error'))
   } finally {
     togglingId.value = null
   }
@@ -760,9 +757,9 @@ async function confirmToggleAdmin() {
     const { data } = await usersApi.update(user.id, { roles: newRoles })
     const idx = users.value.findIndex(u => u.id === user.id)
     if (idx !== -1) users.value[idx] = data
-    toast.success(wasAdmin ? 'Admin huquqi olindi' : 'Admin huquqi berildi')
+    toast.success(wasAdmin ? t('adminUsers.adminRevoked') : t('adminUsers.adminGranted'))
   } catch {
-    toast.error('Xatolik yuz berdi')
+    toast.error(t('common.error'))
   } finally {
     togglingId.value = null
   }
@@ -773,9 +770,9 @@ async function confirmDelete(id: string) {
     await usersApi.delete(id)
     users.value = users.value.filter(u => u.id !== id)
     deleteConfirm.value = null
-    toast.success("O'chirildi")
+    toast.success(t('adminUsers.deleted'))
   } catch {
-    toast.error('Xatolik yuz berdi')
+    toast.error(t('common.error'))
   }
 }
 
@@ -784,10 +781,10 @@ function isAdmin(user: User) {
 }
 
 function roleLabel(user: User) {
-  if (isAdmin(user)) return 'Admin'
-  if (user.roles?.includes('ROLE_BUSINESS_OWNER') || user.businessOwner) return 'Biznes egasi'
-  if (user.roles?.includes('ROLE_MANAGER')) return 'Menejer'
-  return 'Foydalanuvchi'
+  if (isAdmin(user)) return t('roles.ROLE_ADMIN')
+  if (user.roles?.includes('ROLE_BUSINESS_OWNER') || user.businessOwner) return t('roles.ROLE_BUSINESS_OWNER')
+  if (user.roles?.includes('ROLE_MANAGER')) return t('roles.ROLE_MANAGER')
+  return t('roles.ROLE_USER')
 }
 
 function roleColor(user: User) {
@@ -803,7 +800,7 @@ function openUser(user: User) {
 
 function exportCsv() {
   const rows = [
-    ['ID', 'Login', 'Ism', 'Email', 'Telefon', 'Rol', 'Aktiv', "Ro'yxatdan o'tgan"],
+    ['ID', t('adminUsers.colLogin'), t('adminUsers.firstName'), t('adminUsers.email'), t('adminUsers.phone'), t('adminUsers.colRole'), t('adminUsers.colActive'), t('adminUsers.registered')],
     ...filtered.value.map(u => [
       u.id,
       u.login,
@@ -811,8 +808,8 @@ function exportCsv() {
       u.email ?? '',
       u.phone ?? '',
       roleLabel(u),
-      u.active ? 'Ha' : "Yo'q",
-      new Date(u.createdAt).toLocaleDateString('uz-UZ'),
+      u.active ? t('common.yes') : t('common.no'),
+      new Date(u.createdAt).toLocaleDateString(dateLocale()),
     ]),
   ]
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')

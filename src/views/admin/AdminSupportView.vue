@@ -5,11 +5,11 @@
     >
       <div class="mb-5 flex items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-600">Support</h1>
-          <p class="text-sm text-slate-500">Telegramdan kelgan murojaatlar</p>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-600">{{ t('nav.support') }}</h1>
+          <p class="text-sm text-slate-500">{{ t('adminSupport.subtitle') }}</p>
         </div>
         <button
-            aria-label="Yangilash"
+            :aria-label="t('common.refresh')"
             @click="load"
             class="min-h-11 min-w-11 hover:bg-primary-600 rounded-xl bg-primary-500 p-3 text-white shadow-sm"
         >
@@ -29,18 +29,18 @@
              : 'text-slate-600 border-slate-300 dark:text-slate-500'
              ]"
         >
-          {{ s ? label[s] : 'Barchasi' }}
+          {{ s ? label[s] : t('common.all') }}
         </button>
       </div>
 
       <div class="space-y-2">
         <button
-            v-for="t in tickets"
-            :key="t.id"
-            @click="open(t.id)"
+            v-for="tk in tickets"
+            :key="tk.id"
+            @click="open(tk.id)"
             class="w-full dark:hover:border-primary-500 rounded-2xl border border-slate-300 bg-white p-4 text-left transition-all duration-200 shadow-sm hover:border-primary-500 hover:shadow-md"
             :class="
-              selectedItem === t.id
+              selectedItem === tk.id
                 ? 'border-primary-500 bg-primary-100/50 shadow-md ring-1 ring-primary-200'
                 : ''
             "
@@ -49,28 +49,28 @@
             <strong
                 class="min-w-0 truncate text-sm text-slate-700"
             >
-              {{ t.requesterName }}
+              {{ tk.requesterName }}
             </strong>
-            <StatusBadge class="shrink-0" :status="t.status" />
+            <StatusBadge class="shrink-0" :status="tk.status" />
           </span>
           <span class="mt-1.5 truncate text-sm text-slate-500">
-            {{ t.subject }}
+            {{ tk.subject }}
           </span>
           <span class="mt-3 text-xs text-slate-400">
-            {{ date(t.updatedAt) }}
+            {{ date(tk.updatedAt) }}
           </span>
         </button>
         <p
             v-if="loading"
             class="py-12 text-center text-sm text-slate-400"
         >
-          Yuklanmoqda...
+          {{ t('common.loading') }}
         </p>
         <p
             v-else-if="!tickets.length"
             class="py-12 text-center text-sm text-slate-400"
         >
-          Murojaatlar yo‘q
+          {{ t('adminSupport.noTickets') }}
         </p>
       </div>
     </section>
@@ -84,13 +84,13 @@
           class="flex h-full min-h-80 flex-col items-center justify-center text-slate-400"
       >
         <MessageCircle class="mb-3 h-9 w-9" />
-        Murojaatni tanlang
+        {{ t('adminSupport.selectTicket') }}
       </div>
 
       <template v-else>
         <div class="flex items-start gap-2 border-b border-slate-100 pb-4 dark:border-slate-700">
           <button
-              aria-label="Ro‘yxatga qaytish"
+              :aria-label="t('adminSupport.backToList')"
               @click="closeTicket"
               class="mt-0.5 -ml-1 rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 lg:hidden"
           >
@@ -108,7 +108,7 @@
 
         <div class="mt-4 grid grid-cols-2 gap-2">
           <label class="text-xs font-medium text-slate-300">
-            Muhimlik
+            {{ t('adminSupport.priority') }}
             <select
                 :value="selected.priority"
                 @change="save({ priority: ($event.target as HTMLSelectElement).value })"
@@ -124,7 +124,7 @@
             </select>
           </label>
           <label class="text-xs font-medium text-slate-300">
-            Holati
+            {{ t('adminSupport.status') }}
             <select
                 :value="selected.status"
                 @change="save({ status: ($event.target as HTMLSelectElement).value })"
@@ -169,17 +169,17 @@
           <textarea
               v-model="reply"
               rows="3"
-              placeholder="Javob yozing..." class="min-h-24 w-full min-w-0 flex-1 resize-none rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-800 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+              :placeholder="t('adminSupport.replyPlaceholder')" class="min-h-24 w-full min-w-0 flex-1 resize-none rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-800 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
               @keydown.ctrl.enter="send"
           />
           <button
-              aria-label="Javobni yuborish"
+              :aria-label="t('adminSupport.sendReply')"
               @click="send"
               class="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 font-semibold text-white transition hover:bg-primary-500 disabled:opacity-60 sm:self-end"
               :disabled="!reply.trim()"
           >
             <Send class="h-5 w-5" />
-            <span class="sm:hidden">Yuborish</span>
+            <span class="sm:hidden">{{ t('common.send') }}</span>
           </button>
         </div>
       </template>
@@ -193,6 +193,10 @@ import { ArrowLeft, MessageCircle, RefreshCw, Send } from 'lucide-vue-next'
 import { supportApi, type SupportStatus, type SupportTicket } from '@/api/support'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import { useToast } from '@/composables/useToast'
+import { useI18n } from 'vue-i18n'
+import { dateLocale, translatedRecord } from '@/i18n'
+
+const { t } = useI18n()
 
 const tickets = ref<SupportTicket[]>([]);
 const selected = ref<SupportTicket | null>(null);
@@ -202,20 +206,9 @@ const filter = ref<SupportStatus | ''>('');
 const reply = ref('');
 const toast = useToast()
 const statuses: SupportStatus[] = ['NEW','IN_PROGRESS','WAITING_USER','RESOLVED','CLOSED']
-const label: Record<SupportStatus,string> = {
-  NEW:'Yangi',
-  IN_PROGRESS:'Jarayonda',
-  WAITING_USER:'User javobi kutilmoqda',
-  RESOLVED:'Hal qilindi',
-  CLOSED:'Yopildi'
-}
+const label = translatedRecord<SupportStatus>('status.ticket')
 const priorities = ['LOW','NORMAL','HIGH','URGENT'] as const
-const priorityLabel: Record<(typeof priorities)[number], string> = {
-  LOW:'Past',
-  NORMAL:'Oddiy',
-  HIGH:'Yuqori',
-  URGENT:'Shoshilinch'
-}
+const priorityLabel = translatedRecord<(typeof priorities)[number]>('adminSupport.priorityLevel')
 
 async function load() {
   loading.value=true;
@@ -255,14 +248,14 @@ async function send() {
     selected.value=(await supportApi.reply(selected.value.id,reply.value.trim()))
         .data; reply.value='';
         await load();
-        toast.success('Javob Telegramga yuborildi')
+        toast.success(t('adminSupport.replySent'))
   } catch(e:any){
-    toast.error(e.response?.data?.message||'Yuborib bo‘lmadi')
+    toast.error(e.response?.data?.message||t('adminSupport.sendError'))
   }
 }
 
 function date(v:string){
-  return new Date(v).toLocaleString('uz-UZ',{dateStyle:'short',timeStyle:'short'})
+  return new Date(v).toLocaleString(dateLocale(),{dateStyle:'short',timeStyle:'short'})
 }
 
 onMounted(load)

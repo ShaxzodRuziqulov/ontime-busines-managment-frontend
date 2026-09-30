@@ -1,8 +1,8 @@
 <template>
   <div class="lg:p-0 p-4">
     <div class="mb-6">
-      <h2 class="text-2xl font-bold text-slate-800">Biznesim</h2>
-      <p class="text-slate-500 text-sm mt-1">Biznes ma'lumotlarini boshqaring</p>
+      <h2 class="text-2xl font-bold text-slate-800">{{ t('business.title') }}</h2>
+      <p class="text-slate-500 text-sm mt-1">{{ t('business.subtitle') }}</p>
     </div>
 
     <LoadingSpinner v-if="businessStore.loading" />
@@ -13,7 +13,7 @@
     >
       <Building2 class="w-12 h-12 text-slate-300 mx-auto mb-3" />
       <p class="text-slate-500">
-        Biznes topilmadi
+        {{ t('business.notFound') }}
       </p>
     </div>
 
@@ -21,15 +21,15 @@
       <div class="space-y-4">
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">
-            Holat
+            {{ t('business.state') }}
           </h3>
           <div class="space-y-3">
             <div class="flex items-center justify-between gap-3">
-              <span class="text-sm text-slate-600">Status</span>
+              <span class="text-sm text-slate-600">{{ t('business.status') }}</span>
               <StatusBadge :status="businessStore.business.status" />
             </div>
             <div class="flex items-center justify-between gap-3">
-              <span class="text-sm text-slate-600">Xizmat turi</span>
+              <span class="text-sm text-slate-600">{{ t('business.category') }}</span>
               <span class="text-sm font-medium text-slate-800 text-right">
                 {{ categoryLabel(businessStore.business.category) }}
               </span>
@@ -38,11 +38,11 @@
                 v-if="businessStore.business.trialEndDate"
                 class="flex items-center justify-between gap-3"
             >
-              <span class="text-sm text-slate-600">Sinov tugashi</span>
+              <span class="text-sm text-slate-600">{{ t('business.trialEnd') }}</span>
               <span class="text-sm font-medium text-slate-800">{{ formatDate(businessStore.business.trialEndDate) }}</span>
             </div>
             <div class="flex items-center justify-between gap-3">
-              <span class="text-sm text-slate-600">Obuna</span>
+              <span class="text-sm text-slate-600">{{ t('business.subscription') }}</span>
               <span class="text-sm font-medium text-slate-800 text-right">{{ subscriptionLabel }}</span>
             </div>
           </div>
@@ -54,10 +54,10 @@
         >
           <div class="flex items-center gap-2 mb-3">
             <Clock class="w-5 h-5 text-amber-600" />
-            <span class="font-semibold text-amber-800">Sinov davri</span>
+            <span class="font-semibold text-amber-800">{{ t('business.trialPeriod') }}</span>
           </div>
           <div class="text-3xl font-bold text-amber-700 mb-1">{{ businessStore.trialDaysLeft }}</div>
-          <div class="text-sm text-amber-600 mb-3">kun qoldi</div>
+          <div class="text-sm text-amber-600 mb-3">{{ t('business.daysLeft') }}</div>
           <div class="w-full bg-amber-200 rounded-full h-2">
             <div
               class="bg-amber-500 h-2 rounded-full transition-all"
@@ -70,15 +70,15 @@
           v-else-if="businessStore.isExpired"
           class="bg-red-50 border border-red-200 rounded-2xl p-5"
         >
-          <p class="text-sm font-semibold text-red-700 mb-1">Obuna kerak</p>
-          <p class="text-xs text-red-600">Amallar bloklangan. Obunani faollashtiring.</p>
+          <p class="text-sm font-semibold text-red-700 mb-1">{{ t('business.subscriptionNeeded') }}</p>
+          <p class="text-xs text-red-600">{{ t('business.actionsBlocked') }}</p>
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div class="flex items-start justify-between gap-3">
             <div>
-              <h3 class="text-sm font-semibold text-slate-800">Mijozlar uchun QR-kod</h3>
-              <p class="text-xs text-slate-500 mt-1">Mijoz skanerlab, bevosita navbat oladi</p>
+              <h3 class="text-sm font-semibold text-slate-800">{{ t('business.qrTitle') }}</h3>
+              <p class="text-xs text-slate-500 mt-1">{{ t('business.qrDesc') }}</p>
             </div>
             <QrCode class="w-5 h-5 text-primary-600 flex-shrink-0" />
           </div>
@@ -87,7 +87,7 @@
             to="/qr-code"
             class="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
           >
-            <QrCode class="w-4 h-4" /> QR-kodni olish
+            <QrCode class="w-4 h-4" /> {{ t('business.getQr') }}
           </RouterLink>
         </div>
       </div>
@@ -96,8 +96,8 @@
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-5">
           <div class="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 class="font-semibold text-slate-800">Bo'limlar</h2>
-              <p class="text-xs text-slate-500 mt-1">Kerakli sahifaga tez o'tish</p>
+              <h2 class="font-semibold text-slate-800">{{ t('business.sections') }}</h2>
+              <p class="text-xs text-slate-500 mt-1">{{ t('business.sectionsDesc') }}</p>
             </div>
           </div>
 
@@ -128,7 +128,7 @@
               <div class="css-hover-tooltip opacity-0 invisible
                  group-hover:opacity-100
                  group-hover:visible">
-                <span>{{section.label}} sahifasiga utish</span>
+                <span>{{ t('common.goToNamedPage', { name: section.label }) }}</span>
               </div>
             </RouterLink>
           </div>
@@ -136,8 +136,8 @@
 
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-            <h2 class="font-semibold text-slate-800">Ma'lumotlarni tahrirlash</h2>
-            <span v-if="saved" class="text-sm text-emerald-600 font-medium">Saqlandi</span>
+            <h2 class="font-semibold text-slate-800">{{ t('business.editInfo') }}</h2>
+            <span v-if="saved" class="text-sm text-emerald-600 font-medium">{{ t('common.saved') }}</span>
           </div>
 
           <div
@@ -155,7 +155,7 @@
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
                 <Building2 class="w-4 h-4 inline mr-1.5" />
-                Biznes nomi
+                {{ t('business.name') }}
               </label>
               <input
                 v-model="form.name"
@@ -168,7 +168,7 @@
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
                 <Tag class="w-4 h-4 inline mr-1.5" />
-                Xizmat turi
+                {{ t('business.category') }}
               </label>
               <select
                 v-model="form.category"
@@ -188,7 +188,7 @@
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
                 <FileText class="w-4 h-4 inline mr-1.5" />
-                Tavsif
+                {{ t('business.description') }}
               </label>
               <textarea
                 v-model="form.description"
@@ -202,7 +202,7 @@
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1.5">
                   <Phone class="w-4 h-4 inline mr-1.5" />
-                  Telefon
+                  {{ t('business.phone') }}
                 </label>
                 <input
                   v-model="form.contactPhone"
@@ -215,12 +215,12 @@
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1.5">
                   <MapPin class="w-4 h-4 inline mr-1.5" />
-                  Shahar
+                  {{ t('business.city') }}
                 </label>
                 <input
                   v-model="form.city"
                   type="text"
-                  placeholder="Toshkent"
+                  :placeholder="t('business.cityPlaceholder')"
                   :disabled="businessStore.isReadOnly"
                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
@@ -230,12 +230,12 @@
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
                 <MapPin class="w-4 h-4 inline mr-1.5" />
-                Manzil
+                {{ t('business.address') }}
               </label>
               <input
                 v-model="form.addressLine"
                 type="text"
-                placeholder="Ko'cha nomi, uy raqami"
+                :placeholder="t('business.addressPlaceholder')"
                 :disabled="businessStore.isReadOnly"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
@@ -244,7 +244,7 @@
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
                 <MapPin class="w-4 h-4 inline mr-1.5" />
-                Xaritadagi joylashuv
+                {{ t('business.mapLocation') }}
               </label>
               <MapPicker
                 v-model="mapPoint"
@@ -262,7 +262,7 @@
                 class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors"
               >
                 <Save class="w-4 h-4" />
-                {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
+                {{ saving ? t('common.saving') : t('common.save') }}
               </button>
             </div>
           </form>
@@ -305,8 +305,10 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import MapPicker from '@/components/common/MapPicker.vue'
 import type { BusinessCategory } from '@/types'
+import { useI18n } from 'vue-i18n'
 
 const toast = useToast()
+const { t } = useI18n()
 const businessStore = useBusinessStore()
 const saving = ref(false)
 const saved = ref(false)
@@ -347,21 +349,11 @@ function applyMapAddress(address: { addressLine: string; city: string }) {
   if (address.city) form.value.city = address.city
 }
 
-const categoryOptions: { value: BusinessCategory; label: string }[] = [
-  { value: 'BARBER', label: 'Sartaroshlik' },
-  { value: 'BEAUTY', label: "Go'zallik" },
-  { value: 'MEDICAL', label: 'Tibbiyot' },
-  { value: 'REPAIR', label: "Ta'mirlash" },
-  { value: 'CONSULTING', label: 'Konsultatsiya' },
-  { value: 'EDUCATION', label: "Ta'lim" },
-  { value: 'FITNESS', label: 'Sport' },
-  { value: 'AUTO', label: 'Avto xizmat' },
-  { value: 'LEGAL', label: 'Yuridik xizmat' },
-  { value: 'OTHER', label: 'Boshqa' },
-]
+const CATEGORIES: BusinessCategory[] = ['BARBER', 'BEAUTY', 'MEDICAL', 'REPAIR', 'CONSULTING', 'EDUCATION', 'FITNESS', 'AUTO', 'LEGAL', 'OTHER']
+const categoryOptions = computed(() => CATEGORIES.map((value) => ({ value, label: t(`category.${value}`) })))
 
 function categoryLabel(category?: BusinessCategory) {
-  return categoryOptions.find((item) => item.value === category)?.label ?? 'Boshqa'
+  return t(`category.${category ?? 'OTHER'}`)
 }
 
 function formatDate(iso: string) {
@@ -377,70 +369,70 @@ const subscriptionLabel = computed(() => {
   const business = businessStore.business
   if (!business) return ''
   if (business.subscriptionEndDate) return formatDate(business.subscriptionEndDate)
-  if (business.status === 'ACTIVE') return 'Cheksiz'
-  if (business.status === 'TRIAL') return 'Sinov rejimida'
-  if (business.status === 'EXPIRED') return 'Muddati tugagan'
-  if (business.status === 'SUSPENDED') return "To'xtatilgan"
-  return 'Belgilanmagan'
+  if (business.status === 'ACTIVE') return t('business.unlimited')
+  if (business.status === 'TRIAL') return t('business.inTrial')
+  if (business.status === 'EXPIRED') return t('business.expired')
+  if (business.status === 'SUSPENDED') return t('business.suspended')
+  return t('business.notSet')
 })
 
 const readOnlyNotice = computed(() => {
   if (!businessStore.isReadOnly) return ''
-  if (businessStore.isTrial) return "Sinov muddati tugagan. Hozir faqat ko'rish mumkin."
-  return "Obuna faol emas. Hozir faqat ko'rish mumkin."
+  if (businessStore.isTrial) return t('business.trialEndedNotice')
+  return t('business.subInactiveNotice')
 })
 
 const profileSections = computed(() => [
   {
-    label: 'Navbatlar',
-    description: 'Mijoz navbatlari va statuslar',
+    label: t('business.secBookings'),
+    description: t('business.secBookingsDesc'),
     value: sectionCounts.value.bookings,
-    suffix: 'ta',
+    suffix: t('common.pcs'),
     to: '/bookings',
     icon: CalendarCheck,
     color: 'bg-blue-50 text-blue-600',
   },
   {
-    label: 'Xizmatlar',
-    description: 'Narx va davomiylik sozlamalari',
+    label: t('business.secServices'),
+    description: t('business.secServicesDesc'),
     value: sectionCounts.value.services,
-    suffix: 'ta',
+    suffix: t('common.pcs'),
     to: '/services',
     icon: Building2,
     color: 'bg-violet-50 text-violet-600',
   },
   {
-    label: 'Xodimlar',
-    description: 'Jamoa va ishchi profillari',
+    label: t('business.secStaff'),
+    description: t('business.secStaffDesc'),
     value: sectionCounts.value.staff,
-    suffix: 'ta',
+    suffix: t('common.pcs'),
     to: '/staff',
     icon: Users,
     color: 'bg-emerald-50 text-emerald-600',
   },
   {
-    label: 'Mijozlar',
-    description: 'Kontaktlar va mijoz bazasi',
+    label: t('business.secCustomers'),
+    description: t('business.secCustomersDesc'),
     value: sectionCounts.value.customers,
-    suffix: 'ta',
+    suffix: t('common.pcs'),
     to: '/customers',
     icon: UserRound,
     color: 'bg-orange-50 text-orange-600',
   },
   {
-    label: 'Ish soatlari',
-    description: 'Haftalik ochiq kunlar',
+    label: t('business.secHours'),
+    description: t('business.secHoursDesc'),
     value: sectionCounts.value.openDays,
-    suffix: 'kun',
+    suffix: t('common.days'),
     to: '/hours',
     icon: AlarmClock,
     color: 'bg-amber-50 text-amber-600',
   },
   {
-    label: 'Sharhlar',
-    description: 'Mijoz baholari va fikrlar',
+    label: t('business.secReviews'),
+    description: t('business.secReviewsDesc'),
     value: sectionCounts.value.reviews,
-    suffix: 'ta',
+    suffix: t('common.pcs'),
     to: '/reviews',
     icon: Star,
     color: 'bg-yellow-100 text-yellow-700',
@@ -478,7 +470,7 @@ async function saveChanges() {
     setTimeout(() => (saved.value = false), 2500)
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Saqlashda xatolik yuz berdi')
+    toast.error(msg || t('profile.saveError'))
   } finally {
     saving.value = false
   }

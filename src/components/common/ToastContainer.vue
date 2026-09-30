@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-vue-next'
 import { useToast } from '@/composables/useToast'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const { toasts, remove } = useToast()
 
@@ -53,7 +56,7 @@ const iconStyles = {
           <button
             @click="remove(toast.id)"
             class="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
-            aria-label="Yopish"
+            :aria-label="t('common.close')"
           >
             <X class="w-4 h-4" />
           </button>

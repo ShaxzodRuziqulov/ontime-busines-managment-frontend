@@ -9,7 +9,7 @@
     <div class="flex items-center justify-between h-16 px-6 border-b border-slate-700/50">
       <AppLogo label="OnTime" size="sm" />
       <button
-        aria-label="Yopish"
+        :aria-label="t('common.close')"
         class="lg:hidden text-slate-400 hover:text-white transition-colors"
         @click="$emit('close')"
       >
@@ -22,7 +22,7 @@
       <!-- Admin navigation -->
       <template v-if="authStore.isAdmin">
         <div class="px-3 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-          Admin
+          {{ t('nav.adminGroup') }}
         </div>
         <RouterLink
           v-for="item in adminNavItems"
@@ -50,7 +50,7 @@
       <!-- Staff portal navigation -->
       <template v-else-if="authStore.isStaff && !authStore.canManageBusiness">
         <div class="px-3 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-          Xodim
+          {{ t('nav.staffGroup') }}
         </div>
         <RouterLink
           v-for="item in staffNavItems"
@@ -101,18 +101,19 @@
         ]"
       >
         <CircleHelp class="h-5 w-5" />
-        Yordam
+        {{ t('common.help') }}
       </RouterLink>
       <div class="px-3 py-2 text-xs text-slate-500">
-        Business Management v1.0
+        {{ t('footer.version') }}
       </div>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -136,39 +137,40 @@ import AppLogo from '@/components/common/AppLogo.vue'
 defineProps<{ open: boolean }>()
 defineEmits<{ close: [] }>()
 
+const { t } = useI18n()
 const route = useRoute()
 const authStore = useAuthStore()
 const adminStore = useAdminStore()
 
-const businessNavItems = [
-  { name: 'Dashboard', to: '/', icon: LayoutDashboard },
-  { name: 'Navbatlar', to: '/bookings', icon: CalendarCheck },
-  { name: 'Jadval', to: '/schedule', icon: CalendarDays },
-  { name: 'Xizmatlar', to: '/services', icon: Briefcase },
-  { name: 'Xodimlar', to: '/staff', icon: Users },
-  { name: 'Mijozlar', to: '/customers', icon: UserRound },
-  { name: 'Ish vaqti', to: '/hours', icon: AlarmClock },
-  { name: 'Biznesim', to: '/business', icon: Building2 },
-  { name: 'Sharhlar', to: '/reviews', icon: Star },
-]
+const businessNavItems = computed(() => [
+  { name: t('nav.dashboard'), to: '/', icon: LayoutDashboard },
+  { name: t('nav.bookings'), to: '/bookings', icon: CalendarCheck },
+  { name: t('nav.schedule'), to: '/schedule', icon: CalendarDays },
+  { name: t('nav.services'), to: '/services', icon: Briefcase },
+  { name: t('nav.staff'), to: '/staff', icon: Users },
+  { name: t('nav.customers'), to: '/customers', icon: UserRound },
+  { name: t('nav.hours'), to: '/hours', icon: AlarmClock },
+  { name: t('nav.business'), to: '/business', icon: Building2 },
+  { name: t('nav.reviews'), to: '/reviews', icon: Star },
+])
 
-const staffNavItems = [
-  { name: 'Bosh sahifa', to: '/staff-portal', icon: House },
-  { name: 'Jadval', to: '/staff-portal/schedule', icon: CalendarDays },
-]
+const staffNavItems = computed(() => [
+  { name: t('nav.home'), to: '/staff-portal', icon: House },
+  { name: t('nav.schedule'), to: '/staff-portal/schedule', icon: CalendarDays },
+])
 
-const adminNavItems = [
-  { name: 'Boshqaruv', to: '/admin', icon: ShieldCheck, badge: null as null | (() => number) },
-  { name: 'Foydalanuvchilar', to: '/admin/users', icon: Users, badge: null },
+const adminNavItems = computed(() => [
+  { name: t('nav.control'), to: '/admin', icon: ShieldCheck, badge: null as null | (() => number) },
+  { name: t('nav.users'), to: '/admin/users', icon: Users, badge: null },
   {
-    name: 'Bizneslar',
+    name: t('nav.businesses'),
     to: '/admin/businesses',
     icon: Building2,
     badge: () => adminStore.pendingReviewCount,
   },
-  { name: 'Audit', to: '/admin/audit', icon: ClipboardList, badge: null },
-  { name: 'Support', to: '/admin/support', icon: CircleHelp, badge: null },
-]
+  { name: t('nav.audit'), to: '/admin/audit', icon: ClipboardList, badge: null },
+  { name: t('nav.support'), to: '/admin/support', icon: CircleHelp, badge: null },
+])
 
 function isActive(path: string) {
   if (path === '/' || path === '/admin' || path === '/staff-portal') return route.path === path

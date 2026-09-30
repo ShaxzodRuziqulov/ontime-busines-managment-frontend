@@ -1,11 +1,11 @@
 <template>
   <div class="max-w-3xl mx-auto space-y-6 lg:p-0 p-4">
     <div>
-      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-600">Yordam va qo‘llab-quvvatlash</h1>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-600">{{ t('support.title') }}</h1>
       <p
           class="mt-1 text-slate-500 dark:text-slate-400"
       >
-        Murojaatingizni OnTime Telegram botiga yozing — javob ham shu chatga keladi.
+        {{ t('support.subtitle') }}
       </p>
     </div>
 
@@ -15,11 +15,11 @@
           <MessageCircle class="h-6 w-6" />
         </div>
         <div>
-          <h2 class="font-semibold text-slate-900 dark:text-white">Telegram orqali murojaat qiling</h2>
+          <h2 class="font-semibold text-slate-900 dark:text-white">{{ t('support.telegramTitle') }}</h2>
           <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Tugmani bosing, botda
+            {{ t('support.telegramDescBefore') }}
             <code class="rounded bg-slate-100 px-1 py-0.5 text-slate-700 dark:bg-slate-700 dark:text-slate-200">Start</code>
-            ni bosing va murojaatingizni yuboring. Hisob bog‘lanmagan bo‘lsa ham yozishingiz mumkin; rasm hamda fayl jo‘natish ham mumkin.
+            {{ t('support.telegramDescAfter') }}
           </p>
           <button
             class="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -27,7 +27,7 @@
             @click="openTelegram"
           >
             <Send class="h-4 w-4" />
-            {{ loading ? 'Ochilyapti...' : 'Telegram botni ochish' }}
+            {{ loading ? t('support.opening') : t('support.openBot') }}
             <ExternalLink class="h-3.5 w-3.5" />
           </button>
         </div>
@@ -40,18 +40,18 @@
         <h3
             class="mt-3 font-medium text-slate-900 dark:text-white"
         >
-          Hisobni bog‘lash — ixtiyoriy
+          {{ t('support.linkTitle') }}
         </h3>
         <p
             class="mt-1 text-sm text-slate-500 dark:text-slate-400"
         >
-          Bir martalik havola hisobingizni botga xavfsiz bog‘laydi va murojaatlar tarixini shu sahifada ko‘rsatadi.
+          {{ t('support.linkDesc') }}
         </p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
         <MessageCircle class="h-5 w-5 text-primary-600" />
-        <h3 class="mt-3 font-medium text-slate-900 dark:text-white">Javobni shu yerda oling</h3>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Support jamoasi javob berganda Telegramdan xabar keladi.</p>
+        <h3 class="mt-3 font-medium text-slate-900 dark:text-white">{{ t('support.replyTitle') }}</h3>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('support.replyDesc') }}</p>
       </div>
     </div>
 
@@ -59,28 +59,28 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="font-semibold text-slate-900 dark:text-white">
-            Murojaatlarim
+            {{ t('support.myTickets') }}
           </h2>
-          <p class="text-sm text-slate-500">Telegram orqali yuborilgan murojaatlar tarixi</p>
+          <p class="text-sm text-slate-500">{{ t('support.myTicketsDesc') }}</p>
         </div>
         <button
             @click="loadTickets"
             class="text-sm text-primary-600"
         >
-          Yangilash
+          {{ t('common.refresh') }}
         </button>
       </div>
       <p
           v-if="ticketsLoading"
           class="py-5 text-sm text-slate-400"
       >
-        Yuklanmoqda...
+        {{ t('common.loading') }}
       </p>
       <p
           v-else-if="!tickets.length"
           class="py-5 text-sm text-slate-400"
       >
-        Hali murojaat yo‘q.
+        {{ t('support.noTickets') }}
       </p>
       <div
           v-else
@@ -113,7 +113,7 @@
               @click="selectedTicket=null"
               class="text-xs text-slate-500"
           >
-            Yopish
+            {{ t('common.close') }}
           </button>
         </div>
         <div class="mt-3 max-h-72 space-y-2 overflow-y-auto">
@@ -144,6 +144,9 @@ import { telegramApi } from '@/api/telegram'
 import { useToast } from '@/composables/useToast'
 import { supportApi, type SupportTicket } from '@/api/support'
 import StatusBadge from '@/components/common/StatusBadge.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const toast = useToast()
@@ -164,7 +167,7 @@ async function openTicket(id: string) {
     selectedTicket.value = (await supportApi.mineGet(id)).data
   }
   catch (error: any) {
-    toast.error(error.response?.data?.message || 'Murojaat tafsilotini yuklab bo‘lmadi.')
+    toast.error(error.response?.data?.message || t('support.ticketLoadError'))
   }
 }
 
@@ -176,7 +179,7 @@ async function openTelegram() {
     const { data } = await telegramApi.createLink()
     window.location.assign(data.url)
   } catch (error: any) {
-    toast.error(error.response?.data?.message || 'Telegram havolasini yaratib bo‘lmadi.')
+    toast.error(error.response?.data?.message || t('support.linkError'))
   } finally {
     loading.value = false
   }

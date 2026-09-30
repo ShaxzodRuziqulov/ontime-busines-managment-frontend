@@ -2,8 +2,8 @@
   <div>
     <div class="flex items-center justify-between mb-6 lg:p-0 p-4">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Xizmatlar</h2>
-        <p class="text-slate-500 text-sm mt-1">{{ services.length }} ta xizmat</p>
+        <h2 class="text-2xl font-bold text-slate-800">{{ t('nav.services') }}</h2>
+        <p class="text-slate-500 text-sm mt-1">{{ t('services.count', { n: services.length }) }}</p>
       </div>
       <button
         v-if="!businessStore.isReadOnly"
@@ -11,7 +11,7 @@
         class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
       >
         <Plus class="w-4 h-4" />
-        Xizmat qo'shish
+        {{ t('services.add') }}
       </button>
     </div>
 
@@ -22,8 +22,8 @@
     <template v-else>
       <EmptyState
         v-if="services.length === 0"
-        title="Xizmat yo'q"
-        description="Birinchi xizmatni qo'shing va mijozlar uni tanlashi mumkin bo'ladi"
+        :title="t('services.emptyTitle')"
+        :description="t('services.emptyDesc')"
       >
         <template #icon>
           <Briefcase class="w-8 h-8 text-slate-400" />
@@ -34,7 +34,7 @@
             @click="openAdd"
             class="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700"
           >
-            Xizmat qo'shish
+            {{ t('services.add') }}
           </button>
         </template>
       </EmptyState>
@@ -72,7 +72,7 @@
               <button
                 @click="toggleActive(service)"
                 class="ml-2 flex-shrink-0 transition-colors"
-                :title="service.active ? 'O\'chirish' : 'Yoqish'"
+                :title="service.active ? t('common.disable') : t('common.enable')"
               >
                 <ToggleRight v-if="service.active" class="w-6 h-6 text-emerald-500" />
                 <ToggleLeft v-else class="w-6 h-6 text-slate-300" />
@@ -87,7 +87,7 @@
               </div>
               <div class="flex items-center gap-1.5 text-sm text-slate-500">
                 <Clock class="w-4 h-4 text-slate-400" />
-                {{ service.durationMinutes }} daqiqa
+                {{ service.durationMinutes }} {{ t('common.minutes') }}
               </div>
             </div>
 
@@ -97,7 +97,7 @@
                   :class="['text-xs font-medium px-2.5 py-1 rounded-full',
                    service.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500']"
               >
-                {{ service.active ? 'Faol' : 'Nofaol' }}
+                {{ service.active ? t('common.active') : t('common.inactive') }}
               </span>
               <div class="flex gap-1">
                 <button
@@ -122,25 +122,25 @@
     <!-- Add/Edit Modal -->
     <AppModal
       v-if="showModal"
-      :title="editingService ? 'Xizmatni tahrirlash' : 'Yangi xizmat'"
+      :title="editingService ? t('services.editTitle') : t('services.newTitle')"
       @close="showModal = false"
     >
       <form @submit.prevent="save" class="space-y-4 p-2">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Xizmat nomi *</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('services.name') }}</label>
           <input
             v-model="form.name"
             type="text"
-            placeholder="Xizmat turini kiriting"
+            :placeholder="t('services.namePlaceholder')"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Tavsif</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('services.description') }}</label>
           <textarea
             v-model="form.description"
-            placeholder="Xizmat haqida qisqacha..."
+            :placeholder="t('services.descriptionPlaceholder')"
             rows="2"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
           />
@@ -148,7 +148,7 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Narx (so'm) *</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('services.price') }}</label>
             <input
               v-model.number="form.basePrice"
               type="number"
@@ -158,7 +158,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Davomiylik (daqiqa) *</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('services.duration') }}</label>
             <input
               v-model.number="form.durationMinutes"
               type="number"
@@ -171,7 +171,7 @@
 
         <!-- Image upload -->
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Reklama rasmi (ixtiyoriy)</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('services.promoImage') }}</label>
 
           <!-- Preview -->
           <div
@@ -198,7 +198,7 @@
             class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-xl p-4 cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors"
           >
             <ImagePlus class="w-6 h-6 text-slate-400" />
-            <span class="text-sm text-slate-500">Rasm yuklash uchun bosing</span>
+            <span class="text-sm text-slate-500">{{ t('common.clickToUpload') }}</span>
             <input
               ref="imageInput"
               type="file"
@@ -216,18 +216,18 @@
           >
             <div :class="['absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform', form.active ? 'translate-x-5' : '']" />
           </div>
-          <span class="text-sm font-medium text-slate-700">Faol holat</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('common.activeState') }}</span>
         </label>
 
         <div class="flex gap-3 pt-2">
           <button type="button"
             class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
             @click="showModal = false">
-            Bekor qilish
+            {{ t('common.cancel') }}
           </button>
           <button type="submit" :disabled="saving || imageUploading"
             class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors">
-            {{ saving || imageUploading ? 'Saqlanmoqda...' : 'Saqlash' }}
+            {{ saving || imageUploading ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </form>
@@ -235,9 +235,9 @@
 
     <ConfirmModal
       v-if="deleteConfirm"
-      title="Xizmatni o'chirish"
-      message="Bu xizmatni o'chirishni tasdiqlaysizmi? Ushbu amal qaytarib bo'lmaydi."
-      confirm-label="O'chirish"
+      :title="t('services.deleteTitle')"
+      :message="t('services.deleteMessage')"
+      :confirm-label="t('common.delete')"
       icon="trash"
       variant="danger"
       @confirm="confirmDelete(deleteConfirm!)"
@@ -261,9 +261,12 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import type { OfferedService, ServiceCreateRequest } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 
 const businessStore = useBusinessStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const services = ref<OfferedService[]>([])
 const loading = ref(true)
@@ -316,12 +319,12 @@ function onImagePick(event: Event) {
   const file = input.files?.[0]
   if (!file) return
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    toast.error('Faqat JPEG, PNG, GIF yoki WEBP formatidagi rasm yuklang')
+    toast.error(t('common.imageTypeAll'))
     input.value = ''
     return
   }
   if (file.size > MAX_IMAGE_SIZE) {
-    toast.error('Rasm hajmi 5MB dan oshmasligi kerak')
+    toast.error(t('common.imageSize'))
     input.value = ''
     return
   }
@@ -359,7 +362,7 @@ async function save() {
       }
       const idx = services.value.findIndex((s) => s.id === editingId)
       if (idx !== -1) services.value[idx] = saved
-      toast.success('Xizmat yangilandi')
+      toast.success(t('services.updated'))
     } else {
       const { data } = await servicesApi.create(bid, form.value)
       saved = data
@@ -370,11 +373,11 @@ async function save() {
         imageUploading.value = false
       }
       services.value.unshift(saved)
-      toast.success("Yangi xizmat qo'shildi")
+      toast.success(t('services.added'))
     }
     showModal.value = false
   } catch {
-    toast.error('Xatolik yuz berdi')
+    toast.error(t('common.error'))
   } finally {
     saving.value = false
     imageUploading.value = false
@@ -389,7 +392,7 @@ async function toggleActive(service: OfferedService) {
     const idx = services.value.findIndex((s) => s.id === service.id)
     if (idx !== -1) services.value[idx] = data
   } catch {
-    toast.error('Holatni o\'zgartirishda xatolik yuz berdi')
+    toast.error(t('common.statusChangeError'))
   }
 }
 
@@ -402,15 +405,15 @@ async function confirmDelete(id: string) {
   try {
     await servicesApi.delete(bid, id)
     services.value = services.value.filter((s) => s.id !== id)
-    toast.success("Xizmat o'chirildi")
+    toast.success(t('services.deleted'))
   } catch {
-    toast.error("O'chirishda xatolik yuz berdi")
+    toast.error(t('common.deleteError'))
   }
   deleteConfirm.value = null
 }
 
 function formatPrice(price: number) {
-  return new Intl.NumberFormat('uz-UZ').format(price) + " so'm"
+  return new Intl.NumberFormat(dateLocale()).format(price) + ' ' + t('common.currency')
 }
 
 function imgUrl(url: string | null | undefined) {

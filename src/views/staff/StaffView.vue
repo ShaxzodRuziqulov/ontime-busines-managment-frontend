@@ -2,8 +2,8 @@
   <div>
     <div class="flex items-center justify-between lg:p-0 p-4 mb-6">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Xodimlar</h2>
-        <p class="text-slate-500 text-sm mt-1">{{ staff.length }} ta xodim</p>
+        <h2 class="text-2xl font-bold text-slate-800">{{ t('nav.staff') }}</h2>
+        <p class="text-slate-500 text-sm mt-1">{{ t('staff.count', { n: staff.length }) }}</p>
       </div>
       <button
         v-if="!businessStore.isReadOnly"
@@ -11,7 +11,7 @@
         class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
       >
         <Plus class="w-4 h-4" />
-        Xodim qo'shish
+        {{ t('staff.add') }}
       </button>
     </div>
 
@@ -30,8 +30,8 @@
     <template v-else>
       <EmptyState
         v-if="staff.length === 0"
-        title="Xodim yo'q"
-        description="Birinchi xodimni qo'shing va ular navbatlar uchun tanlanishi mumkin bo'ladi"
+        :title="t('staff.emptyTitle')"
+        :description="t('staff.emptyDesc')"
       >
         <template #icon>
           <Users class="w-8 h-8 text-slate-400" />
@@ -42,7 +42,7 @@
             @click="openAdd"
             class="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700"
           >
-            Xodim qo'shish
+            {{ t('staff.add') }}
           </button>
         </template>
       </EmptyState>
@@ -61,7 +61,7 @@
             <img
                 v-if="member.avatarUrl"
                 :src="getAvatarUrl(member.avatarUrl)"
-                alt="Xodim"
+                :alt="t('staff.avatarAlt')"
                 class="w-12 h-12 rounded-full"
             >
             <div
@@ -79,7 +79,7 @@
                 <div class="flex items-center gap-1">
                   <Briefcase class="w-3.5 h-3.5 text-slate-400" />
                   <span class="text-sm text-slate-500">
-                    {{ member.linkedUserId ? "Bog'langan" : 'Mustaqil' }}
+                    {{ member.linkedUserId ? t('staff.linked') : t('staff.independent') }}
                   </span>
                 </div>
                 <!-- Avg rating badge -->
@@ -133,7 +133,7 @@
                 v-else
                 class="text-xs font-medium text-red-500"
             >
-              Xizmat biriktirilmagan
+              {{ t('staff.noServices') }}
             </p>
           </div>
 
@@ -144,7 +144,7 @@
                 member.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500',
               ]"
             >
-              {{ member.active ? 'Faol' : 'Nofaol' }}
+              {{ member.active ? t('common.active') : t('common.inactive') }}
             </span>
             <div v-if="!businessStore.isReadOnly" class="flex gap-1">
               <button
@@ -168,7 +168,7 @@
     <!-- Add/Edit Modal -->
     <AppModal
       v-if="showModal"
-      :title="editingStaff ? 'Xodimni tahrirlash' : 'Yangi xodim'"
+      :title="editingStaff ? t('staff.editTitle') : t('staff.newTitle')"
       size="lg"
       @close="showModal = false"
     >
@@ -181,12 +181,12 @@
             <label
                 class="block text-sm font-medium text-slate-700 mb-1.5"
             >
-              Ism *
+              {{ t('staff.firstNameReq') }}
             </label>
             <input
               v-model="form.firstName"
               type="text"
-              placeholder="Ism kiriting"
+              :placeholder="t('staff.firstNamePlaceholder')"
               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
@@ -195,12 +195,12 @@
             <label
                 class="block text-sm font-medium text-slate-700 mb-1.5"
             >
-              Familiya
+              {{ t('staff.lastName') }}
             </label>
             <input
               v-model="form.lastName"
               type="text"
-              placeholder="Familiya kiriting"
+              :placeholder="t('staff.lastNamePlaceholder')"
               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
@@ -208,7 +208,7 @@
 
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">
-            Qila oladigan xizmatlar
+            {{ t('staff.services') }}
           </label>
           <div
               v-if="services.length"
@@ -243,7 +243,7 @@
               <span
                   class="flex-shrink-0 text-xs text-slate-400"
               >
-                {{ service.durationMinutes }} daq
+                {{ service.durationMinutes }} {{ t('common.minShort') }}
               </span>
             </label>
           </div>
@@ -251,13 +251,13 @@
               v-else
               class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700"
           >
-            Avval xizmat qo'shing, keyin xodimni shu xizmatlarga biriktirasiz.
+            {{ t('staff.addServiceFirst') }}
           </p>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">
-            Hisob (portalga kirish)
+            {{ t('staff.account') }}
           </label>
 
           <!-- Mode tabs -->
@@ -266,13 +266,13 @@
               type="button"
               @click="setAccountMode('register')"
               :disabled="!!editingStaff?.linkedUserId"
-              :title="editingStaff?.linkedUserId ? 'Xodim allaqachon hisobga bog\'langan' : ''"
+              :title="editingStaff?.linkedUserId ? t('staff.alreadyLinked') : ''"
               :class="[
                 'px-3 py-2 rounded-xl text-xs font-medium border transition-all disabled:opacity-40 disabled:cursor-not-allowed',
                 accountMode === 'register' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
               ]"
             >
-              Yangi hisob yaratish
+              {{ t('staff.createAccount') }}
             </button>
             <button
               type="button"
@@ -282,7 +282,7 @@
                 accountMode === 'link' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
               ]"
             >
-              Mavjud loginni bog'lash
+              {{ t('staff.linkExisting') }}
             </button>
           </div>
 
@@ -295,12 +295,12 @@
               <label
                   class="block text-xs font-medium text-slate-600 mb-1"
               >
-                Login *
+                {{ t('staff.login') }}
               </label>
               <input
                 v-model="registerForm.login"
                 type="text"
-                placeholder="Loginni kiriting"
+                :placeholder="t('staff.loginPlaceholder')"
                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
@@ -308,12 +308,12 @@
               <label
                   class="block text-xs font-medium text-slate-600 mb-1"
               >
-                Parol *
+                {{ t('staff.password') }}
               </label>
               <input
                 v-model="registerForm.password"
                 type="text"
-                placeholder="Kamida 4 belgi"
+                :placeholder="t('auth.min4')"
                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
@@ -322,7 +322,7 @@
                 <label
                     class="block text-xs font-medium text-slate-600 mb-1"
                 >
-                  Email (ixtiyoriy)
+                  {{ t('staff.emailOptional') }}
                 </label>
                 <input
                   v-model="registerForm.email"
@@ -335,7 +335,7 @@
                 <label
                     class="block text-xs font-medium text-slate-600 mb-1"
                 >
-                  Telefon (ixtiyoriy)
+                  {{ t('staff.phoneOptional') }}
                 </label>
                 <input
                   v-model="registerForm.phone"
@@ -379,7 +379,7 @@
                   class="group bg-slate-50 rounded-xl mt-3"
               >
                 <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-semibold text-slate-600">
-                  Hisob ma'lumotlarini o'zgartirish
+                  {{ t('staff.editAccount') }}
                   <span class="text-slate-400 transition-transform group-open:rotate-180">
                     <ChevronDown class="w-4 h-4" />
                   </span>
@@ -388,7 +388,7 @@
                   <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">
-                      Ism
+                      {{ t('staff.firstName') }}
                     </label>
                     <input
                       v-model="accountUpdateForm.firstName"
@@ -398,7 +398,7 @@
                   </div>
                   <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">
-                      Familiya
+                      {{ t('staff.lastName') }}
                     </label>
                     <input
                       v-model="accountUpdateForm.lastName"
@@ -407,7 +407,7 @@
                     />
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Email</label>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('staff.email') }}</label>
                     <input
                       v-model="accountUpdateForm.email"
                       type="email"
@@ -415,7 +415,7 @@
                     />
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Telefon</label>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('staff.phone') }}</label>
                     <input
                       v-model="accountUpdateForm.phone"
                       type="tel"
@@ -425,11 +425,11 @@
                   </div>
                 </div>
                   <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Yangi parol</label>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('staff.newPassword') }}</label>
                     <input
                       v-model="accountUpdateForm.password"
                       type="text"
-                      placeholder="O'zgartirmaslik uchun bo'sh qoldiring"
+                      :placeholder="t('staff.keepEmpty')"
                       class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
@@ -440,7 +440,7 @@
               <input
                 v-model="linkLogin"
                 type="text"
-                placeholder="Foydalanuvchi login"
+                :placeholder="t('staff.userLogin')"
                 class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 @keydown.enter.prevent="lookupUser"
               />
@@ -451,11 +451,11 @@
                 class="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
               >
                 <Search class="w-4 h-4" />
-                {{ linkLookupLoading ? 'Qidirilmoqda...' : 'Tekshirish' }}
+                {{ linkLookupLoading ? t('staff.searching') : t('staff.check') }}
               </button>
             </div>
             <p v-if="linkLookupError" class="text-xs text-red-600 mt-1.5">{{ linkLookupError }}</p>
-            <p class="text-xs text-slate-500 mt-1.5">Xodim avval o'zi ro'yxatdan o'tgan (login yaratgan) bo'lishi kerak.</p>
+            <p class="text-xs text-slate-500 mt-1.5">{{ t('staff.mustRegister') }}</p>
           </template>
         </div>
 
@@ -475,7 +475,7 @@
                 ]"
               />
             </span>
-            <span class="text-sm font-medium text-slate-700">Faol holat</span>
+            <span class="text-sm font-medium text-slate-700">{{ t('common.activeState') }}</span>
           </label>
 
           <div class="flex gap-3 sm:w-72">
@@ -484,14 +484,14 @@
               class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
               @click="showModal = false"
             >
-              Bekor qilish
+              {{ t('common.cancel') }}
             </button>
             <button
               type="submit"
               :disabled="saving"
               class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors"
             >
-              {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
+              {{ saving ? t('common.saving') : t('common.save') }}
             </button>
           </div>
         </div>
@@ -500,9 +500,9 @@
 
     <ConfirmModal
       v-if="deleteConfirm"
-      title="Xodimni o'chirish"
-      message="Bu xodimni o'chirishni tasdiqlaysizmi? Ushbu amal qaytarib bo'lmaydi."
-      confirm-label="O'chirish"
+      :title="t('staff.deleteTitle')"
+      :message="t('staff.deleteMessage')"
+      :confirm-label="t('common.delete')"
       icon="trash"
       variant="danger"
       @confirm="confirmDelete(deleteConfirm!)"
@@ -527,9 +527,11 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import type { StaffMember, StaffCreateRequest, StaffRegisterRequest, StaffAccountUpdateRequest, OfferedService } from '@/types'
+import { useI18n } from 'vue-i18n'
 
 const businessStore = useBusinessStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const staff = ref<StaffMember[]>([])
 const services = ref<OfferedService[]>([])
@@ -596,7 +598,7 @@ async function openEdit(member: StaffMember) {
   originalAccountUpdateForm.value = { firstName: '', lastName: '', email: '', phone: '', password: '' }
   if (member.linkedUserId) {
     accountMode.value = 'link'
-    linkedUser.value = { id: member.linkedUserId, login: '', firstName: "Bog'langan foydalanuvchi", lastName: null }
+    linkedUser.value = { id: member.linkedUserId, login: '', firstName: t('staff.linkedUser'), lastName: null }
     showModal.value = true
     const bid = businessStore.business?.id
     try {
@@ -613,7 +615,7 @@ async function openEdit(member: StaffMember) {
         originalAccountUpdateForm.value = { ...accountUpdateForm.value }
       }
     } catch {
-      toast.error("Bog'langan hisob ma'lumotlarini yuklab bo'lmadi")
+      toast.error(t('staff.accountLoadError'))
     }
   } else {
     accountMode.value = 'none'
@@ -633,7 +635,7 @@ async function lookupUser() {
     form.value.firstName = data.firstName || ''
     form.value.lastName = data.lastName || ''
   } catch {
-    linkLookupError.value = 'Bu login bilan foydalanuvchi topilmadi'
+    linkLookupError.value = t('staff.userNotFound')
     linkedUser.value = null
     form.value.linkedUserId = null
   } finally {
@@ -691,21 +693,21 @@ async function save() {
   if (!bid) return
 
   if (accountMode.value === 'link' && !linkedUser.value) {
-    toast.error('Avval loginni tekshiring')
+    toast.error(t('staff.checkLoginFirst'))
     return
   }
   if (accountMode.value === 'register') {
     if (!registerForm.value.login || registerForm.value.password.length < 4) {
-      toast.error('Login va kamida 4 belgili parol kiriting')
+      toast.error(t('staff.loginPasswordRequired'))
       return
     }
   }
   if (accountUpdateForm.value.password && accountUpdateForm.value.password.length < 4) {
-    toast.error('Yangi parol kamida 4 belgidan iborat bo\'lishi kerak')
+    toast.error(t('profile.newPasswordMin'))
     return
   }
   if (!form.value.firstName.trim()) {
-    toast.error('Ism kiritilishi shart')
+    toast.error(t('profile.firstNameRequired'))
     return
   }
 
@@ -717,7 +719,7 @@ async function save() {
       const { data } = await staffApi.registerForExisting(bid, editingId, payload)
       const idx = staff.value.findIndex((s) => s.id === editingId)
       if (idx !== -1) staff.value[idx] = data
-      toast.success('Xodimga hisob yaratildi')
+      toast.success(t('staff.accountCreated'))
     } else if (editingStaff.value) {
       const editingId = editingStaff.value.id
       const { data } = await staffApi.update(bid, editingId, staffPayload())
@@ -736,23 +738,23 @@ async function save() {
       }
       const idx = staff.value.findIndex((s) => s.id === editingId)
       if (idx !== -1) staff.value[idx] = finalData
-      toast.success('Xodim yangilandi')
+      toast.success(t('staff.updated'))
     } else if (accountMode.value === 'register') {
       const payload = staffRegisterPayload()
       const { data } = await staffApi.register(bid, payload)
       staff.value.unshift(data)
       ratings.value[data.id] = 0
-      toast.success("Yangi xodim va uning hisobi yaratildi")
+      toast.success(t('staff.createdWithAccount'))
     } else {
       const { data } = await staffApi.create(bid, staffPayload())
       staff.value.unshift(data)
       ratings.value[data.id] = 0
-      toast.success("Yangi xodim qo'shildi")
+      toast.success(t('staff.added'))
     }
     showModal.value = false
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Xatolik yuz berdi')
+    toast.error(msg || t('common.error'))
   } finally {
     saving.value = false
   }
@@ -767,7 +769,7 @@ async function toggleActive(member: StaffMember) {
     const idx = staff.value.findIndex((s) => s.id === member.id)
     if (idx !== -1) staff.value[idx] = data
   } catch {
-    toast.error("Holatni o'zgartirishda xatolik")
+    toast.error(t('common.statusChangeError'))
   }
 }
 
@@ -779,9 +781,9 @@ async function confirmDelete(id: string) {
     await staffApi.delete(bid, id)
     staff.value = staff.value.filter((s) => s.id !== id)
     delete ratings.value[id]
-    toast.success("Xodim o'chirildi")
+    toast.success(t('staff.deleted'))
   } catch {
-    toast.error("O'chirishda xatolik yuz berdi")
+    toast.error(t('common.deleteError'))
   }
   deleteConfirm.value = null
 }
@@ -819,7 +821,7 @@ const getAvatarUrl = (url: string | undefined): string => {
 };
 
 function serviceName(serviceId: string) {
-  return services.value.find((service) => service.id === serviceId)?.name ?? "O'chirilgan xizmat"
+  return services.value.find((service) => service.id === serviceId)?.name ?? t('staff.deletedService')
 }
 
 onMounted(async () => {

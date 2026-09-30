@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between flex-wrap gap-4 mb-6">
       <div class="flex w-full items-center justify-between lg:p-0 p-4">
         <div class="flex flex-col">
-          <h2 class="font-bold text-slate-800">Jadval</h2>
+          <h2 class="font-bold text-slate-800">{{ t('schedule.title') }}</h2>
 <!--          <p class="text-slate-500 text-sm">{{ formatDate() }}</p>-->
         </div>
         <div class="flex items-center gap-2">
@@ -32,7 +32,7 @@
               @click="selectedDate = todayIso()"
               class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 cursor-pointer text-sm text-slate-600"
           >
-            Bugun
+            {{ t('common.today') }}
           </button>
         </div>
       </div>
@@ -57,10 +57,10 @@
           {{tab.label}}
         </button>
         <div class="flex text-slate-400 text-sm font-medium ml-2 gap-2">
-          Jami:
+          {{ t('schedule.total') }}
           <span class="text-slate-700 border-b border-gray-400 inline-block"
           >
-            {{ filteredBookings.length }} ta navbat
+            {{ t('schedule.bookingsCount', { n: filteredBookings.length }) }}
           </span>
         </div>
       </div>
@@ -70,13 +70,13 @@
         v-if="loading"
         class="bg-white rounded-2xl border border-slate-100 p-10 text-center text-slate-400"
     >
-      Yuklanmoqda...
+      {{ t('common.loading') }}
     </div>
 
     <EmptyState
         v-else-if="activeStaff.length === 0"
-        title="Faol xodim yo'q"
-        description="Jadvalni ko'rish uchun avval faol xodim qo'shing"
+        :title="t('schedule.noActiveStaff')"
+        :description="t('schedule.noActiveStaffDesc')"
     >
       <template #icon>
         <CalendarDays class="w-8 h-8 text-slate-400" />
@@ -85,8 +85,8 @@
 
     <EmptyState
         v-else-if="!todayHours || todayHours.closed"
-        :title="`${WEEKDAY_LABELS[weekdayForSelectedDate]} kuni ish yo'q`"
-        description="Bu kun uchun ish vaqti belgilanmagan yoki dam olish kuni"
+        :title="t('schedule.dayOffTitle', { day: t(`weekdays.${weekdayForSelectedDate}`) })"
+        :description="t('schedule.dayOffDesc')"
     >
       <template #icon>
         <CalendarDays class="w-8 h-8 text-slate-400" />
@@ -101,7 +101,7 @@
           v-if="bookingsLoading"
           class="absolute inset-0 bg-white/60 z-30 flex items-center justify-center text-sm text-slate-400"
       >
-        Yuklanmoqda...
+        {{ t('common.loading') }}
       </div>
       <div
           class="overflow-auto"
@@ -114,7 +114,7 @@
           <div class="flex sticky top-0 z-30 bg-slate-100 border-b border-gray-200">
             <div class="w-16 flex-shrink-0 bg-slate-50 flex items-center justify-center text-xs font-medium border-r border-gray-200 text-slate-600 sticky left-0"
             >
-              Vaqt
+              {{ t('schedule.time') }}
             </div>
             <div
                 v-for="col in columns"
@@ -185,7 +185,7 @@
                 :key="col.id ?? 'unassigned'"
                 class="flex-1 relative z-10 border-r border-slate-100 duration-200 transition-colors group"
                 :style="{ minWidth: `${COLUMN_WIDTH}px` }"
-                title="Yangi navbat qo'shish uchun bosing"
+                :title="t('schedule.clickToAdd')"
                 @click.self="onColumnClick($event, col.id, col.name)"
                 @mousemove="onColumnMouseMove($event, col.id)"
                 @mouseleave="onColumnMouseLeave"
@@ -229,7 +229,7 @@
                 <div v-else class="absolute" :style="item.style">
                   <button
                       class="w-full h-full rounded-md flex items-center justify-center text-[11px] font-semibold text-white bg-slate-400 hover:bg-slate-500 shadow-sm transition-colors z-20"
-                      :title="`${item.bookings.length} ta bekor/kelmadi`"
+                      :title="t('schedule.cancelledCount', { n: item.bookings.length })"
                       @click.stop="toggleGroup(item.key)"
                   >
                     {{ item.bookings.length }}✕
@@ -245,7 +245,7 @@
                         :style="{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }"
                     >
                       <div class="px-3 py-2 border-b border-slate-100 bg-slate-50">
-                        <p class="text-xs font-medium text-slate-600">Bekor / kelmadi bronlar</p>
+                        <p class="text-xs font-medium text-slate-600">{{ t('schedule.cancelledList') }}</p>
                       </div>
                       <div class="max-h-64 overflow-auto divide-y divide-slate-100">
                         <button
@@ -343,25 +343,25 @@
           </div>
           <div class="px-5 py-4 space-y-2 text-sm">
             <p class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1">
-              <span>Xodim:</span>
+              <span>{{ t('schedule.staffLabel') }}</span>
               {{ bookingStaffName(selectedBooking) }}
             </p>
             <p
                 class="text-slate-700 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
             >
-              Telefon
+              {{ t('schedule.phone') }}
               <span>{{ selectedBooking.customerPhone }}</span>
             </p>
             <p
                 class="flex items-center justify-between border-b border-dashed border-slate-300 pb-1 text-slate-700"
             >
-              Xizmat
+              {{ t('schedule.service') }}
               <span>{{ selectedBooking.offeredServiceName || '—' }}</span>
             </p>
             <p
                 class="text-slate-700 border-b border-dashed border-slate-300 pb-1 flex items-center justify-between"
             >
-              <span>Vaqt</span>
+              <span>{{ t('schedule.time') }}</span>
               <span>
                 {{ formatTime(selectedBooking.startAt) }} — {{ formatTime(selectedBooking.endAt) }}
               </span>
@@ -369,7 +369,7 @@
             <p
                 class="flex text-slate-700 items-center justify-between border-b border-dashed border-slate-300 pb-1"
             >
-              <span>Holat</span>
+              <span>{{ t('schedule.status') }}</span>
               <span
                   :class="['inline-block text-xs font-medium px-2.5 py-1 rounded-full',
                   bookingStatusBadgeColors[selectedBooking?.status]]"
@@ -380,7 +380,7 @@
             <p
                 class="flex flex-wrap text-slate-700 items-center justify-between border-b border-dashed border-slate-300 pb-1"
             >
-              <span>Izoh:</span>
+              <span>{{ t('schedule.noteLabel') }}</span>
               <span
                   class="text-slate-400"
               >
@@ -419,7 +419,7 @@
         <div class="relative text-gray-600 bg-white rounded-2xl shadow-2xl w-full max-w-sm z-10">
           <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <div>
-              <h3 class="font-semibold text-slate-800">Yangi navbat</h3>
+              <h3 class="font-semibold text-slate-800">{{ t('schedule.newBooking') }}</h3>
               <p
                   class="text-xs text-slate-600 mt-0.5"
               >
@@ -438,38 +438,38 @@
               <label
                   class="block text-xs font-medium text-slate-600 mb-1"
               >
-                Xizmat *
+                {{ t('schedule.serviceReq') }}
               </label>
               <select
                   v-model="quickForm.offeredServiceId"
                   class="w-full px-3 py-2 rounded-lg text-gray-600 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
               >
-                <option value="" disabled>Tanlang...</option>
+                <option value="" disabled>{{ t('schedule.choose') }}</option>
                 <option
                     v-for="s in quickAvailableServices"
                     :key="s.id"
                     :value="s.id"
                 >
-                  {{ s.name }} — ({{ s.durationMinutes }} daq. - {{s.basePrice}} so'm).
+                  {{ s.name }} — ({{ s.durationMinutes }} {{ t('common.minShort') }}. - {{ s.basePrice.toLocaleString(dateLocale()) }} {{ t('common.currency') }}).
                 </option>
               </select>
               <p
                   v-if="quickCreate.staffId && quickAvailableServices.length === 0"
                   class="mt-1 text-xs text-red-500"
               >
-                Bu xodimga xizmat biriktirilmagan
+                {{ t('schedule.noStaffServices') }}
               </p>
             </div>
 
             <div v-if="quickSelectedService">
               <label class="block text-xs font-medium text-slate-600 mb-1">
-                Vaqt *
+                {{ t('schedule.timeReq') }}
               </label>
               <div
                   v-if="quickPossibleStarts.length === 0"
                   class="text-xs text-slate-400"
               >
-                Bu kunda bo'sh vaqt yo'q
+                {{ t('schedule.noFreeTime') }}
               </div>
               <div
                   v-else
@@ -495,12 +495,12 @@
 
             <div>
               <label class="block border-t border-gray-200 py-2 text-xs font-medium text-slate-600 mb-1">
-                Mijoz ismi *
+                {{ t('schedule.customerNameReq') }}
               </label>
               <input
                   v-model="quickForm.customerFirstName"
                   type="text"
-                  placeholder="Ism kiriting"
+                  :placeholder="t('staff.firstNamePlaceholder')"
                   class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
@@ -508,7 +508,7 @@
               <label
                   class="block text-xs font-medium text-slate-600 mb-1"
               >
-                Telefon
+                {{ t('schedule.phone') }}
               </label>
               <input
                   v-model="quickForm.customerPhone"
@@ -532,7 +532,7 @@
                 @click="closeQuickCreate"
                 class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
             >
-              Bekor qilish
+              {{ t('common.cancel') }}
             </button>
             <button
                 type="button"
@@ -540,7 +540,7 @@
                 @click="submitQuickCreate"
                 class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors"
             >
-              {{ quickSaving ? 'Saqlanmoqda...' : 'Yaratish' }}
+              {{ quickSaving ? t('common.saving') : t('schedule.create') }}
             </button>
           </div>
         </div>
@@ -558,6 +558,8 @@ import { bookingsApi } from '@/api/bookings'
 import { servicesApi } from '@/api/services'
 import { useBusinessStore } from '@/stores/business'
 import { useToast } from '@/composables/useToast'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 import EmptyState from '@/components/common/EmptyState.vue'
 import {
   bookingStatusLabels,
@@ -573,6 +575,7 @@ import type { StaffMember, BusinessHours, Booking, BookingStatus, OfferedService
 
 const businessStore = useBusinessStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const staffList = ref<StaffMember[]>([])
 const hours = ref<BusinessHours[]>([])
@@ -598,10 +601,6 @@ const quickError = ref('')
 
 const selectedDate = ref(todayIso())
 
-const WEEKDAY_LABELS: Record<string, string> = {
-  MONDAY: 'Dushanba', TUESDAY: 'Seshanba', WEDNESDAY: 'Chorshanba',
-  THURSDAY: 'Payshanba', FRIDAY: 'Juma', SATURDAY: 'Shanba', SUNDAY: 'Yakshanba',
-}
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string)
     .replace(/\/api\/v1\/?$/, '');
@@ -812,16 +811,16 @@ type Tabs = 'all' | 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CAN
 
 const activeFilter =ref<Tabs>('all')
 
-const filteredButtons: {label: string; value: Tabs; activeColor?: string; color?: string; }[] = [
-  {label: 'Hammasi', value: 'all', color: 'bg-gray-600 text-white border-gray-200'},
-  {label: 'Mijoz', value: 'PENDING', activeColor: 'bg-amber-500', color: 'bg-amber-100 text-gray-600 border-amber-200'},
-  {label: 'Bekor(Mijoz)', value: 'CANCELLED_BY_CUSTOMER', activeColor: 'bg-red-500', color: 'bg-red-100 text-red-600 border-red-500'},
-  {label: 'Bekor(Xodim)', value: 'CANCELLED_BY_BUSINESS', activeColor: 'bg-red-400', color: 'bg-red-50 text-red-600 border-red-400'},
-  {label: 'Kelmadi', value: 'NO_SHOW', activeColor: 'bg-gray-400', color: 'bg-slate-200 text-slate-500 border-slate-300'},
-  {label: 'Tasdiqlandi', value: 'CONFIRMED', activeColor: 'bg-blue-400', color: 'bg-blue-100 text-blue-600 border-blue-300'},
-  {label: 'Jarayonda', value: 'IN_PROGRESS', activeColor: 'bg-indigo-500', color: 'bg-indigo-400 text-indigo-500 border-indigo-300'},
-  {label: 'Bajarildi', value: 'COMPLETED', activeColor: 'bg-emerald-500', color: 'bg-emerald-100 text-gray-600 border-emerald-500' },
-]
+const filteredButtons = computed<{label: string; value: Tabs; activeColor?: string; color?: string; }[]>(() => [
+  {label: t('schedule.all'), value: 'all', color: 'bg-gray-600 text-white border-gray-200'},
+  {label: t('schedule.legendCustomer'), value: 'PENDING', activeColor: 'bg-amber-500', color: 'bg-amber-100 text-gray-600 border-amber-200'},
+  {label: t('schedule.cancelledCustomer'), value: 'CANCELLED_BY_CUSTOMER', activeColor: 'bg-red-500', color: 'bg-red-100 text-red-600 border-red-500'},
+  {label: t('schedule.cancelledStaff'), value: 'CANCELLED_BY_BUSINESS', activeColor: 'bg-red-400', color: 'bg-red-50 text-red-600 border-red-400'},
+  {label: t('schedule.legendNoShow'), value: 'NO_SHOW', activeColor: 'bg-gray-400', color: 'bg-slate-200 text-slate-500 border-slate-300'},
+  {label: t('schedule.legendConfirmed'), value: 'CONFIRMED', activeColor: 'bg-blue-400', color: 'bg-blue-100 text-blue-600 border-blue-300'},
+  {label: t('schedule.legendInProgress'), value: 'IN_PROGRESS', activeColor: 'bg-indigo-500', color: 'bg-indigo-400 text-indigo-500 border-indigo-300'},
+  {label: t('schedule.legendCompleted'), value: 'COMPLETED', activeColor: 'bg-emerald-500', color: 'bg-emerald-100 text-gray-600 border-emerald-500' },
+])
 
 const setActiveTab = (tab: Tabs) => {
   activeFilter.value = tab
@@ -994,7 +993,7 @@ async function submitQuickCreate() {
   const service = quickSelectedService.value
   if (!bid || !quickCreate.value || !service || quickForm.value.startMin === null) return
   if (!quickForm.value.customerFirstName.trim()) {
-    quickError.value = 'Mijoz ismini kiriting'
+    quickError.value = t('bookings.enterCustomerName')
     return
   }
   quickSaving.value = true
@@ -1016,19 +1015,19 @@ async function submitQuickCreate() {
       customerNote: quickForm.value.customerNote.trim() || undefined,
     }
     await bookingsApi.create(payload)
-    toast.success('Navbat yaratildi')
+    toast.success(t('bookings.created'))
     quickCreate.value = null
     await loadBookings()
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    quickError.value = msg || 'Navbat yaratishda xatolik'
+    quickError.value = msg || t('bookings.createError')
   } finally {
     quickSaving.value = false
   }
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })
 }
 
 async function loadStaticData() {
@@ -1080,10 +1079,10 @@ async function changeStatus(status: BookingStatus) {
   try {
     await bookingsApi.update(booking.id, { status })
     booking.status = status
-    toast.success('Holat yangilandi')
+    toast.success(t('common.statusUpdated'))
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Holatni yangilashda xatolik')
+    toast.error(msg || t('common.statusUpdateError'))
   } finally {
     updatingId.value = null
   }

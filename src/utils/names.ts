@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 export interface PersonName {
   firstName?: string | null
   lastName?: string | null
@@ -27,7 +29,7 @@ export function personName(person: PersonName | null | undefined, fallback = 'â€
   return name || person.login || fallback
 }
 
-export function bookingCustomerName(booking: BookingName, fallback = 'Mijoz') {
+export function bookingCustomerName(booking: BookingName, fallback = t('common.customer')) {
   const name = [booking.customerFirstName, booking.customerLastName]
     .filter((part) => !!part?.trim())
     .map((part) => part!.trim())
@@ -43,7 +45,7 @@ export function bookingStaffName(booking: BookingName, fallback = 'â€”') {
   return name || fallback
 }
 
-export function reviewCustomerName(review: ReviewName, fallback = 'Mijoz') {
+export function reviewCustomerName(review: ReviewName, fallback = t('common.customer')) {
   return bookingCustomerName(review, fallback)
 }
 

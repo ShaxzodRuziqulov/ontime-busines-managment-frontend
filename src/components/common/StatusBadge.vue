@@ -1,32 +1,12 @@
 <script setup lang="ts">
 import type { BookingStatus, BusinessStatus } from '@/types'
+import { useI18n } from 'vue-i18n'
+
+const { t, te } = useI18n()
 
 defineProps<{
   status: BookingStatus | BusinessStatus | string
 }>()
-
-const bookingLabels: Record<string, string> = {
-  PENDING: 'Kutilmoqda',
-  CONFIRMED: 'Tasdiqlangan',
-  IN_PROGRESS: 'Jarayonda',
-  COMPLETED: 'Bajarildi',
-  CANCELLED_BY_CUSTOMER: 'Mijoz bekor qildi',
-  CANCELLED_BY_BUSINESS: 'Biznes bekor qildi',
-  NO_SHOW: 'Kelmadi',
-}
-
-const businessLabels: Record<string, string> = {
-  TRIAL: 'Sinov',
-  ACTIVE: 'Faol',
-  EXPIRED: 'Muddati o\'tgan',
-  SUSPENDED: 'To\'xtatilgan',
-  DRAFT: 'Qoralama',
-  PENDING_REVIEW: 'Moderatsiyada',
-  NEW: 'Yangi',
-  WAITING_USER: 'User javobi kutilmoqda',
-  RESOLVED: 'Hal qilindi',
-  CLOSED: 'Yopildi',
-}
 
 const colorMap: Record<string, string> = {
   PENDING: 'bg-amber-100 text-amber-700 ring-amber-200',
@@ -69,7 +49,10 @@ const dotMap: Record<string, string> = {
 }
 
 function getLabel(status: string) {
-  return bookingLabels[status] || businessLabels[status] || status
+  for (const group of ['status.bookingLong', 'status.booking', 'status.business', 'status.ticket']) {
+    if (te(`${group}.${status}`)) return t(`${group}.${status}`)
+  }
+  return status
 }
 
 function getColor(status: string) {

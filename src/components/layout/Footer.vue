@@ -32,7 +32,7 @@
             class="w-5 h-5"
             :class="moreOpen || isMoreActive ? 'text-primary-600' : 'text-slate-400'"
         />
-        <span class="leading-none">Yana</span>
+        <span class="leading-none">{{ t('common.more') }}</span>
       </button>
     </div>
 
@@ -73,6 +73,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   ShieldCheck,
   Users,
@@ -92,6 +93,7 @@ import {
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const route = useRoute()
 const moreOpen = ref(false)
@@ -103,54 +105,52 @@ interface NavItem {
 }
 
 /* ------------------------------------------------------------- Admin */
-const adminMain: NavItem[] = [
-  { label: 'Boshqaruv', to: '/admin', icon: ShieldCheck },
-  { label: 'Foydalanuvchilar', to: '/admin/users', icon: Users },
-  { label: 'Bizneslar', to: '/admin/businesses', icon: Building2 },
-  { label: 'Audit', to: '/admin/audit', icon: ClipboardList },
-  { label: 'Support', to: '/admin/support', icon: LifeBuoy },
-
-]
-const adminMore: NavItem[] = [
-  // { label: 'Yordam', to: '/help', icon: HelpCircle },
-]
+const adminMain = computed<NavItem[]>(() => [
+  { label: t('nav.control'), to: '/admin', icon: ShieldCheck },
+  { label: t('nav.users'), to: '/admin/users', icon: Users },
+  { label: t('nav.businesses'), to: '/admin/businesses', icon: Building2 },
+  { label: t('nav.audit'), to: '/admin/audit', icon: ClipboardList },
+  { label: t('nav.support'), to: '/admin/support', icon: LifeBuoy },
+])
+const adminMore = computed<NavItem[]>(() => [
+  // { label: t('common.help'), to: '/help', icon: HelpCircle },
+])
 
 /* ---------------------------------------------------------- Business */
-const businessMain: NavItem[] = [
-  { label: 'Bosh sahifa', to: '/', icon: LayoutDashboard },
-  { label: 'Navbatlar', to: '/bookings', icon: CalendarCheck },
-  { label: 'Jadval', to: '/schedule', icon: CalendarDays },
-  { label: 'Xizmatlar', to: '/services', icon: Briefcase },
-]
-const businessMore: NavItem[] = [
-  { label: 'Xodimlar', to: '/staff', icon: Users },
-  { label: 'Mijozlar', to: '/customers', icon: UserRound },
-  { label: 'Ish vaqti', to: '/hours', icon: AlarmClock },
-  { label: 'Biznesim', to: '/business', icon: Building2 },
-  { label: 'Sharhlar', to: '/reviews', icon: Star },
-  { label: 'Yordam', to: '/help', icon: CircleHelp },
-]
+const businessMain = computed<NavItem[]>(() => [
+  { label: t('nav.home'), to: '/', icon: LayoutDashboard },
+  { label: t('nav.bookings'), to: '/bookings', icon: CalendarCheck },
+  { label: t('nav.schedule'), to: '/schedule', icon: CalendarDays },
+  { label: t('nav.services'), to: '/services', icon: Briefcase },
+])
+const businessMore = computed<NavItem[]>(() => [
+  { label: t('nav.staff'), to: '/staff', icon: Users },
+  { label: t('nav.customers'), to: '/customers', icon: UserRound },
+  { label: t('nav.hours'), to: '/hours', icon: AlarmClock },
+  { label: t('nav.business'), to: '/business', icon: Building2 },
+  { label: t('nav.reviews'), to: '/reviews', icon: Star },
+  { label: t('common.help'), to: '/help', icon: CircleHelp },
+])
 
 /* ------------------------------------------------------------- Staff */
-const staffMain: NavItem[] = [
-  { label: 'Bosh sahifa', to: '/staff-portal', icon: House },
-  { label: 'Jadval', to: '/staff-portal/schedule', icon: CalendarDays },
-  { label: 'Yordam', to: '/help', icon: CircleHelp },
-
-]
-const staffMore: NavItem[] = []
+const staffMain = computed<NavItem[]>(() => [
+  { label: t('nav.home'), to: '/staff-portal', icon: House },
+  { label: t('nav.schedule'), to: '/staff-portal/schedule', icon: CalendarDays },
+  { label: t('common.help'), to: '/help', icon: CircleHelp },
+])
+const staffMore = computed<NavItem[]>(() => [])
 
 /* ------------------------------------------------------ Rolga qarab tanlash */
 const mainItems = computed<NavItem[]>(() => {
-  if (authStore.isAdmin) return adminMain
-  if (authStore.isStaff && !authStore.canManageBusiness) return staffMain
-  return businessMain
+  if (authStore.isAdmin) return adminMain.value
+  if (authStore.isStaff && !authStore.canManageBusiness) return staffMain.value
+  return businessMain.value
 })
 
 const moreItems = computed<NavItem[]>(() => {
-  if (authStore.isAdmin) return adminMore
-  if (authStore.isStaff && !authStore.canManageBusiness) return staffMore
-  return businessMore
+  if (authStore.isAdmin) return adminMore.value
+  if (authStore.isStaff && !authStore.canManageBusiness) return staffMore.value
+  return businessMore.value
 })
 
 const showMore = computed(() => moreItems.value.length > 0)

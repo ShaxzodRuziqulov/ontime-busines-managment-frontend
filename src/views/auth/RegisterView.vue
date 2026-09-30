@@ -10,27 +10,27 @@
         <div
             class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-400/25 bg-primary-500/10 px-3 py-1.5 text-xs font-bold text-primary-200"
         >
-          Yangi biznesingizni bugun boshlang
+          {{ t('auth.regTagline') }}
         </div>
         <h1 class="text-5xl font-black leading-[1.08] tracking-tight xl:text-6xl">
-          Bir necha daqiqada
+          {{ t('auth.regHeroLine1') }}
           <br />
           <span class="bg-gradient-to-r from-primary-300 to-teal-300 bg-clip-text text-transparent">
-            ishga tayyor
+            {{ t('auth.regHeroHighlight') }}
           </span>
-          bo‘ling.
+          {{ t('auth.regHeroLine2') }}
         </h1>
         <p class="mt-6 max-w-lg text-lg leading-8 text-slate-300">
-          Biznesingiz, jamoangiz va navbatlaringizni bitta tizimdan boshqaring. Dastlabki 14 kun bepul.
+          {{ t('auth.regHeroDesc') }}
         </p>
       </div>
 
       <div class="grid max-w-2xl grid-cols-3 gap-3">
         <div
             v-for="step in [
-            { num: '1', text: 'Hisob yarating' },
-            { num: '2', text: 'Biznesingizni sozlang' },
-            { num: '3', text: 'Bepul sinab ko‘ring' },
+            { num: '1', text: t('auth.step1') },
+            { num: '2', text: t('auth.step2') },
+            { num: '3', text: t('auth.step3') },
           ]"
             :key="step.num"
             class="rounded-2xl border border-white/10 bg-white/[.045] p-4 backdrop-blur"
@@ -44,6 +44,9 @@
     </section>
 
     <section class="relative flex min-h-screen flex-1 items-center justify-center px-5 py-10 sm:px-8 lg:border-l lg:border-white/[.06]">
+      <div class="absolute right-4 top-4 z-10">
+        <LanguageSwitcher />
+      </div>
       <div class="w-full max-w-md">
         <AppLogo size="md" class="mb-10 lg:hidden" />
 
@@ -56,10 +59,10 @@
               OnTime Biznes
             </p>
             <h2 class="mt-2 text-3xl font-black tracking-tight">
-              Ro'yxatdan o'tish
+              {{ t('auth.registerTitle') }}
             </h2>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              Hisob yarating va biznesingizni boshqarishni boshlang.
+              {{ t('auth.registerDesc') }}
             </p>
           </div>
 
@@ -81,12 +84,12 @@
               <label
                   class="mb-1.5 block text-sm font-bold text-slate-200"
               >
-                Ism *
+                {{ t('auth.firstName') }} *
               </label>
               <input
                   v-model="form.firstName"
                   type="text"
-                  placeholder="Ism"
+                  :placeholder="t('auth.firstName')"
                   autocomplete="given-name"
                   @blur="validateFirstName"
                   :class="[
@@ -108,12 +111,12 @@
               <label
                   class="mb-1.5 block text-sm font-bold text-slate-200"
               >
-                Familiya
+                {{ t('auth.lastName') }}
               </label>
               <input
                   v-model="form.lastName"
                   type="text"
-                  placeholder="Familiya"
+                  :placeholder="t('auth.lastName')"
                   autocomplete="family-name"
                   class="w-full rounded-xl border border-white/10 bg-white/[.045] px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-primary-400 focus:bg-white/[.075] focus:ring-2 focus:ring-primary-500/30"
               />
@@ -125,7 +128,7 @@
                   for="reg-username"
                   class="mb-1.5 block text-sm font-bold text-slate-200"
               >
-                Login *
+                {{ t('auth.login') }} *
               </label>
               <input
                   id="reg-username"
@@ -155,7 +158,7 @@
                   for="reg-password"
                   class="mb-1.5 block text-sm font-bold text-slate-200"
               >
-                Parol *
+                {{ t('auth.password') }} *
               </label>
               <div class="relative">
                 <input
@@ -172,7 +175,7 @@
                 />
                 <button
                     type="button"
-                    :aria-label="showPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish'"
+                    :aria-label="showPassword ? t('auth.hidePassword') : t('auth.showPassword')"
                     class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 transition hover:text-white"
                     @click="showPassword = !showPassword"
                 >
@@ -201,7 +204,7 @@
                     for="reg-email"
                     class="mb-1.5 block text-sm font-bold text-slate-200"
                 >
-                  Email
+                  {{ t('auth.email') }}
                 </label>
                 <input
                     id="reg-email"
@@ -217,7 +220,7 @@
                     for="reg-phone"
                     class="mb-1.5 block text-sm font-bold text-slate-200"
                 >
-                  Telefon
+                  {{ t('auth.phone') }}
                 </label>
                 <input
                     id="reg-phone"
@@ -241,17 +244,17 @@
                 class="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 py-3.5 font-bold text-white shadow-lg shadow-primary-900/30 transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Loader2 v-if="loading" class="w-5 h-5 animate-spin" />
-              {{ loading ? 'Ro\'yxatdan o\'tilmoqda...' : 'Davom etish' }}
+              {{ loading ? t('auth.registering') : t('auth.continue') }}
             </button>
           </form>
 
           <p class="mt-7 text-center text-sm text-slate-400">
-            Hisobingiz bormi?
+            {{ t('auth.haveAccount') }}
             <RouterLink
                 :to="{ name: 'login' }"
                 class="font-bold text-primary-300 transition hover:text-primary-200"
             >
-              Kirish
+              {{ t('auth.signInLink') }}
             </RouterLink>
           </p>
         </div>
@@ -266,6 +269,10 @@ import { useRouter } from 'vue-router'
 import { Eye, EyeOff, Loader2, AlertCircle, UserPlus } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import AppLogo from '@/components/common/AppLogo.vue'
+import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -329,27 +336,27 @@ const error = ref('')
 const fieldErrors = reactive({ firstName: '', login: '', password: '' })
 
 function validateFirstName() {
-  fieldErrors.firstName = form.firstName.length < 2 ? 'Ism kamida 2 ta belgi bo\'lishi kerak' : ''
+  fieldErrors.firstName = form.firstName.length < 2 ? t('auth.firstNameMin') : ''
 }
 function validateLogin() {
-  fieldErrors.login = form.login.length < 3 ? 'Login kamida 3 ta belgi bo\'lishi kerak' : ''
+  fieldErrors.login = form.login.length < 3 ? t('auth.loginMin') : ''
 }
 function validatePassword() {
-  fieldErrors.password = form.password.length < 4 ? 'Parol kamida 4 ta belgi bo\'lishi kerak' : ''
+  fieldErrors.password = form.password.length < 4 ? t('auth.passwordMin') : ''
 }
 
 async function handleRegister() {
   if (!form.login || !form.firstName) {
-    error.value = 'Login va ism kiritilishi shart'
+    error.value = t('auth.loginNameRequired')
     return
   }
   if (form.password.length < 4) {
-    error.value = 'Parol kamida 4 ta belgidan iborat bo\'lishi kerak'
+    error.value = t('auth.passwordMin')
     return
   }
 
   if (!isPhoneComplete.value) {
-    error.value = "Telefon raqamni to'liq kiriting";
+    error.value = t('auth.phoneIncomplete');
     return;
   }
 
@@ -364,11 +371,11 @@ async function handleRegister() {
     await router.push('/onboarding')
   } catch (e: any) {
     if (e.response?.status === 409) {
-      error.value = 'Bu login allaqachon band'
+      error.value = t('auth.loginTaken')
     } else if (e.response?.status === 400) {
-      error.value = e.response.data?.message || 'Ma\'lumotlar noto\'g\'ri'
+      error.value = e.response.data?.message || t('auth.invalidData')
     } else {
-      error.value = 'Serverga ulanishda xatolik'
+      error.value = t('auth.serverError')
     }
   } finally {
     loading.value = false

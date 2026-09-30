@@ -13,17 +13,17 @@
           v-if="services.length === 0"
           class="py-14 text-center text-slate-400 text-sm"
       >
-        Xizmat yo'q
+        {{ t('bizTabs.noServices') }}
       </div>
       <table v-else class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
             <th class="px-5 py-3 text-left font-medium">№</th>
-            <th class="px-5 py-3 text-left font-medium">Xizmat nomi</th>
-            <th class="px-5 py-3 text-left font-medium">Rasm</th>
-            <th class="px-5 py-3 text-left font-medium">Narx</th>
-            <th class="px-5 py-3 text-left font-medium">Davomiyligi</th>
-            <th class="px-5 py-3 text-left font-medium">Holat</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.serviceName') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.image') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.price') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.duration') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('common.status') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
@@ -46,17 +46,17 @@
               <img v-if="svc.imageUrl" class="w-10 h-10 rounded-md" :src="getAvatarUrl(svc.imageUrl)" alt="">
             </td>
             <td class="px-5 py-3.5 text-slate-700 font-medium">
-              {{ svc.basePrice.toLocaleString('uz-UZ') }} so'm
+              {{ svc.basePrice.toLocaleString(dateLocale()) }} {{ t('common.currency') }}
             </td>
             <td class="px-5 py-3.5 text-slate-500">
-              {{ svc.durationMinutes }} daqiqa
+              {{ svc.durationMinutes }} {{ t('common.minutes') }}
             </td>
             <td class="px-5 py-3.5">
               <span
                   :class="['px-2.5 py-1 rounded-full text-xs font-medium',
                    svc.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500']"
               >
-                {{ svc.active ? 'Faol' : "Nofaol" }}
+                {{ svc.active ? t('common.active') : t('common.inactive') }}
               </span>
             </td>
           </tr>
@@ -72,16 +72,16 @@
           v-if="staff.length === 0"
           class="py-14 text-center text-slate-400 text-sm"
       >
-        Xodim yo'q
+        {{ t('bizTabs.noStaff') }}
       </div>
       <table v-else class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
             <th class="px-5 py-3 text-left font-medium">№</th>
-            <th class="px-5 py-3 text-left font-medium">Xodim</th>
-            <th class="px-5 py-3 text-left font-medium">Tajriba yili</th>
-            <th class="px-5 py-3 text-left font-medium">Holat</th>
-            <th class="px-5 py-3 text-left font-medium">Qo'shilgan</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.staff') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.experience') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('common.status') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.joined') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
@@ -113,11 +113,11 @@
                   :class="['px-2.5 py-1 rounded-full text-xs font-medium',
                    s.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500']"
               >
-                {{ s.active ? 'Faol' : 'Nofaol' }}
+                {{ s.active ? t('common.active') : t('common.inactive') }}
               </span>
             </td>
             <td class="px-5 py-3.5 text-slate-500 text-xs">
-              {{ new Date(s.createdAt).toLocaleDateString('uz-UZ') }}
+              {{ new Date(s.createdAt).toLocaleDateString(dateLocale()) }}
             </td>
           </tr>
         </tbody>
@@ -132,15 +132,15 @@
           v-if="sortedHours.length === 0"
           class="py-14 text-center text-slate-400 text-sm"
       >
-        Ish soatlari belgilanmagan
+        {{ t('bizTabs.noHours') }}
       </div>
       <table v-else class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
-            <th class="px-5 py-3 text-left font-medium">Kun</th>
-            <th class="px-5 py-3 text-left font-medium">Ochilish</th>
-            <th class="px-5 py-3 text-left font-medium">Yopilish</th>
-            <th class="px-5 py-3 text-left font-medium">Holat</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.day') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.opens') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('bizTabs.closes') }}</th>
+            <th class="px-5 py-3 text-left font-medium">{{ t('common.status') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-50">
@@ -151,7 +151,7 @@
                h.closed && 'opacity-60']"
           >
             <td class="px-5 py-3 font-medium text-slate-800">
-              {{ weekdayLabels[h.weekday] ?? h.weekday }}
+              {{ te(`weekdays.${h.weekday}`) ? t(`weekdays.${h.weekday}`) : h.weekday }}
             </td>
             <td class="px-5 py-3 text-slate-600">
               {{ h.closed ? '—' : h.opensAt }}
@@ -164,7 +164,7 @@
                   :class="['px-2.5 py-1 rounded-full text-xs font-medium',
                    h.closed ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700']"
               >
-                {{ h.closed ? 'Yopiq' : 'Ochiq' }}
+                {{ h.closed ? t('common.closed') : t('common.open') }}
               </span>
             </td>
           </tr>
@@ -180,7 +180,7 @@
           v-if="reviews.length === 0"
           class="py-14 text-center text-slate-400 text-sm"
       >
-        Sharh yo'q
+        {{ t('bizTabs.noReviews') }}
       </div>
       <div
           v-else
@@ -199,7 +199,7 @@
               <div class="min-w-0">
                 <p class="text-sm font-semibold text-slate-800 truncate">
                   <span v-if="r.customerFirstName">{{ r.customerFirstName }} {{ r.customerLastName }}</span>
-                  <span v-else class="text-slate-400 font-normal italic">Mijoz topilmadi</span>
+                  <span v-else class="text-slate-400 font-normal italic">{{ t('bizTabs.customerNotFound') }}</span>
                 </p>
                 <p class="flex items-center gap-1 text-xs text-slate-400">
                   <Users class="w-3 h-3 flex-shrink-0" />
@@ -208,7 +208,7 @@
               </div>
             </div>
             <span class="text-xs text-slate-400 whitespace-nowrap flex-shrink-0">
-              {{ new Date(r.createdAt).toLocaleDateString('uz-UZ') }}
+              {{ new Date(r.createdAt).toLocaleDateString(dateLocale()) }}
             </span>
           </div>
 
@@ -233,7 +233,7 @@
               v-else
               class="text-sm text-slate-400 italic"
           >
-            Izoh yo'q
+            {{ t('bizTabs.noComment') }}
           </p>
         </div>
       </div>
@@ -246,6 +246,10 @@ import { computed } from 'vue'
 import { Loader2, Users, Star } from 'lucide-vue-next'
 import { personName } from '@/utils/names'
 import type { OfferedService, StaffMember, BusinessHours, Review } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
+
+const { t, te } = useI18n()
 
 const props = defineProps<{
   activeTab: 'services' | 'staff' | 'hours' | 'reviews'
@@ -264,11 +268,6 @@ const getAvatarUrl = (url: string | undefined): string => {
   if (url.startsWith("https")) return url;
   return `${BASE_URL}${url}`;
 };
-
-const weekdayLabels: Record<string, string> = {
-  MONDAY: 'Dushanba', TUESDAY: 'Seshanba', WEDNESDAY: 'Chorshanba',
-  THURSDAY: 'Payshanba', FRIDAY: 'Juma', SATURDAY: 'Shanba', SUNDAY: 'Yakshanba',
-}
 
 const weekdayOrder = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 const sortedHours = computed(() =>

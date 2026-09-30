@@ -10,22 +10,22 @@
             class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-400/25 bg-primary-500/10 px-3 py-1.5 text-xs font-bold text-primary-200"
         >
           <Sparkles class="h-3.5 w-3.5" />
-          Biznesingiz uchun yagona ish maydoni
+          {{ t('auth.tagline') }}
         </div>
         <h1
             class="text-5xl font-black leading-[1.08] tracking-tight xl:text-6xl"
         >
-          Vaqtingizni emas,
+          {{ t('auth.heroLine1') }}
           <br />
           <span
               class="bg-gradient-to-r from-primary-300 to-teal-300 bg-clip-text text-transparent"
           >
-            biznesingizni
+            {{ t('auth.heroHighlight') }}
           </span>
-          o‘stiring.
+          {{ t('auth.heroLine2') }}
         </h1>
         <p class="mt-6 max-w-lg text-lg leading-8 text-slate-300">
-          Navbatlar, jamoa va xizmatlarni bir markazdan boshqaring. Mijozingiz kutishdan avval siz tayyor bo‘ling.
+          {{ t('auth.heroDesc') }}
         </p>
       </div>
       <div class="grid max-w-2xl grid-cols-3 gap-3">
@@ -33,25 +33,28 @@
             class="rounded-2xl border border-white/10 bg-white/[.045] p-4 backdrop-blur"
         >
           <CalendarCheck2 class="h-5 w-5 text-teal-300" />
-          <p class="mt-4 text-xl font-black">14 kun</p>
-          <p class="mt-1 text-xs text-slate-400">Bepul sinov</p>
+          <p class="mt-4 text-xl font-black">{{ t('auth.trialDays') }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ t('auth.freeTrial') }}</p>
         </div>
         <div
             class="rounded-2xl border border-white/10 bg-white/[.045] p-4 backdrop-blur"
         >
           <UsersRound class="h-5 w-5 text-primary-300" />
-          <p class="mt-4 text-xl font-black">Cheksiz</p>
-          <p class="mt-1 text-xs text-slate-400">Jamoa a’zolari</p>
+          <p class="mt-4 text-xl font-black">{{ t('auth.unlimited') }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ t('auth.teamMembers') }}</p>
         </div>
         <div class="rounded-2xl border border-white/10 bg-white/[.045] p-4 backdrop-blur">
           <ShieldCheck class="h-5 w-5 text-cyan-300" />
-          <p class="mt-4 text-xl font-black">Xavfsiz</p>
-          <p class="mt-1 text-xs text-slate-400">Boshqaruv tizimi</p>
+          <p class="mt-4 text-xl font-black">{{ t('auth.secure') }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ t('auth.managementSystem') }}</p>
         </div>
       </div>
     </section>
 
     <section class="relative flex min-h-screen flex-1 items-center justify-center px-5 py-10 sm:px-8 lg:border-l lg:border-white/[.06]">
+      <div class="absolute right-4 top-4 z-10">
+        <LanguageSwitcher />
+      </div>
       <div class="w-full max-w-md">
         <AppLogo size="md" class="mb-10 lg:hidden" />
         <div class="rounded-[2rem] border border-white/10 bg-slate-950/45 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
@@ -60,10 +63,10 @@
               OnTime Biznes
             </p>
             <h2 class="mt-2 text-3xl font-black tracking-tight">
-              Xush kelibsiz
+              {{ t('auth.welcome') }}
             </h2>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              Biznes panelingizga kirish uchun ma’lumotlarni kiriting.
+              {{ t('auth.loginDesc') }}
             </p>
           </div>
 
@@ -72,7 +75,7 @@
             v-if="route.query.reset === 'success'"
             class="mb-6 flex items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200"
           >
-            Parol almashtirildi. Yangi parol bilan tizimga kiring.
+            {{ t('auth.resetSuccess') }}
           </div>
 
           <div
@@ -93,13 +96,13 @@
                   for="login-username"
                   class="mb-1.5 block text-sm font-bold text-slate-200"
               >
-                Login
+                {{ t('auth.login') }}
               </label>
               <input
                 id="login-username"
                 v-model="form.login"
                 type="text"
-                placeholder="loginni kiriting"
+                :placeholder="t('auth.loginPlaceholder')"
                 autocomplete="username"
                 @blur="validateLogin"
                 :class="[
@@ -122,13 +125,13 @@
                     for="login-password"
                     class="block text-sm font-bold text-slate-200"
                 >
-                  Parol
+                  {{ t('auth.password') }}
                 </label>
                 <RouterLink
                     to="/forgot-password"
                     class="text-sm font-bold text-primary-300 transition hover:text-primary-200"
                 >
-                  Parolni unutdingizmi?
+                  {{ t('auth.forgotPassword') }}
                 </RouterLink>
               </div>
               <div class="relative">
@@ -146,7 +149,7 @@
                 />
                 <button
                   type="button"
-                  :aria-label="showPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish'"
+                  :aria-label="showPassword ? t('auth.hidePassword') : t('auth.showPassword')"
                   class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 transition hover:text-white"
                   @click="showPassword = !showPassword"
                 >
@@ -172,7 +175,7 @@
                   v-if="loading"
                   class="w-5 h-5 animate-spin"
               />
-              {{ loading ? 'Kirilmoqda...' : 'Panelga kirish' }}
+              {{ loading ? t('auth.signingIn') : t('auth.signIn') }}
               <ArrowRight
                   v-if="!loading"
                   class="h-4 w-4"
@@ -181,13 +184,13 @@
           </form>
 
           <p class="mt-7 text-center text-sm text-slate-400">
-            Hali hisobingiz yo'qmi?
+            {{ t('auth.noAccount') }}
             <RouterLink
                 :to="{ name: 'register' }"
                 class="font-bold text-primary-300 transition hover:text-primary-200"
                 @click="error = ''"
             >
-              Ro'yxatdan o'ting
+              {{ t('auth.register') }}
             </RouterLink>
           </p>
         </div>
@@ -202,6 +205,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowRight, CalendarCheck2, Eye, EyeOff, Loader2, AlertCircle, ShieldCheck, Sparkles, UsersRound } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import AppLogo from '@/components/common/AppLogo.vue'
+import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const router = useRouter()
 const route = useRoute()
@@ -214,16 +221,16 @@ const error = ref('')
 const fieldErrors = reactive({ login: '', password: '' })
 
 function validateLogin() {
-  fieldErrors.login = form.login.length < 3 ? 'Login kamida 3 ta belgi bo\'lishi kerak' : ''
+  fieldErrors.login = form.login.length < 3 ? t('auth.loginMin') : ''
 }
 function validatePassword() {
-  fieldErrors.password = form.password.length < 1 ? 'Parol kiritilishi shart' : ''
+  fieldErrors.password = form.password.length < 1 ? t('auth.passwordRequired') : ''
 }
 
 const handleLogin = async () => {
   if (loading.value) return
   if (!form.login || !form.password) {
-    error.value = 'Login va parol kiritilishi shart'
+    error.value = t('auth.credentialsRequired')
     return
   }
 
@@ -248,9 +255,9 @@ const handleLogin = async () => {
     }
   } catch (e: any) {
     if (e.response?.status === 401) {
-      error.value = 'Login yoki parol noto\'g\'ri'
+      error.value = t('auth.invalidCredentials')
     } else {
-      error.value = e.response?.data?.message || 'Serverga ulanishda xatolik'
+      error.value = e.response?.data?.message || t('auth.serverError')
     }
   } finally {
     loading.value = false

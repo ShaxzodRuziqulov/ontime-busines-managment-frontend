@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-5xl lg:p-0 p-4">
     <div class="mb-5">
-      <h2 class="text-xl font-bold text-slate-800">Mening profilim</h2>
+      <h2 class="text-xl font-bold text-slate-800">{{ t('profile.title') }}</h2>
     </div>
 
     <LoadingSpinner v-if="loading" />
@@ -41,11 +41,11 @@
                 :class="profile.active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'"
               >
                 <CheckCircle v-if="profile.active" class="w-3.5 h-3.5" />
-                {{ profile.active ? 'Faol' : 'Faol emas' }}
+                {{ profile.active ? t('profile.active') : t('profile.notActive') }}
               </span>
               <span v-if="profile.businessOwner" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary-50 text-primary-700 text-xs font-medium">
                 <Shield class="w-3.5 h-3.5" />
-                Egasi
+                {{ t('profile.owner') }}
               </span>
             </div>
           </div>
@@ -53,11 +53,11 @@
 
         <div class="mt-5 pt-5 border-t border-slate-100 space-y-3 text-sm">
           <div>
-            <p class="text-xs text-slate-400 mb-1">Email</p>
+            <p class="text-xs text-slate-400 mb-1">{{ t('profile.email') }}</p>
             <p class="text-slate-700 truncate">{{ profile.email || '-' }}</p>
           </div>
           <div>
-            <p class="text-xs text-slate-400 mb-1">Telefon</p>
+            <p class="text-xs text-slate-400 mb-1">{{ t('profile.phone') }}</p>
             <p class="text-slate-700 truncate">{{ profile.phone || '-' }}</p>
           </div>
         </div>
@@ -69,32 +69,32 @@
             class="bg-white rounded-xl border border-slate-100 shadow-sm p-5"
         >
           <div class="flex items-center justify-between gap-3 mb-4">
-            <h3 class="text-sm font-semibold text-slate-800">Shaxsiy ma'lumotlar</h3>
-            <span class="text-xs text-slate-400">Profil</span>
+            <h3 class="text-sm font-semibold text-slate-800">{{ t('profile.personalInfo') }}</h3>
+            <span class="text-xs text-slate-400">{{ t('profile.profileTag') }}</span>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Ism *</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('profile.firstName') }}</label>
               <input
                 v-model="form.firstName"
                 type="text"
                 autocomplete="given-name"
-                placeholder="Masalan: Shaxzod"
+                :placeholder="t('profile.firstNamePlaceholder')"
                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Familiya</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('profile.lastName') }}</label>
               <input
                 v-model="form.lastName"
                 type="text"
                 autocomplete="family-name"
-                placeholder="Masalan: Ruziqulov"
+                :placeholder="t('profile.lastNamePlaceholder')"
                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Email</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('profile.email') }}</label>
               <input
                 v-model="form.email"
                 type="email"
@@ -104,7 +104,7 @@
               />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Telefon</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('profile.phone') }}</label>
               <input
                 v-model="displayPhone"
                 inputmode="numeric"
@@ -124,7 +124,7 @@
               :disabled="saving"
               class="w-full sm:w-auto px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white text-sm font-semibold transition-colors"
             >
-              {{ saving ? 'Saqlanmoqda...' : "Ma'lumotlarni saqlash" }}
+              {{ saving ? t('common.saving') : t('profile.saveInfo') }}
             </button>
           </div>
         </form>
@@ -134,25 +134,25 @@
             class="bg-white rounded-xl border border-slate-100 shadow-sm p-5"
         >
           <div class="flex items-center justify-between gap-3 mb-4">
-            <h3 class="text-sm font-semibold text-slate-800">Parolni o'zgartirish</h3>
-            <span class="text-xs text-slate-400">Xavfsizlik</span>
+            <h3 class="text-sm font-semibold text-slate-800">{{ t('profile.changePassword') }}</h3>
+            <span class="text-xs text-slate-400">{{ t('profile.security') }}</span>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Joriy parol</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('profile.currentPassword') }}</label>
               <div class="relative">
                 <input
                   v-model="passwordForm.currentPassword"
                   :type="showCurrentPassword ? 'text' : 'password'"
                   autocomplete="current-password"
-                  placeholder="Joriy parol"
+                  :placeholder="t('profile.currentPassword')"
                   class="w-full pl-3 pr-10 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
                 <button
                   type="button"
                   class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
                   @click="showCurrentPassword = !showCurrentPassword"
-                  :aria-label="showCurrentPassword ? 'Parolni yashirish' : 'Parolni ko‘rsatish'"
+                  :aria-label="showCurrentPassword ? t('auth.hidePassword') : t('auth.showPassword')"
                 >
                   <EyeOff v-if="showCurrentPassword" class="w-4 h-4" />
                   <Eye v-else class="w-4 h-4" />
@@ -160,20 +160,20 @@
               </div>
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Yangi parol</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('profile.newPassword') }}</label>
               <div class="relative">
                 <input
                   v-model="passwordForm.newPassword"
                   :type="showNewPassword ? 'text' : 'password'"
                   autocomplete="new-password"
-                  placeholder="Kamida 4 belgi"
+                  :placeholder="t('auth.min4')"
                   class="w-full pl-3 pr-10 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
                 <button
                   type="button"
                   class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
                   @click="showNewPassword = !showNewPassword"
-                  :aria-label="showNewPassword ? 'Parolni yashirish' : 'Parolni ko‘rsatish'"
+                  :aria-label="showNewPassword ? t('auth.hidePassword') : t('auth.showPassword')"
                 >
                   <EyeOff v-if="showNewPassword" class="w-4 h-4" />
                   <Eye v-else class="w-4 h-4" />
@@ -181,20 +181,20 @@
               </div>
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Tasdiqlash</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ t('profile.confirm') }}</label>
               <div class="relative">
                 <input
                   v-model="passwordForm.confirmPassword"
                   :type="showConfirmPassword ? 'text' : 'password'"
                   autocomplete="new-password"
-                  placeholder="Yangi parolni qayta kiriting"
+                  :placeholder="t('auth.confirmPasswordPlaceholder')"
                   class="w-full pl-3 pr-10 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
                 <button
                   type="button"
                   class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
                   @click="showConfirmPassword = !showConfirmPassword"
-                  :aria-label="showConfirmPassword ? 'Parolni yashirish' : 'Parolni ko‘rsatish'"
+                  :aria-label="showConfirmPassword ? t('auth.hidePassword') : t('auth.showPassword')"
                 >
                   <EyeOff v-if="showConfirmPassword" class="w-4 h-4" />
                   <Eye v-else class="w-4 h-4" />
@@ -208,7 +208,7 @@
               :disabled="passwordSaving"
               class="w-full sm:w-auto px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white text-sm font-semibold transition-colors"
             >
-              {{ passwordSaving ? "O'zgartirilmoqda..." : 'Parolni saqlash' }}
+              {{ passwordSaving ? t('profile.changing') : t('profile.savePassword') }}
             </button>
           </div>
         </form>
@@ -227,9 +227,11 @@ import { mediaUrl } from '@/utils/media'
 import { personName } from '@/utils/names'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import type { User } from '@/types'
+import { useI18n } from 'vue-i18n'
 
 const authStore = useAuthStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const loading = ref(true)
 const saving = ref(false)
@@ -318,7 +320,7 @@ onMounted(async () => {
     const { data } = await usersApi.getById(userId)
     applyProfile(data)
   } catch {
-    toast.error("Profil ma'lumotlarini yuklashda xatolik")
+    toast.error(t('profile.loadError'))
   } finally {
     loading.value = false
   }
@@ -329,12 +331,12 @@ async function onAvatarChange(e: Event) {
   const file = input.files?.[0]
   if (!file || !profile.value) return
   if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-    toast.error('Faqat JPEG, PNG yoki WEBP formatidagi rasm yuklang')
+    toast.error(t('profile.imageType'))
     input.value = ''
     return
   }
   if (file.size > MAX_AVATAR_SIZE) {
-    toast.error('Rasm hajmi 5MB dan oshmasligi kerak')
+    toast.error(t('profile.imageSize'))
     input.value = ''
     return
   }
@@ -343,9 +345,9 @@ async function onAvatarChange(e: Event) {
     const { data } = await usersApi.uploadAvatar(profile.value.id, file)
     applyProfile(data)
     authStore.updateProfile({ avatarUrl: data.avatarUrl })
-    toast.success('Rasm yangilandi')
+    toast.success(t('profile.imageUpdated'))
   } catch {
-    toast.error('Rasmni yuklashda xatolik')
+    toast.error(t('profile.imageUploadError'))
   } finally {
     uploadingAvatar.value = false
     input.value = ''
@@ -355,11 +357,11 @@ async function onAvatarChange(e: Event) {
 async function save() {
   if (!profile.value) return
   if (!form.firstName.trim()) {
-    toast.error('Ism kiritilishi shart')
+    toast.error(t('profile.firstNameRequired'))
     return
   }
   if (!isPhoneComplete.value) {
-    toast.error("Telefon raqamni to'liq kiriting");
+    toast.error(t('auth.phoneIncomplete'));
     return;
   }
   saving.value = true
@@ -372,10 +374,10 @@ async function save() {
     })
     applyProfile(data)
     authStore.updateProfile({ firstName: data.firstName, lastName: data.lastName })
-    toast.success('Profil yangilandi')
+    toast.success(t('profile.updated'))
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Saqlashda xatolik yuz berdi')
+    toast.error(msg || t('profile.saveError'))
   } finally {
     saving.value = false
   }
@@ -383,15 +385,15 @@ async function save() {
 
 async function changePassword() {
   if (!passwordForm.currentPassword || !passwordForm.newPassword) {
-    toast.error('Joriy parol va yangi parolni kiriting')
+    toast.error(t('profile.enterPasswords'))
     return
   }
   if (passwordForm.newPassword.length < 4) {
-    toast.error("Yangi parol kamida 4 belgidan iborat bo'lishi kerak")
+    toast.error(t('profile.newPasswordMin'))
     return
   }
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    toast.error('Yangi parollar mos kelmadi')
+    toast.error(t('profile.passwordsMismatch'))
     return
   }
   passwordSaving.value = true
@@ -403,10 +405,10 @@ async function changePassword() {
     passwordForm.currentPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
-    toast.success("Parol o'zgartirildi")
+    toast.success(t('profile.passwordChanged'))
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || "Parolni o'zgartirishda xatolik yuz berdi")
+    toast.error(msg || t('profile.passwordChangeError'))
   } finally {
     passwordSaving.value = false
   }

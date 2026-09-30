@@ -2,6 +2,9 @@
 import { AlertTriangle, Clock } from 'lucide-vue-next'
 import { useBusinessStore } from '@/stores/business'
 import { useAuthStore } from '@/stores/auth'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const businessStore = useBusinessStore()
 const authStore = useAuthStore()
@@ -16,7 +19,7 @@ const authStore = useAuthStore()
   >
     <AlertTriangle class="w-5 h-5 flex-shrink-0" />
     <p class="text-sm font-medium">
-      Sinov/obuna muddati tugagan. Faqat ko'rish mumkin — obuna sotib oling!
+      {{ t('trial.expired') }}
     </p>
   </div>
 
@@ -27,8 +30,7 @@ const authStore = useAuthStore()
   >
     <Clock class="w-5 h-5 flex-shrink-0" />
     <p class="text-sm font-medium">
-      Sinov davridan
-      <strong>{{ businessStore.trialDaysLeft }} kun</strong> qoldi.
+      {{ t('trial.daysLeft', { days: businessStore.trialDaysLeft }) }}
     </p>
   </div>
 </template>

@@ -6,7 +6,7 @@
       @click="router.push('/admin/users')"
     >
       <ArrowLeft class="h-4 w-4" />
-      Foydalanuvchilar ro'yxatiga qaytish
+      {{ t('userDetail.back') }}
     </button>
 
     <div
@@ -62,7 +62,7 @@
             >
               <ToggleRight v-if="user.active" class="h-3.5 w-3.5" />
               <ToggleLeft v-else class="h-3.5 w-3.5" />
-              {{ user.active ? 'Aktiv' : 'Bloklangan' }}
+              {{ user.active ? t('userDetail.active') : t('userDetail.blocked') }}
             </span>
           </div>
         </div>
@@ -72,13 +72,13 @@
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
           <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
             <h2 class="mb-4 font-semibold text-slate-800">
-              Kontakt
+              {{ t('userDetail.contact') }}
             </h2>
             <div class="space-y-4 text-sm">
               <div>
                 <span class="mb-1 flex items-center gap-2 text-slate-500">
                   <Mail class="h-4 w-4" />
-                  Email
+                  {{ t('userDetail.email') }}
                 </span>
                 <span class="block truncate font-medium text-slate-800">
                   {{ user.email || '-' }}
@@ -87,7 +87,7 @@
               <div>
                 <span class="mb-1 flex items-center gap-2 text-slate-500">
                   <Phone class="h-4 w-4" />
-                  Telefon
+                  {{ t('userDetail.phone') }}
                 </span>
                 <span class="block font-medium text-slate-800">
                   {{ user.phone || '-' }}
@@ -98,13 +98,13 @@
 
           <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
             <h2 class="mb-4 font-semibold text-slate-800">
-              Hisob
+              {{ t('userDetail.account') }}
             </h2>
             <div class="space-y-4 text-sm">
               <div>
                 <span class="mb-1 flex items-center gap-2 text-slate-500">
                   <CalendarDays class="h-4 w-4" />
-                  Yaratilgan
+                  {{ t('userDetail.created') }}
                 </span>
                 <span class="block font-medium text-slate-800">
                   {{ formatDate(user.createdAt) }}
@@ -113,7 +113,7 @@
               <div>
                 <span class="mb-1 flex items-center gap-2 text-slate-500">
                   <CalendarDays class="h-4 w-4" />
-                  Yangilangan
+                  {{ t('userDetail.updated') }}
                 </span>
                 <span class="block font-medium text-slate-800">
                   {{ formatDate(user.updatedAt) }}
@@ -126,8 +126,8 @@
         <div class="rounded-2xl border border-slate-100 bg-white shadow-sm">
           <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <div>
-              <h2 class="font-semibold text-slate-800">Bizneslari</h2>
-              <p class="mt-0.5 text-xs text-slate-500">{{ businesses.length }} ta biznes</p>
+              <h2 class="font-semibold text-slate-800">{{ t('userDetail.businesses') }}</h2>
+              <p class="mt-0.5 text-xs text-slate-500">{{ t('userDetail.businessCount', { n: businesses.length }) }}</p>
             </div>
             <Building2 class="h-5 w-5 text-slate-400" />
           </div>
@@ -136,7 +136,7 @@
               v-if="businesses.length === 0"
               class="px-5 py-12 text-center text-sm text-slate-500"
           >
-            Bu foydalanuvchiga biriktirilgan biznes yo'q
+            {{ t('userDetail.noBusinesses') }}
           </div>
 
           <div v-else class="grid gap-4 p-4 sm:grid-cols-[repeat(auto-fill,minmax(340px,380px))]">
@@ -170,7 +170,7 @@
               <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
                 <div class="rounded-xl bg-white px-3 py-2">
                   <p class="text-slate-400">
-                    Trial
+                    {{ t('userDetail.trial') }}
                   </p>
                   <p class="mt-0.5 font-semibold text-slate-700">
                     {{ formatShortDate(biz.trialEndDate) }}
@@ -178,7 +178,7 @@
                 </div>
                 <div class="rounded-xl bg-white px-3 py-2">
                   <p class="text-slate-400">
-                    Obuna
+                    {{ t('userDetail.subscription') }}
                   </p>
                   <p class="mt-0.5 truncate font-semibold text-slate-700">
                     {{ subscriptionLabel(biz) }}
@@ -188,7 +188,7 @@
 
               <div class="mt-4 flex items-center justify-between border-t border-slate-200/70 pt-3">
                 <span class="text-xs font-semibold text-primary-600">
-                  Batafsil
+                  {{ t('userDetail.details') }}
                 </span>
                 <ArrowRight class="h-4 w-4 text-primary-500" />
               </div>
@@ -213,9 +213,12 @@ import { mediaUrl } from '@/utils/media'
 import { personName } from '@/utils/names'
 import { businessStatusLabels, businessStatusColor } from '@/utils/businessStatus'
 import type { User, Business } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
+const { t, te } = useI18n()
 
 const id = route.params.id as string
 const user = ref<User | null>(null)
@@ -223,23 +226,16 @@ const businesses = ref<Business[]>([])
 const loading = ref(true)
 
 const isAdmin = computed(() => user.value?.roles?.includes('ROLE_ADMIN') ?? false)
-const roleNames: Record<string, string> = {
-  ROLE_ADMIN: 'Admin',
-  ROLE_BUSINESS_OWNER: 'Biznes egasi',
-  ROLE_MANAGER: 'Menejer',
-  ROLE_STAFF: 'Xodim',
-  ROLE_USER: 'Foydalanuvchi',
-}
 
 const roleLabels = computed(() => {
   const roles = user.value?.roles ?? []
-  if (roles.length === 0) return ['Foydalanuvchi']
-  return roles.map((role) => roleNames[role] ?? role)
+  if (roles.length === 0) return [t('roles.ROLE_USER')]
+  return roles.map((role) => (te(`roles.${role}`) ? t(`roles.${role}`) : role))
 })
 
 function formatDate(iso: string | null | undefined) {
   if (!iso) return '-'
-  return new Date(iso).toLocaleString('uz-UZ', {
+  return new Date(iso).toLocaleString(dateLocale(), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -250,14 +246,14 @@ function formatDate(iso: string | null | undefined) {
 
 function formatShortDate(iso: string | null | undefined) {
   if (!iso) return '-'
-  return new Date(iso).toLocaleDateString('uz-UZ')
+  return new Date(iso).toLocaleDateString(dateLocale())
 }
 
 function subscriptionLabel(biz: Business) {
   if (biz.subscriptionEndDate) return formatShortDate(biz.subscriptionEndDate)
-  if (biz.status === 'TRIAL') return 'Trial rejimida'
-  if (biz.status === 'ACTIVE') return 'Cheksiz'
-  return 'Belgilanmagan'
+  if (biz.status === 'TRIAL') return t('userDetail.inTrial')
+  if (biz.status === 'ACTIVE') return t('userDetail.unlimited')
+  return t('userDetail.notSet')
 }
 
 function statusColor(status: Business['status']) {

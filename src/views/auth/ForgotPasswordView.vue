@@ -1,17 +1,20 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex">
+  <div class="relative min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex">
+    <div class="absolute right-4 top-4 z-10">
+      <LanguageSwitcher />
+    </div>
     <div class="hidden lg:flex flex-1 flex-col justify-center px-16 text-white">
       <AppLogo size="lg" class="mb-10" />
 
       <h1 class="text-4xl font-bold leading-tight mb-4">
-        Hisobingizga
+        {{ t('auth.fpHeroLine1') }}
         <br />
         <span class="text-primary-400">
-          qayta kiring
+          {{ t('auth.fpHeroHighlight') }}
         </span>
       </h1>
       <p class="text-slate-400 text-lg leading-relaxed max-w-md">
-        Login orqali kod so'rang va emailingizga kelgan tasdiqlash kodi bilan yangi parol o'rnating.
+        {{ t('auth.fpHeroDesc') }}
       </p>
     </div>
 
@@ -31,9 +34,9 @@
                   class="w-6 h-6"
               />
             </div>
-            <h2 class="text-2xl font-bold text-slate-800">Parolni tiklash</h2>
+            <h2 class="text-2xl font-bold text-slate-800">{{ t('auth.resetTitle') }}</h2>
             <p class="text-slate-500 mt-1">
-              {{ step === 'request' ? 'Loginni kiriting, emailga kod yuboramiz' : 'Kod va yangi parolni kiriting' }}
+              {{ step === 'request' ? t('auth.resetRequestDesc') : t('auth.resetConfirmDesc') }}
             </p>
           </div>
 
@@ -63,13 +66,13 @@
                   for="reset-login"
                   class="block text-sm font-medium text-slate-700 mb-1.5"
               >
-                Login
+                {{ t('auth.login') }}
               </label>
               <input
                 id="reset-login"
                 v-model="form.login"
                 type="text"
-                placeholder="loginni kiriting"
+                :placeholder="t('auth.loginPlaceholder')"
                 autocomplete="username"
                 required
                 :disabled="loading"
@@ -83,7 +86,7 @@
               class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Loader2 v-if="loading" class="w-5 h-5 animate-spin" />
-              {{ loading ? 'Yuborilmoqda...' : 'Kod yuborish' }}
+              {{ loading ? t('auth.sending') : t('auth.sendCode') }}
             </button>
           </form>
 
@@ -97,7 +100,7 @@
                   for="reset-code-0"
                   class="block text-sm font-medium text-slate-700 mb-1.5"
               >
-                Kod
+                {{ t('auth.code') }}
               </label>
               <div class="flex justify-between gap-2">
                 <input
@@ -109,7 +112,7 @@
                   type="text"
                   inputmode="numeric"
                   :autocomplete="index === 0 ? 'one-time-code' : 'off'"
-                  :aria-label="`Kodning ${index + 1}-raqami`"
+                  :aria-label="t('auth.codeDigit', { n: index + 1 })"
                   :disabled="loading"
                   class="w-12 h-14 sm:w-14 text-center text-2xl font-semibold rounded-xl border text-slate-800 focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-slate-50 focus:bg-white border-slate-200 focus:ring-primary-500"
                   @input="onCodeInput($event, index)"
@@ -125,7 +128,7 @@
                   for="new-password"
                   class="block text-sm font-medium text-slate-700 mb-1.5"
               >
-                Yangi parol
+                {{ t('auth.newPassword') }}
               </label>
               <div class="relative">
                 <input
@@ -133,7 +136,7 @@
                   v-model="form.newPassword"
                   :type="showNewPassword ? 'text' : 'password'"
                   autocomplete="new-password"
-                  placeholder="Kamida 4 belgi"
+                  :placeholder="t('auth.min4')"
                   required
                   minlength="4"
                   :disabled="loading"
@@ -141,7 +144,7 @@
                 />
                 <button
                   type="button"
-                  :aria-label="showNewPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish'"
+                  :aria-label="showNewPassword ? t('auth.hidePassword') : t('auth.showPassword')"
                   class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
                   @click="showNewPassword = !showNewPassword"
                 >
@@ -156,7 +159,7 @@
                   for="confirm-password"
                   class="block text-sm font-medium text-slate-700 mb-1.5"
               >
-                Parolni tasdiqlang
+                {{ t('auth.confirmPassword') }}
               </label>
               <div class="relative">
                 <input
@@ -164,7 +167,7 @@
                   v-model="form.confirmPassword"
                   :type="showConfirmPassword ? 'text' : 'password'"
                   autocomplete="new-password"
-                  placeholder="Yangi parolni qayta kiriting"
+                  :placeholder="t('auth.confirmPasswordPlaceholder')"
                   required
                   minlength="4"
                   :disabled="loading"
@@ -172,7 +175,7 @@
                 />
                 <button
                   type="button"
-                  :aria-label="showConfirmPassword ? 'Parolni yashirish' : 'Parolni ko\'rsatish'"
+                  :aria-label="showConfirmPassword ? t('auth.hidePassword') : t('auth.showPassword')"
                   class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
                   @click="showConfirmPassword = !showConfirmPassword"
                 >
@@ -188,7 +191,7 @@
               class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-300 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Loader2 v-if="loading" class="w-5 h-5 animate-spin" />
-              {{ loading ? 'Saqlanmoqda...' : 'Parolni almashtirish' }}
+              {{ loading ? t('common.saving') : t('auth.changePassword') }}
             </button>
 
             <div class="grid gap-2 sm:grid-cols-2">
@@ -198,7 +201,7 @@
                   class="text-sm font-semibold text-primary-600 hover:text-primary-700 disabled:opacity-60"
                   @click="changeLogin"
               >
-                Loginni o'zgartirish
+                {{ t('auth.changeLogin') }}
               </button>
               <button
                   type="button"
@@ -206,15 +209,15 @@
                   class="text-sm font-semibold text-primary-600 hover:text-primary-700 disabled:opacity-60"
                   @click="sendCode"
               >
-                Kodni qayta yuborish
+                {{ t('auth.resendCode') }}
               </button>
             </div>
           </form>
 
           <p class="mt-6 text-center text-sm text-slate-500">
-            Parol esingizdami?
+            {{ t('auth.rememberPassword') }}
             <RouterLink to="/login" class="font-semibold text-primary-600 hover:text-primary-700">
-              Tizimga kiring
+              {{ t('auth.signInAgain') }}
             </RouterLink>
           </p>
         </div>
@@ -229,6 +232,10 @@ import { useRouter } from 'vue-router'
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole, MailCheck } from 'lucide-vue-next'
 import { authApi } from '@/api/auth'
 import AppLogo from '@/components/common/AppLogo.vue'
+import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const router = useRouter()
 const step = ref<'request' | 'confirm'>('request')
@@ -259,7 +266,7 @@ async function sendCode() {
   message.value = ''
 
   if (form.login.trim().length < 3) {
-    error.value = 'Login kamida 3 ta belgi bo\'lishi kerak'
+    error.value = t('auth.loginMin')
     return
   }
 
@@ -267,10 +274,10 @@ async function sendCode() {
   try {
     form.login = form.login.trim()
     await authApi.requestPasswordReset({ login: form.login })
-    message.value = 'Agar login mavjud bo\'lsa, emailga kod yuborildi.'
+    message.value = t('auth.codeSent')
     step.value = 'confirm'
   } catch (e: any) {
-    error.value = e.response?.data?.message || 'Kodni yuborishda xatolik yuz berdi'
+    error.value = e.response?.data?.message || t('auth.sendCodeError')
   } finally {
     loading.value = false
   }
@@ -369,15 +376,15 @@ async function resetPassword() {
   message.value = ''
 
   if (form.code.trim().length !== 6) {
-    error.value = '6 xonali kodni kiriting'
+    error.value = t('auth.enterCode')
     return
   }
   if (form.newPassword.length < 4) {
-    error.value = 'Parol kamida 4 ta belgi bo\'lishi kerak'
+    error.value = t('auth.passwordMin')
     return
   }
   if (form.newPassword !== form.confirmPassword) {
-    error.value = 'Parollar mos emas'
+    error.value = t('auth.passwordsMismatch')
     return
   }
 
@@ -393,7 +400,7 @@ async function resetPassword() {
     form.confirmPassword = ''
     await router.push({name: 'login', query: {reset: 'success'}})
   } catch (e: any) {
-    error.value = e.response?.data?.message || 'Kod noto\'g\'ri yoki muddati o\'tgan'
+    error.value = e.response?.data?.message || t('auth.codeInvalid')
   } finally {
     loading.value = false
   }

@@ -6,8 +6,8 @@
           <QrCode class="w-6 h-6" />
         </div>
         <div>
-          <h2 class="text-2xl font-bold text-slate-800">Mijozlar uchun QR-kod</h2>
-          <p class="text-sm text-slate-500 mt-1">Mijoz QR-kodni skanerlab, bevosita navbat oladi.</p>
+          <h2 class="text-2xl font-bold text-slate-800">{{ t('qr.title') }}</h2>
+          <p class="text-sm text-slate-500 mt-1">{{ t('qr.subtitle') }}</p>
         </div>
       </div>
     </div>
@@ -17,7 +17,7 @@
         v-else-if="!businessStore.business"
         class="rounded-2xl border border-slate-100 bg-white p-10 text-center text-slate-500"
     >
-      QR-kod yaratish uchun avval biznes ma'lumotlarini to'ldiring.
+      {{ t('qr.fillBusiness') }}
     </div>
 
     <div
@@ -25,36 +25,36 @@
         class="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center"
     >
       <QrCode class="mx-auto h-10 w-10 text-amber-600" />
-      <h3 class="mt-3 font-semibold text-amber-900">QR-kod hozir faol emas</h3>
-      <p class="mt-1 text-sm text-amber-800">Obunani faollashtirgach, mijozlar uchun QR-kod yaratishingiz mumkin.</p>
+      <h3 class="mt-3 font-semibold text-amber-900">{{ t('qr.inactiveTitle') }}</h3>
+      <p class="mt-1 text-sm text-amber-800">{{ t('qr.inactiveDesc') }}</p>
     </div>
 
     <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.9fr)]">
       <section class="rounded-2xl border border-slate-100 bg-white shadow-sm p-6 sm:p-8 flex flex-col items-center">
         <p class="text-sm font-semibold text-slate-800">{{ businessStore.business.name }}</p>
-        <p class="mt-1 text-xs text-slate-500">Onlayn navbat olish</p>
+        <p class="mt-1 text-xs text-slate-500">{{ t('qr.onlineBooking') }}</p>
         <div class="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
           <img
               v-if="qrImageUrl"
               :src="qrImageUrl"
-              :alt="`${businessStore.business.name} uchun QR-kod`"
+              :alt="t('qr.alt', { name: businessStore.business.name })"
               class="w-full max-w-[320px] rounded-xl bg-white"
           />
           <div
               v-else
               class="grid h-72 w-72 place-items-center text-sm text-slate-400"
           >
-            QR-kod yaratilmoqda...
+            {{ t('qr.generating') }}
           </div>
         </div>
         <p class="mt-5 max-w-sm text-center text-sm leading-6 text-slate-500">
-          QR-kodni chop etib, kirish joyiga yoki kutish zaliga qo‘ying.
+          {{ t('qr.printHint') }}
         </p>
       </section>
 
       <section class="rounded-2xl border border-slate-100 bg-white shadow-sm p-6">
-        <h3 class="text-base font-semibold text-slate-800">QR-kod bilan amallar</h3>
-        <p class="mt-1 text-sm text-slate-500">Kerakli usulni tanlang.</p>
+        <h3 class="text-base font-semibold text-slate-800">{{ t('qr.actionsTitle') }}</h3>
+        <p class="mt-1 text-sm text-slate-500">{{ t('qr.actionsDesc') }}</p>
 
         <div class="mt-5 space-y-3">
           <button
@@ -65,8 +65,8 @@
           >
             <Send class="w-5 h-5" />
             <span>
-              <b>{{ sharingQr ? 'Tayyorlanmoqda...' : 'QR rasmni ulashish' }}</b>
-              <small>Telefonda Telegram’ni tanlang</small>
+              <b>{{ sharingQr ? t('qr.preparing') : t('qr.share') }}</b>
+              <small>{{ t('qr.shareHint') }}</small>
             </span>
           </button>
           <button
@@ -76,8 +76,8 @@
           >
             <Printer class="w-5 h-5 text-slate-500" />
             <span>
-              <b>Chop etish</b>
-              <small>Print uchun tayyor sahifani ochadi</small>
+              <b>{{ t('qr.print') }}</b>
+              <small>{{ t('qr.printDesc') }}</small>
             </span>
           </button>
           <button
@@ -87,15 +87,15 @@
           >
             <Download class="w-5 h-5 text-slate-500" />
             <span>
-              <b>QR-kodni yuklash</b>
-              <small>PNG rasm sifatida saqlanadi</small>
+              <b>{{ t('qr.download') }}</b>
+              <small>{{ t('qr.downloadDesc') }}</small>
             </span>
           </button>
         </div>
 
         <div class="mt-6 border-t border-slate-100 pt-5">
           <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Mijozlar havolasi
+            {{ t('qr.customerLink') }}
           </p>
           <div class="mt-2 flex gap-2">
             <input
@@ -105,7 +105,7 @@
             <button
                 type="button"
                 class="rounded-xl border border-primary-200 px-3 text-primary-700 hover:bg-primary-50"
-                title="Linkni nusxalash"
+                :title="t('qr.copyLink')"
                 @click="copyBookingUrl"
             >
               <Copy class="w-4 h-4" />
@@ -124,6 +124,9 @@ import QRCode from 'qrcode'
 import { useBusinessStore } from '@/stores/business'
 import { useToast } from '@/composables/useToast'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const businessStore = useBusinessStore()
 const toast = useToast()
@@ -145,7 +148,7 @@ watch(publicBookingUrl, async (url) => {
     })
   } catch {
     qrImageUrl.value = ''
-    toast.error("QR-kodni yaratib bo'lmadi")
+    toast.error(t('qr.createError'))
   }
 }, { immediate: true })
 
@@ -160,24 +163,24 @@ async function qrImageFile() {
 async function copyBookingUrl() {
   try {
     await navigator.clipboard.writeText(publicBookingUrl.value)
-    toast.success('Mijozlar uchun havola nusxalandi')
+    toast.success(t('qr.linkCopied'))
   } catch {
-    toast.error("Havolani nusxalab bo'lmadi")
+    toast.error(t('qr.copyError'))
   }
 }
 
 async function shareQrImage() {
   if (!navigator.share) {
-    toast.error("Bu brauzer QR rasmini bevosita ulashishni qo'llamaydi. QR-ni yuklab, Telegramga rasm sifatida yuboring.")
+    toast.error(t('qr.shareUnsupported'))
     return
   }
   sharingQr.value = true
   try {
     const file = await qrImageFile()
-    if (navigator.canShare && !navigator.canShare({ files: [file] })) throw new Error('Faylni ulashib bo\'lmadi')
-    await navigator.share({ title: `${businessStore.business?.name || 'Biznes'} QR-kodi`, text: 'Navbat olish uchun QR-kodni skanerlang', files: [file] })
+    if (navigator.canShare && !navigator.canShare({ files: [file] })) throw new Error(t('qr.shareError'))
+    await navigator.share({ title: t('qr.shareTitle', { name: businessStore.business?.name || t('qr.businessFallback') }), text: t('qr.scanText'), files: [file] })
   } catch (error) {
-    if ((error as Error).name !== 'AbortError') toast.error("QR rasmini ulashib bo'lmadi. Uni yuklab, Telegramga yuboring.")
+    if ((error as Error).name !== 'AbortError') toast.error(t('qr.shareError'))
   } finally {
     sharingQr.value = false
   }
@@ -192,7 +195,7 @@ async function downloadQrCode() {
     link.click()
     URL.revokeObjectURL(link.href)
   } catch {
-    toast.error("QR-kodni yuklab bo'lmadi")
+    toast.error(t('qr.downloadError'))
   }
 }
 
@@ -202,8 +205,8 @@ function escapeHtml(value: string) {
 
 function printQrCode() {
   const popup = window.open('', '_blank', 'width=720,height=760')
-  if (!popup) { toast.error("Chop etish oynasini ochib bo'lmadi"); return }
-  const businessName = escapeHtml(businessStore.business?.name || 'Biznes')
+  if (!popup) { toast.error(t('qr.printPopupError')); return }
+  const businessName = escapeHtml(businessStore.business?.name || t('qr.businessFallback'))
   const bookingUrl = escapeHtml(publicBookingUrl.value)
   popup.document.write(`
 <!doctype html>
@@ -221,7 +224,7 @@ p{word-break:break-all;color:#475569;font-size:14px}
 </head>
 <body>
 <h1>${businessName}</h1>
-<p class="hint">Navbat olish uchun QR-kodni skanerlang</p>
+<p class="hint">${escapeHtml(t('qr.scanText'))}</p>
 <img src="${qrImageUrl.value}" alt="QR-kod">
 <p>${bookingUrl}</p>
 <script>window.onload=()=>window.print()<\/script>

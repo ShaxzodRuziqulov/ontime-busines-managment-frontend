@@ -2,8 +2,8 @@
   <div class="lg:p-0 p-4">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Mijozlar</h2>
-        <p class="text-slate-500 text-sm mt-1">{{ totalElements }} ta mijoz</p>
+        <h2 class="text-2xl font-bold text-slate-800">{{ t('nav.customers') }}</h2>
+        <p class="text-slate-500 text-sm mt-1">{{ t('customers.count', { n: totalElements }) }}</p>
       </div>
       <button
         v-if="!businessStore.isReadOnly"
@@ -11,7 +11,7 @@
         class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
       >
         <Plus class="w-4 h-4" />
-        Mijoz qo'shish
+        {{ t('customers.add') }}
       </button>
     </div>
     <div class="relative mb-5">
@@ -21,7 +21,7 @@
       <input
         v-model="search"
         type="text"
-        placeholder="Ism yoki telefon bo'yicha qidirish..."
+        :placeholder="t('customers.searchPlaceholder')"
         class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
       />
     </div>
@@ -38,10 +38,8 @@
     <template v-else>
       <EmptyState
         v-if="customers.length === 0"
-        :title="search ? 'Hech narsa topilmadi' : 'Mijoz yo\'q'"
-        :description="search
-          ? 'Qidiruv bo\'yicha mijoz topilmadi'
-          : 'Telefon bilan navbat qo\'shsangiz, mijozlar shu yerga avtomatik yig\'iladi'"
+        :title="search ? t('customers.nothingFound') : t('customers.empty')"
+        :description="search ? t('customers.notFoundDesc') : t('customers.emptyDesc')"
       >
         <template #icon>
           <Users class="w-8 h-8 text-slate-400" />
@@ -52,7 +50,7 @@
             @click="openAdd"
             class="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700"
           >
-            Mijoz qo'shish
+            {{ t('customers.add') }}
           </button>
         </template>
       </EmptyState>
@@ -85,7 +83,7 @@
               >
                 <Repeat class="w-3.5 h-3.5 text-emerald-500" />
                 <span class="text-xs font-medium text-emerald-600">
-                  {{ c.visitCount }} marta tashrif
+                  {{ t('customers.visits', { n: c.visitCount }) }}
                 </span>
               </div>
             </div>
@@ -102,7 +100,7 @@
             </div>
             <div class="flex items-center gap-2 text-slate-400">
               <CalendarClock class="w-3.5 h-3.5 flex-shrink-0" />
-              <span class="text-xs">Oxirgi tashrif: {{ formatDate(c.lastVisitAt) }}</span>
+              <span class="text-xs">{{ t('customers.lastVisit', { date: formatDate(c.lastVisitAt) }) }}</span>
             </div>
           </div>
 
@@ -117,7 +115,7 @@
                 c.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500',
               ]"
             >
-              {{ c.active ? 'Faol' : 'Nofaol' }}
+              {{ c.active ? t('common.active') : t('common.inactive') }}
             </span>
             <div v-if="!businessStore.isReadOnly" class="flex gap-1">
               <button
@@ -156,42 +154,42 @@
     </template>
     <AppModal
       v-if="showModal"
-      :title="editing ? 'Mijozni tahrirlash' : 'Yangi mijoz'"
+      :title="editing ? t('customers.editTitle') : t('customers.newTitle')"
       @close="showModal = false"
     >
       <form @submit.prevent="save" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1.5">Ism *</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('customers.firstName') }}</label>
           <input
             v-model="form.firstName"
             type="text"
-            placeholder="Ismni kiriting"
+            :placeholder="t('customers.firstNamePlaceholder')"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Familiya</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('customers.lastName') }}</label>
             <input
               v-model="form.lastName"
               type="text"
-              placeholder="Familiyani kiriting"
+              :placeholder="t('customers.lastNamePlaceholder')"
               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Otasining ismi</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('customers.middleName') }}</label>
             <input
               v-model="form.middleName"
               type="text"
-              placeholder="Otasining ismini kiriting"
+              :placeholder="t('customers.middleNamePlaceholder')"
               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Telefon</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('customers.phone') }}</label>
             <input
               v-model="form.phone"
               type="tel"
@@ -200,23 +198,23 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('customers.email') }}</label>
             <input
               v-model="form.email"
               type="email"
-              placeholder="mijoz@mail.com"
+              placeholder="email@example.com"
               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">
-            Eslatma <span class="text-slate-400 font-normal">— ixtiyoriy</span>
+            {{ t('customers.note') }} <span class="text-slate-400 font-normal">{{ t('customers.optionalDash') }}</span>
           </label>
           <textarea
             v-model="form.note"
             rows="2"
-            placeholder="Masalan: VIP mijoz, qisqa soch yoqtiradi..."
+            :placeholder="t('customers.notePlaceholder')"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
           />
         </div>
@@ -236,7 +234,7 @@
               ]"
             />
           </span>
-          <span class="text-sm font-medium text-slate-700">Faol holat</span>
+          <span class="text-sm font-medium text-slate-700">{{ t('common.activeState') }}</span>
         </label>
 
         <div class="flex gap-3 pt-2">
@@ -245,14 +243,14 @@
             class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
             @click="showModal = false"
           >
-            Bekor qilish
+            {{ t('common.cancel') }}
           </button>
           <button
             type="submit"
             :disabled="saving"
             class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60 transition-colors"
           >
-            {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
+            {{ saving ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </form>
@@ -260,9 +258,9 @@
 
     <ConfirmModal
       v-if="deleteConfirm"
-      title="Mijozni o'chirish"
-      message="Bu mijozni o'chirishni tasdiqlaysizmi?"
-      confirm-label="O'chirish"
+      :title="t('customers.deleteTitle')"
+      :message="t('customers.deleteMessage')"
+      :confirm-label="t('common.delete')"
       icon="trash"
       variant="danger"
       @confirm="confirmDelete(deleteConfirm!)"
@@ -282,9 +280,11 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import AppModal from '@/components/common/AppModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import type { Customer, CustomerCreateRequest } from '@/types'
+import { useI18n } from 'vue-i18n'
 
 const businessStore = useBusinessStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const customers = ref<Customer[]>([])
 const loading = ref(true)
@@ -337,7 +337,7 @@ async function load() {
     totalPages.value = data.totalPages
     totalElements.value = data.totalElements
   } catch {
-    toast.error("Mijozlar ro'yxatini yuklab bo'lmadi")
+    toast.error(t('customers.loadError'))
   } finally {
     loading.value = false
   }
@@ -367,7 +367,7 @@ async function save() {
   const bid = businessStore.business?.id
   if (!bid) return
   if (!form.value.firstName.trim()) {
-    toast.error('Ism kiritilishi shart')
+    toast.error(t('customers.firstNameRequired'))
     return
   }
   saving.value = true
@@ -387,17 +387,17 @@ async function save() {
       })
       const idx = customers.value.findIndex((c) => c.id === data.id)
       if (idx !== -1) customers.value[idx] = data
-      toast.success('Mijoz yangilandi')
+      toast.success(t('customers.updated'))
     } else {
       const { data } = await customersApi.create(bid, payload)
       customers.value.unshift(data)
       totalElements.value++
-      toast.success("Mijoz qo'shildi")
+      toast.success(t('customers.added'))
     }
     showModal.value = false
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || 'Xatolik yuz berdi')
+    toast.error(msg || t('common.error'))
   } finally {
     saving.value = false
   }
@@ -410,10 +410,10 @@ async function confirmDelete(id: string) {
     await customersApi.delete(bid, id)
     customers.value = customers.value.filter((c) => c.id !== id)
     totalElements.value = Math.max(0, totalElements.value - 1)
-    toast.success("Mijoz o'chirildi")
+    toast.success(t('customers.deleted'))
   } catch (e) {
     const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-    toast.error(msg || "O'chirishda xatolik yuz berdi")
+    toast.error(msg || t('common.deleteError'))
   }
   deleteConfirm.value = null
 }

@@ -1,8 +1,8 @@
 <template>
   <div class="lg:p-0 p-4">
     <div class="mb-4">
-      <h2 class="text-lg font-bold text-slate-800">Sharhlar</h2>
-      <p class="text-slate-500 text-sm font-semibold">Mijozlar fikrlari</p>
+      <h2 class="text-lg font-bold text-slate-800">{{ t('reviews.title') }}</h2>
+      <p class="text-slate-500 text-sm font-semibold">{{ t('reviews.subtitle') }}</p>
     </div>
 
     <LoadingSpinner v-if="loading" />
@@ -24,7 +24,7 @@
                 :class="['w-5 h-5', i <= Math.round(avgRating) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200']"
               />
             </div>
-            <div class="text-sm text-slate-500 mt-1">{{ reviews.length }} ta sharh</div>
+            <div class="text-sm text-slate-500 mt-1">{{ t('reviews.count', { n: reviews.length }) }}</div>
           </div>
 
           <!-- Distribution -->
@@ -50,8 +50,8 @@
 
       <EmptyState
         v-if="reviews.length === 0"
-        title="Hali sharh yo'q"
-        description="Mijozlar xizmatdan keyin sharh qoldirishadi"
+        :title="t('reviews.emptyTitle')"
+        :description="t('reviews.emptyDesc')"
       >
         <template #icon>
           <MessageSquare class="w-8 h-8 text-slate-400" />
@@ -111,6 +111,9 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { reviewCustomerName, reviewStaffName } from '@/utils/names'
 import type { Review } from '@/types'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const businessStore = useBusinessStore()
 const reviews = ref<Review[]>([])

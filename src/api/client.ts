@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useToast } from '@/composables/useToast'
+import { t } from '@/i18n'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9092/api/v1'
 
@@ -43,7 +44,7 @@ apiClient.interceptors.response.use(
     // holatini yangilaymiz — shunda UI darhol read-only ko'rinishga o'tadi.
     if (error.response?.status === 402) {
       const message = error.response?.data?.message
-        || "Sinov/obuna muddati tugagan. Faqat ko'rish mumkin — obuna sotib oling."
+        || t('trial.expired')
       useToast().warning(message)
       import('@/stores/business').then(({ useBusinessStore }) => {
         useBusinessStore().fetchMyBusiness()

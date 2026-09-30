@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { checkToken } from "@/helpers/checkToken.ts";
 import { useToast } from "@/composables/useToast.ts";
+import { t } from '@/i18n'
 
 const Toast = useToast();
 
@@ -177,7 +178,7 @@ router.beforeEach((to, _, next) => {
 
   if (auth.isAuthenticated && !checkToken()) {
       if (!sessionExpiredShown) {
-          Toast.info('Sessiya tugadi, tizimga qayta kiring!')
+          Toast.info(t('common.sessionExpired'))
           sessionExpiredShown = true
       }
       if (to.meta.guest) return next()

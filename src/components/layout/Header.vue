@@ -38,7 +38,7 @@
         class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600 transition-colors text-sm bg-white"
       >
         <Search class="w-4 h-4" />
-        <span>Qidirish</span>
+        <span>{{ t('common.search') }}</span>
         <kbd class="ml-2 text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono">⌘K</kbd>
       </button>
       <!-- Mobile search icon -->
@@ -50,10 +50,13 @@
         <Search class="w-5 h-5" />
       </button>
 
+      <!-- Language switcher -->
+      <LanguageSwitcher />
+
       <button
         type="button"
-        :aria-label="darkMode ? 'Kun rejimi' : 'Tun rejimi'"
-        :title="darkMode ? 'Kun rejimi' : 'Tun rejimi'"
+        :aria-label="darkMode ? t('common.lightMode') : t('common.darkMode')"
+        :title="darkMode ? t('common.lightMode') : t('common.darkMode')"
         class="p-2 rounded-lg text-slate-200 hover:bg-slate-800 transition-colors"
         @click="toggleTheme"
       >
@@ -95,7 +98,7 @@
             @click="dropdownOpen = false"
           >
             <UserCog class="w-4 h-4" />
-            Profilim
+            {{ t('common.profile') }}
           </RouterLink>
           <button
             v-if="canInstall"
@@ -108,7 +111,7 @@
             @click="handleInstall"
           >
             <Download class="w-4 h-4" />
-            {{ isInstalling ? 'Yuklanmoqda' : 'Ilovani yuklash' }}
+            {{ isInstalling ? t('common.installing') : t('common.installApp') }}
           </button>
           <button
             class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -116,7 +119,7 @@
             logout()"
           >
             <LogOut class="w-4 h-4" />
-            Chiqish
+            {{ t('common.logout') }}
           </button>
         </div>
       </div>
@@ -133,6 +136,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Menu, LogOut, ChevronDown, User, UserCog, Search, Moon, Sun, Download } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useBusinessStore } from '@/stores/business'
@@ -144,7 +148,9 @@ import type { BusinessStatus } from '@/types'
 import { usePwaInstall } from '@/composables/usePwaInstall'
 import { useToast } from '@/composables/useToast'
 import AppLogo from "@/components/common/AppLogo.vue";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 
+const { t } = useI18n()
 const toast = useToast()
 
 defineEmits<{ toggleSidebar: [] }>()
@@ -166,12 +172,12 @@ const handleInstall = async () => {
     const installed = await install()
 
     if (installed) {
-      toast.success('Ilova yuklandi')
+      toast.success(t('common.installed'))
     } else {
-      toast.info('Yuklash bekor qilindi')
+      toast.info(t('common.installCancelled'))
     }
   } catch {
-    toast.error('Ilovani yuklab bo‘lmadi')
+    toast.error(t('common.installFailed'))
   } finally {
     isInstalling.value = false
   }

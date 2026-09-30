@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Audit jurnali</h1>
-        <p class="text-slate-500 text-sm mt-1">Barcha admin harakatlari tarixi</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ t('audit.title') }}</h1>
+        <p class="text-slate-500 text-sm mt-1">{{ t('audit.subtitle') }}</p>
       </div>
       <div class="flex gap-2">
         <button
@@ -19,7 +19,7 @@
           :class="['flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors', loading && 'opacity-60 pointer-events-none']"
         >
           <RefreshCw class="w-4 h-4" :class="loading && 'animate-spin'" />
-          Yangilash
+          {{ t('common.refresh') }}
         </button>
       </div>
     </div>
@@ -32,7 +32,7 @@
         <input
           v-model="filterAdmin"
           type="text"
-          placeholder="Admin logini..."
+          :placeholder="t('audit.adminLoginPlaceholder')"
           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
         />
       </div>
@@ -42,13 +42,13 @@
         v-model="filterEntityType"
         class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-slate-700"
       >
-        <option value="">Barcha turlar</option>
+        <option value="">{{ t('audit.allTypes') }}</option>
         <option
-            v-for="t in entityTypes"
-            :key="t"
-            :value="t"
+            v-for="et in entityTypes"
+            :key="et"
+            :value="et"
         >
-          {{ entityTypeLabel(t) }}
+          {{ entityTypeLabel(et) }}
         </option>
       </select>
 
@@ -57,7 +57,7 @@
         v-model="filterAction"
         class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-slate-700 max-w-56"
       >
-        <option value="">Barcha harakatlar</option>
+        <option value="">{{ t('audit.allActions') }}</option>
         <option
             v-for="a in allActions"
             :key="a"
@@ -72,13 +72,13 @@
         @click="resetFilters"
         class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-500 hover:bg-slate-50 transition-colors"
       >
-        Tozalash
+        {{ t('common.clear') }}
       </button>
     </div>
 
     <!-- Stats -->
     <div class="text-xs text-slate-500 mb-3">
-      Jami {{ totalElements }} ta yozuv
+      {{ t('audit.total', { n: totalElements }) }}
     </div>
 
     <SkeletonTable v-if="loading" :rows="8" :cols="5" />
@@ -86,8 +86,8 @@
     <template v-else>
       <EmptyState
         v-if="logs.length === 0"
-        title="Yozuv topilmadi"
-        description="Filtrlarni o'zgartirib ko'ring"
+        :title="t('audit.emptyTitle')"
+        :description="t('audit.emptyDesc')"
       >
         <template #icon>
           <ShieldCheck class="w-8 h-8 text-slate-400" />
@@ -133,11 +133,11 @@
             <thead>
               <tr class="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wide bg-slate-50/50">
                 <th class="px-5 py-3 text-left font-medium">№</th>
-                <th class="px-5 py-3 text-left font-medium">Vaqt</th>
-                <th class="px-5 py-3 text-left font-medium">Admin</th>
-                <th class="px-5 py-3 text-left font-medium">Harakat</th>
-                <th class="px-5 py-3 text-left font-medium">Obyekt</th>
-                <th class="px-5 py-3 text-left font-medium">Tafsilot</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('audit.colTime') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('audit.colAdmin') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('audit.colAction') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('audit.colObject') }}</th>
+                <th class="px-5 py-3 text-left font-medium">{{ t('audit.colDetails') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
@@ -200,19 +200,7 @@
                 >
                   <template v-if="translateStatusDetails(log.details).type === 'status'">
                     <span>
-                      {{translateStatusDetails(log.details).from}}
-                    </span>
-                    <span class="font-semibold text-xs text-slate-700">
-                      dan
-                    </span>
-                    <span class="mx-1 text-slate-400">
-                      →
-                    </span>
-                    <span>
-                      {{translateStatusDetails(log.details).to}}
-                    </span>
-                    <span class="font-semibold text-xs text-slate-700">
-                      ga
+                      {{ t('audit.statusChange', { from: translateStatusDetails(log.details).from, to: translateStatusDetails(log.details).to }) }}
                     </span>
                   </template>
                   <template v-else-if="translateStatusDetails(log.details).type === 'action'">
@@ -298,6 +286,10 @@ import { Search, ShieldCheck, Building2, Users, RefreshCw, ChevronLeft, ChevronR
 import { auditApi, type AuditLog } from '@/api/audit'
 import SkeletonTable from '@/components/common/SkeletonTable.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import { useI18n } from 'vue-i18n'
+import { dateLocale, translatedRecord } from '@/i18n'
+
+const { t, te } = useI18n()
 
 const logs = ref<AuditLog[]>([])
 const loading = ref(true)
@@ -310,17 +302,7 @@ const filterEntityType = ref('')
 const filterAction = ref('')
 const filterAdmin = ref('')
 
-const actionLabels: Record<string, string> = {
-  BUSINESS_STATUS_CHANGED: 'Holat o\'zgartirildi',
-  BUSINESS_REVIEWED:       'Biznes ko\'rib chiqildi',
-  BUSINESS_DELETED:        'Biznes o\'chirildi',
-  USER_CREATED:            'Foydalanuvchi yaratildi',
-  USER_UPDATED:            'Foydalanuvchi yangilandi',
-  USER_ACTIVATED:          'Foydalanuvchi aktivlashtirildi',
-  USER_DEACTIVATED:        'Foydalanuvchi bloklandi',
-  USER_ROLE_CHANGED:       'Rol o\'zgartirildi',
-  USER_DELETED:            'Foydalanuvchi o\'chirildi',
-}
+const actionLabels = translatedRecord<string>('audit.action')
 
 const actionColors: Record<string, string> = {
   BUSINESS_STATUS_CHANGED: 'bg-blue-100 text-blue-700',
@@ -334,21 +316,17 @@ const actionColors: Record<string, string> = {
   USER_DELETED:            'bg-red-100 text-red-700',
 }
 
-const allActions = Object.keys(actionLabels)
+const allActions = Object.keys(actionColors)
 const entityTypes = ['BUSINESS', 'USER']
 
-const entityTypeLabels: Record<string, string> = {
-  BUSINESS: 'Biznes',
-  USER: 'Foydalanuvchi',
-}
 
 function formatDate(iso: string) {
   const d = new Date(iso)
-  return d.toLocaleDateString('uz-UZ') + ' ' + d.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleDateString(dateLocale()) + ' ' + d.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })
 }
 
 function entityTypeLabel(type: string) {
-  return entityTypeLabels[type] ?? type
+  return te(`audit.entity.${type}`) ? t(`audit.entity.${type}`) : type
 }
 
 function shortEntityId(id: string) {
@@ -359,16 +337,7 @@ function entityDisplayName(log: AuditLog) {
   return log.entityName || shortEntityId(log.entityId)
 }
 
-const allStatusName: Record<string, string> = {
-  EXPIRED: "Muddati tugagan",
-  DRAFT: "Qoralama",
-  PENDING_REVIEW: "Ko'rib chiqilmoqda",
-  SUSPENDED: "To'xtatilgan",
-  TRIAL: "Sinov muddati",
-  ACTIVE: "Faol",
-  REJECT: "Rad etish",
-  APPROVE: "Tasdiqlash",
-}
+const allStatusName = translatedRecord<string>('audit.detail')
 
 const translateStatusDetails = (details: string) => {
   if (details.includes('→')){
@@ -488,7 +457,7 @@ watch(page, load)
 
 function exportCsv() {
   const rows = [
-    ['Vaqt', 'Admin', 'Harakat', 'Obyekt turi', 'Obyekt nomi', 'Entity ID', 'Tafsilot'],
+    [t('audit.colTime'), t('audit.colAdmin'), t('audit.colAction'), t('audit.colObjectType'), t('audit.colObjectName'), 'Entity ID', t('audit.colDetails')],
     ...logs.value.map(l => [
       formatDate(l.createdAt),
       l.adminLogin,

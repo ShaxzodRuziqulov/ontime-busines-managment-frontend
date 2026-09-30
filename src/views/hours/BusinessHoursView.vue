@@ -2,8 +2,8 @@
   <div class="lg:p-0 p-4">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Ish soatlari</h2>
-        <p class="text-slate-500 text-sm mt-1">Navbatlar va jadval shu vaqtlarga qarab hisoblanadi</p>
+        <h2 class="text-2xl font-bold text-slate-800">{{ t('hours.title') }}</h2>
+        <p class="text-slate-500 text-sm mt-1">{{ t('hours.subtitle') }}</p>
       </div>
       <button
         @click="save"
@@ -11,7 +11,7 @@
         class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
       >
         <Save class="w-4 h-4" />
-        {{ saving ? 'Saqlanmoqda...' : dirtyCount > 0 ? `Saqlash (${dirtyCount})` : "O'zgarish yo'q" }}
+        {{ saving ? t('common.saving') : dirtyCount > 0 ? t('hours.saveCount', { n: dirtyCount }) : t('hours.noChanges') }}
       </button>
     </div>
 
@@ -20,7 +20,7 @@
     <template v-else>
       <!-- Bir xil vaqtni barcha ish kunlariga tez qo'llash -->
       <div v-if="uniformHours" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-4 flex flex-wrap items-center gap-3">
-        <span class="text-sm font-medium text-slate-600">Ish kunlari:</span>
+        <span class="text-sm font-medium text-slate-600">{{ t('hours.workingDays') }}</span>
         <div class="flex items-center gap-2">
           <input
             :value="uniformHours.opensAt"
@@ -36,7 +36,7 @@
             class="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-32"
           />
         </div>
-        <span class="text-xs text-slate-400 font-bold">barcha ish kunlariga birdek qo'llanadi !</span>
+        <span class="text-xs text-slate-400 font-bold">{{ t('hours.applyAll') }}</span>
       </div>
 
       <!-- Kunlar ro'yxati -->
@@ -66,9 +66,9 @@
                   ]"
                 />
               </span>
-              <span class="text-sm font-medium text-slate-600">{{ day.label }}</span>
+              <span class="text-sm font-medium text-slate-600">{{ t(`weekdays.${day.weekday}`) }}</span>
             </label>
-            <span v-if="isDirty(day.weekday)" class="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" title="Saqlanmagan o'zgarish" />
+            <span v-if="isDirty(day.weekday)" class="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" :title="t('hours.unsaved')" />
           </div>
 
           <div
@@ -91,12 +91,12 @@
             />
             <span v-if="isInvalid(day.weekday)" class="flex items-center gap-1 text-xs text-red-600">
               <AlertCircle class="w-3.5 h-3.5 flex-shrink-0" />
-              Yopilish ochilishdan keyin bo'lsin
+              {{ t('hours.closeAfterOpen') }}
             </span>
           </div>
 
           <span :class="['text-xs font-medium sm:w-20 sm:text-right flex-shrink-0', days[day.weekday].closed ? 'text-slate-400' : 'text-emerald-600']">
-            {{ days[day.weekday].closed ? 'Dam olish' : 'Ish kuni' }}
+            {{ days[day.weekday].closed ? t('hours.dayOff') : t('hours.workDay') }}
           </span>
         </div>
       </div>
@@ -112,20 +112,23 @@ import { useBusinessStore } from '@/stores/business'
 import { useToast } from '@/composables/useToast'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import type { BusinessHours, Weekday } from '@/types'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const businessStore = useBusinessStore()
 const toast = useToast()
 const loading = ref(true)
 const saving = ref(false)
 
-const DAYS: { weekday: Weekday; label: string; short: string }[] = [
-  { weekday: 'MONDAY', label: 'Dushanba', short: 'D' },
-  { weekday: 'TUESDAY', label: 'Seshanba', short: 'S' },
-  { weekday: 'WEDNESDAY', label: 'Chorshanba', short: 'C' },
-  { weekday: 'THURSDAY', label: 'Payshanba', short: 'P' },
-  { weekday: 'FRIDAY', label: 'Juma', short: 'J' },
-  { weekday: 'SATURDAY', label: 'Shanba', short: 'Sh' },
-  { weekday: 'SUNDAY', label: 'Yakshanba', short: 'Y' },
+const DAYS: { weekday: Weekday }[] = [
+  { weekday: 'MONDAY' },
+  { weekday: 'TUESDAY' },
+  { weekday: 'WEDNESDAY' },
+  { weekday: 'THURSDAY' },
+  { weekday: 'FRIDAY' },
+  { weekday: 'SATURDAY' },
+  { weekday: 'SUNDAY' },
 ]
 
 interface DayState {
@@ -240,7 +243,7 @@ async function persistDay(weekday: Weekday): Promise<boolean> {
 
 async function save() {
   if (anyInvalid.value) {
-    toast.error('Yopilish vaqti ochilishdan keyin bo\'lsin')
+    toast.error(t('hours.closeAfterOpen'))
     return
   }
   const dirtyDays = DAYS.filter((d) => isDirty(d.weekday))
@@ -249,8 +252,8 @@ async function save() {
   try {
     const results = await Promise.all(dirtyDays.map((d) => persistDay(d.weekday)))
     const failed = results.filter((ok) => !ok).length
-    if (failed === 0) toast.success('Saqlandi')
-    else toast.error(`${failed} ta kunni saqlashda xatolik yuz berdi`)
+    if (failed === 0) toast.success(t('common.saved'))
+    else toast.error(t('hours.saveDaysError', { n: failed }))
   } finally {
     saving.value = false
   }
@@ -263,7 +266,7 @@ onMounted(async () => {
       const { data } = await businessHoursApi.getAll(bid)
       applyHours(data)
     } catch {
-      toast.error('Ish soatlarini yuklashda xatolik')
+      toast.error(t('hours.loadError'))
     }
   }
   loading.value = false

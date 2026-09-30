@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { AlertTriangle, Trash2, ShieldOff, ToggleLeft, ToggleRight } from 'lucide-vue-next'
 import AppModal from './AppModal.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   title: string
@@ -10,8 +13,6 @@ const props = withDefaults(defineProps<{
   variant?: 'danger' | 'warning' | 'success'
   icon?: 'trash' | 'shield' | 'toggle-off' | 'toggle-on' | 'warning'
 }>(), {
-  confirmLabel: 'Tasdiqlash',
-  cancelLabel: 'Bekor qilish',
   variant: 'danger',
   icon: 'warning',
 })
@@ -61,13 +62,13 @@ const iconColorClasses: Record<string, string> = {
         class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
         @click="emit('cancel')"
       >
-        {{ cancelLabel }}
+        {{ cancelLabel ?? t('common.cancel') }}
       </button>
       <button
         :class="['flex-1 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors', variantClasses[variant]]"
         @click="emit('confirm')"
       >
-        {{ confirmLabel }}
+        {{ confirmLabel ?? t('common.confirm') }}
       </button>
     </div>
   </AppModal>

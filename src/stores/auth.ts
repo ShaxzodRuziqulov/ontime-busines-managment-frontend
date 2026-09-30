@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/api/auth'
+import { t } from '@/i18n'
 import type { AuthResponse, LoginRequest, RegisterRequest } from '@/types'
 
 function parseJwtPayload(token: string): Record<string, any> | null {
@@ -59,7 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
     async function login(credentials: LoginRequest) {
         const { data } = await authApi.login(credentials)
         if (!data || typeof data !== 'object') {
-            throw new Error('Serverdan noto\'g\'ri javob keldi')
+            throw new Error(t('common.badServerResponse'))
         }
         if (!data.roles || data.roles.length === 0) {
             data.roles = parseJwtRoles(data.accessToken)

@@ -5,6 +5,9 @@ import Sidebar from './Sidebar.vue'
 import Header from './Header.vue'
 import TrialBanner from '@/components/common/TrialBanner.vue'
 import Footer from "@/components/layout/Footer.vue";
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const businessStore = useBusinessStore()
 const sidebarOpen = ref(false)
@@ -42,7 +45,7 @@ onMounted(async () => {
       <!-- Page content -->
       <main class="flex-1 z-30 overflow-y-auto lg:pb-4 mb-14 sm:mb-12 sm:p-6 xl:mb-8">
         <div v-if="!ready" class="flex items-center justify-center h-full text-slate-400 text-sm">
-          Yuklanmoqda...
+          {{ t('common.loading') }}
         </div>
         <RouterView v-else />
       </main>

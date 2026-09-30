@@ -4,10 +4,10 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between lg:p-0 p-4 gap-4 mb-6">
       <div>
         <h2 class="text-2xl font-bold text-slate-800">
-          Navbatlar
+          {{ t('nav.bookings') }}
         </h2>
         <p class="text-slate-500 text-sm mt-1">
-          Jami {{ totalElements }} ta navbat
+          {{ t('bookings.total', { n: totalElements }) }}
         </p>
       </div>
       <button
@@ -16,7 +16,7 @@
         class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
       >
         <Plus class="w-4 h-4" />
-        Navbat qo'shish
+        {{ t('bookings.add') }}
       </button>
     </div>
 
@@ -27,7 +27,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Mijoz, telefon, xizmat yoki xodim bo'yicha qidirish..."
+          :placeholder="t('bookings.searchPlaceholder')"
           class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
         />
       </div>
@@ -53,8 +53,8 @@
     <template v-else>
       <EmptyState
         v-if="filtered.length === 0"
-        title="Navbat topilmadi"
-        description="Hali hech qanday navbat yo'q yoki filtr natijasida ko'rsatish uchun ma'lumot yo'q"
+        :title="t('bookings.emptyTitle')"
+        :description="t('bookings.emptyDesc')"
       >
         <template #icon>
           <CalendarCheck class="w-8 h-8 text-slate-400" />
@@ -65,7 +65,7 @@
             @click="openCreate()"
             class="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700"
           >
-            Navbat qo'shish
+            {{ t('bookings.add') }}
           </button>
         </template>
       </EmptyState>
@@ -86,14 +86,14 @@
               <StatusBadge :status="booking.status" />
             </div>
             <p class="text-xs text-slate-500 mb-1">
-              <span class="font-medium">Mijoz:</span> {{ bookingCustomerName(booking, '—') }}
+              <span class="font-medium">{{ t('bookings.customerLabel') }}</span> {{ bookingCustomerName(booking, '—') }}
               <span v-if="booking.customerPhone"> · {{ booking.customerPhone }}</span>
             </p>
             <p class="text-xs text-slate-500 mb-1">
-              <span class="font-medium">Xizmat:</span> {{ serviceNameById(booking.offeredServiceId) }}
+              <span class="font-medium">{{ t('bookings.serviceLabel') }}</span> {{ serviceNameById(booking.offeredServiceId) }}
             </p>
             <p class="text-xs text-slate-500 mb-3">
-              <span class="font-medium">Xodim:</span> {{ staffNameById(booking.staffId) }}
+              <span class="font-medium">{{ t('bookings.staffLabel') }}</span> {{ staffNameById(booking.staffId) }}
             </p>
             <p
                 v-if="booking.customerNote"
@@ -107,13 +107,13 @@
                 @change="updateStatus(booking, ($event.target as HTMLSelectElement).value as BookingStatus)"
                 class="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white text-slate-600"
               >
-                <option value="PENDING">Kutilmoqda</option>
-                <option value="CONFIRMED">Tasdiqlash</option>
-                <option value="IN_PROGRESS">Jarayonda</option>
-                <option value="COMPLETED">Bajarildi</option>
-                <option value="CANCELLED_BY_CUSTOMER">Mijoz bekor qildi</option>
-                <option value="CANCELLED_BY_BUSINESS">Biznes bekor qildi</option>
-                <option value="NO_SHOW">Kelmadi</option>
+                <option value="PENDING">{{ t('status.booking.PENDING') }}</option>
+                <option value="CONFIRMED">{{ t('status.booking.CONFIRMED') }}</option>
+                <option value="IN_PROGRESS">{{ t('status.booking.IN_PROGRESS') }}</option>
+                <option value="COMPLETED">{{ t('status.booking.COMPLETED') }}</option>
+                <option value="CANCELLED_BY_CUSTOMER">{{ t('status.bookingLong.CANCELLED_BY_CUSTOMER') }}</option>
+                <option value="CANCELLED_BY_BUSINESS">{{ t('status.bookingLong.CANCELLED_BY_BUSINESS') }}</option>
+                <option value="NO_SHOW">{{ t('status.booking.NO_SHOW') }}</option>
               </select>
               <div class="flex items-center gap-1">
                 <button
@@ -146,14 +146,14 @@
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-100">
                   <th class="text-left px-5 py-3.5 font-semibold text-slate-600">№</th>
-                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Mijoz</th>
-                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Boshlanish</th>
-                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Davomiylik</th>
-                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Xizmat</th>
-                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Xodim</th>
-                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Izoh</th>
-                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Status</th>
-                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">Amallar</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">{{ t('bookings.colCustomer') }}</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">{{ t('bookings.colStart') }}</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">{{ t('bookings.colDuration') }}</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">{{ t('bookings.colService') }}</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">{{ t('bookings.colStaff') }}</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">{{ t('bookings.colNote') }}</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">{{ t('bookings.colStatus') }}</th>
+                  <th class="text-left px-5 py-3.5 font-semibold text-slate-600">{{ t('bookings.colActions') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y">
@@ -197,13 +197,13 @@
                         @change="updateStatus(booking, ($event.target as HTMLSelectElement).value as BookingStatus)"
                         class="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white text-slate-600 cursor-pointer"
                       >
-                        <option value="PENDING">Kutilmoqda</option>
-                        <option value="CONFIRMED">Tasdiqlash</option>
-                        <option value="IN_PROGRESS">Jarayonda</option>
-                        <option value="COMPLETED">Bajarildi</option>
-                        <option value="CANCELLED_BY_CUSTOMER">Mijoz bekor qildi</option>
-                        <option value="CANCELLED_BY_BUSINESS">Biznes bekor qildi</option>
-                        <option value="NO_SHOW">Kelmadi</option>
+                        <option value="PENDING">{{ t('status.booking.PENDING') }}</option>
+                        <option value="CONFIRMED">{{ t('status.booking.CONFIRMED') }}</option>
+                        <option value="IN_PROGRESS">{{ t('status.booking.IN_PROGRESS') }}</option>
+                        <option value="COMPLETED">{{ t('status.booking.COMPLETED') }}</option>
+                        <option value="CANCELLED_BY_CUSTOMER">{{ t('status.bookingLong.CANCELLED_BY_CUSTOMER') }}</option>
+                        <option value="CANCELLED_BY_BUSINESS">{{ t('status.bookingLong.CANCELLED_BY_BUSINESS') }}</option>
+                        <option value="NO_SHOW">{{ t('status.booking.NO_SHOW') }}</option>
                       </select>
                       <div class="flex items-center gap-1">
                         <button
@@ -235,21 +235,21 @@
 
         <!-- Pagination -->
         <div v-if="totalPages > 1" class="flex items-center justify-between mt-4 text-sm text-slate-500">
-          <span>{{ page + 1 }} / {{ totalPages }} sahifa</span>
+          <span>{{ t('bookings.pageOf', { page: page + 1, total: totalPages }) }}</span>
           <div class="flex gap-2">
             <button
               :disabled="page === 0"
               @click="goToPage(page - 1)"
               class="px-3 py-1.5 rounded-lg border border-slate-200 disabled:opacity-40 hover:bg-slate-50"
             >
-              Oldingi
+              {{ t('bookings.prev') }}
             </button>
             <button
               :disabled="page + 1 >= totalPages"
               @click="goToPage(page + 1)"
               class="px-3 py-1.5 rounded-lg border border-slate-200 disabled:opacity-40 hover:bg-slate-50"
             >
-              Keyingi
+              {{ t('bookings.next') }}
             </button>
           </div>
         </div>
@@ -259,7 +259,7 @@
     <!-- Create booking modal -->
     <AppModal
       v-if="showCreateModal"
-      :title="editingBookingId ? 'Navbatni yangilash' : 'Yangi navbat qo\'shish'"
+      :title="editingBookingId ? t('bookings.editTitle') : t('bookings.newTitle')"
       @close="showCreateModal = false"
     >
       <form
@@ -276,18 +276,18 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
-                Mijoz ismi *
+                {{ t('bookings.customerNameReq') }}
               </label>
               <input
                   v-model="form.customerFirstName"
                   type="text"
-                  placeholder="Ismni kiriting"
+                  :placeholder="t('bookings.namePlaceholder')"
                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1.5">
-                Telefon (ixtiyoriy)
+                {{ t('bookings.phoneOptional') }}
               </label>
               <input
                   v-model="form.customerPhone"
@@ -299,25 +299,25 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Xizmat *
+              {{ t('bookings.serviceReq') }}
             </label>
             <select
                 v-model="form.offeredServiceId"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
             >
-              <option value="">— Xizmatni tanlang —</option>
+              <option value="">{{ t('bookings.selectServiceOption') }}</option>
               <option
                   v-for="s in services.filter(s => s.active)"
                   :key="s.id"
                   :value="s.id"
               >
-                {{ s.name }} ({{ s.durationMinutes }} daqiqa — {{ s.basePrice.toLocaleString() }} so'm)
+                {{ s.name }} ({{ s.durationMinutes }} {{ t('common.minutes') }} — {{ s.basePrice.toLocaleString(dateLocale()) }} {{ t('common.currency') }})
               </option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Sana *
+              {{ t('bookings.dateReq') }}
             </label>
             <input
                 v-model="bookingDate"
@@ -327,7 +327,7 @@
           </div>
           <div v-if="selectedService">
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Xodim (ixtiyoriy)
+              {{ t('bookings.staffOptional') }}
             </label>
             <div class="grid grid-cols-2 gap-2">
               <button
@@ -338,7 +338,7 @@
                 !form.staffId ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
               ]"
               >
-                Xodim tanlanmagan
+                {{ t('bookings.noStaffSelected') }}
               </button>
               <button
                   v-for="st in activeStaffList"
@@ -355,31 +355,31 @@
                     :class="['text-[10px] mt-0.5',
                      form.staffId === st.id ? 'text-white/80' : 'text-slate-400']"
                 >
-                {{ slotsLoading ? '...' : (freeSlotCount(st.id) > 0 ? `${freeSlotCount(st.id)} ta bo'sh` : "To'liq band") }}
+                {{ slotsLoading ? '...' : (freeSlotCount(st.id) > 0 ? t('bookings.freeSlots', { n: freeSlotCount(st.id) }) : t('bookings.fullyBooked')) }}
               </span>
               </button>
             </div>
           </div>
           <div v-if="selectedService">
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Boshlanish vaqti *
+              {{ t('bookings.startTimeReq') }}
               <span
                   class="text-slate-400 font-normal ml-1"
               >
-                ({{ selectedService.durationMinutes }} daqiqa)
+                ({{ t('bookings.minutes', { n: selectedService.durationMinutes }) }})
               </span>
             </label>
             <p
                 v-if="!todaysHoursForBooking || todaysHoursForBooking.closed"
                 class="text-xs text-slate-400"
             >
-              Bu kunda ish vaqti belgilanmagan yoki dam olish kuni
+              {{ t('bookings.noHours') }}
             </p>
             <p
                 v-else-if="possibleStarts.length === 0"
                 class="text-xs text-slate-400"
             >
-              Bu kun uchun bo'sh vaqt yo'q
+              {{ t('bookings.noFreeTime') }}
             </p>
             <div
                 v-else
@@ -406,12 +406,12 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Izoh (ixtiyoriy)
+              {{ t('bookings.noteOptional') }}
             </label>
             <textarea
                 v-model="form.customerNote"
                 rows="2"
-                placeholder="Mijoz istaklari..."
+                :placeholder="t('bookings.notePlaceholder')"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
             />
           </div>
@@ -422,7 +422,7 @@
             class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50"
             @click="showCreateModal = false"
           >
-            Bekor qilish
+            {{ t('common.cancel') }}
           </button>
           <button
             type="submit"
@@ -430,35 +430,35 @@
             class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60"
           >
             {{ saving
-              ? 'Saqlanmoqda...'
+              ? t('common.saving')
               : editingBookingId
-              ? 'Yangilash'
-              : 'Navbat qo\'shish' }}
+              ? t('bookings.update')
+              : t('bookings.add') }}
           </button>
         </div>
       </form>
     </AppModal>
     <AppModal
       v-if="deleteConfirm"
-      title="Navbatni o'chirish"
+      :title="t('bookings.deleteTitle')"
       size="sm"
       @close="deleteConfirm = null"
     >
       <p class="text-slate-600 flex items-center justify-center text-sm mb-5">
-        Ushbu navbatni o'chirishni tasdiqlaysizmi?
+        {{ t('bookings.deleteMessage') }}
       </p>
       <div class="flex gap-3">
         <button
           class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50"
           @click="deleteConfirm = null"
         >
-          Bekor qilish
+          {{ t('common.cancel') }}
         </button>
         <button
           class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700"
           @click="confirmDelete(deleteConfirm!)"
         >
-          O'chirish
+          {{ t('common.delete') }}
         </button>
       </div>
     </AppModal>
@@ -482,9 +482,12 @@ import {
 } from '@/utils/scheduling'
 import { bookingCustomerName, personName } from '@/utils/names'
 import type { Booking, BookingStatus, BookingCreateRequest, OfferedService, StaffMember, BusinessHours } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 
 const businessStore = useBusinessStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const bookings = ref<Booking[]>([])
 const services = ref<OfferedService[]>([])
@@ -509,16 +512,16 @@ const pageSize = 20
 const totalPages = ref(0)
 const totalElements = ref(0)
 
-const statuses: { label: string; value: BookingStatus | '' }[] = [
-  { label: 'Barchasi', value: '' },
-  { label: 'Kutilmoqda', value: 'PENDING' },
-  { label: 'Tasdiqlangan', value: 'CONFIRMED' },
-  { label: 'Jarayonda', value: 'IN_PROGRESS' },
-  { label: 'Bajarildi', value: 'COMPLETED' },
-  { label: 'Mijoz bekor qildi', value: 'CANCELLED_BY_CUSTOMER' },
-  { label: 'Biznes bekor qildi', value: 'CANCELLED_BY_BUSINESS' },
-  { label: 'Kelmadi', value: 'NO_SHOW' },
-]
+const statuses = computed<{ label: string; value: BookingStatus | '' }[]>(() => [
+  { label: t('bookings.all'), value: '' },
+  { label: t('status.booking.PENDING'), value: 'PENDING' },
+  { label: t('status.booking.CONFIRMED'), value: 'CONFIRMED' },
+  { label: t('status.booking.IN_PROGRESS'), value: 'IN_PROGRESS' },
+  { label: t('status.booking.COMPLETED'), value: 'COMPLETED' },
+  { label: t('status.bookingLong.CANCELLED_BY_CUSTOMER'), value: 'CANCELLED_BY_CUSTOMER' },
+  { label: t('status.bookingLong.CANCELLED_BY_BUSINESS'), value: 'CANCELLED_BY_BUSINESS' },
+  { label: t('status.booking.NO_SHOW'), value: 'NO_SHOW' },
+])
 
 const defaultForm = (): BookingCreateRequest => ({
   customerFirstName: '',
@@ -622,7 +625,7 @@ async function loadDayBookings() {
 const filtered = computed(() => bookings.value)
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('uz-UZ', {
+  return new Date(iso).toLocaleString(dateLocale(), {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
@@ -630,7 +633,7 @@ function formatDate(iso: string) {
 
 function duration(start: string, end: string) {
   const diff = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000)
-  return `${diff} daqiqa`
+  return t('bookings.minutes', { n: diff })
 }
 
 function serviceNameById(id: string) {
@@ -769,21 +772,21 @@ const editForm = (booking: Booking) => {
 async function saveBooking() {
   createError.value = ''
   if (!form.value.customerId && !form.value.customerFirstName?.trim()) {
-    createError.value = 'Mijoz ismini kiriting'
+    createError.value = t('bookings.enterCustomerName')
     return
   }
   if (!form.value.offeredServiceId) {
-    createError.value = 'Xizmat tanlang'
+    createError.value = t('bookings.selectService')
     return
   }
   if (!form.value.staffId) {
-    createError.value = 'Xodimni tanlang'
+    createError.value = t('bookings.selectStaff')
     return
   }
 
   if (!editingBookingId.value) {
     if (!form.value.startAt || !form.value.endAt) {
-      createError.value = 'Sana va vaqtni tanlang'
+      createError.value = t('bookings.selectDateTime')
       return
     }
   }
@@ -793,7 +796,7 @@ async function saveBooking() {
     const endAt = new Date(form.value.endAt)
 
     if (endAt <= startAt) {
-      createError.value = 'Tugash vaqti boshlanish vaqtidan keyin bo\'lishi kerak'
+      createError.value = t('bookings.endAfterStart')
       return
     }
   }
@@ -816,10 +819,10 @@ async function saveBooking() {
     if (editingBookingId.value) {
       await bookingsApi.update(editingBookingId.value, payload)
 
-      toast.success('Navbat yangilandi')
+      toast.success(t('bookings.updated'))
     } else {
       await bookingsApi.create(payload)
-      toast.success('Navbat yaratildi')
+      toast.success(t('bookings.created'))
     }
 
     showCreateModal.value = false
@@ -830,8 +833,8 @@ async function saveBooking() {
     createError.value = errorMessage(
         e,
         editingBookingId.value
-            ? 'Navbatni yangilashda xatolik'
-            : 'Navbat yaratishda xatolik'
+            ? t('bookings.updateError')
+            : t('bookings.createError')
     )
   } finally {
     saving.value = false
@@ -843,20 +846,20 @@ async function updateStatus(booking: Booking, status: BookingStatus) {
   try {
     await bookingsApi.update(booking.id, { status })
     booking.status = status
-    toast.success('Status yangilandi')
+    toast.success(t('bookings.statusUpdated'))
   } catch (e) {
     booking.status = previous
-    toast.error(errorMessage(e, 'Statusni yangilashda xatolik'))
+    toast.error(errorMessage(e, t('bookings.statusUpdateError')))
   }
 }
 
 async function confirmDelete(id: string) {
   try {
     await bookingsApi.delete(id)
-    toast.success('Navbat o\'chirildi')
+    toast.success(t('bookings.deleted'))
     await load()
   } catch (e) {
-    toast.error(errorMessage(e, 'O\'chirishda xatolik yuz berdi'))
+    toast.error(errorMessage(e, t('common.deleteError')))
   }
   deleteConfirm.value = null
 }

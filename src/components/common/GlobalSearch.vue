@@ -6,9 +6,12 @@ import { usersApi } from '@/api/users'
 import { businessesApi } from '@/api/businesses'
 import { personName } from '@/utils/names'
 import type { User, Business } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { businessStatusLabels as statusLabels } from '@/utils/businessStatus'
 
 const emit = defineEmits<{ close: [] }>()
 const router = useRouter()
+const { t } = useI18n()
 
 const query = ref('')
 const loading = ref(false)
@@ -18,11 +21,6 @@ const activeIndex = ref(-1)
 const allUsers = ref<User[]>([])
 const allBusinesses = ref<Business[]>([])
 const dataLoaded = ref(false)
-
-const statusLabels: Record<string, string> = {
-  TRIAL: 'Sinov', ACTIVE: 'Faol', EXPIRED: "Muddati o'tgan",
-  SUSPENDED: "To'xtatilgan", DRAFT: 'Qoralama', PENDING_REVIEW: 'Tekshiruvda',
-}
 
 interface Result {
   type: 'user' | 'business'
@@ -133,7 +131,7 @@ onUnmounted(() => {
             ref="inputRef"
             v-model="query"
             type="text"
-            placeholder="Foydalanuvchi yoki biznes qidirish..."
+            :placeholder="t('search.placeholder')"
             class="flex-1 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
           />
           <button @click="$emit('close')" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
@@ -146,12 +144,12 @@ onUnmounted(() => {
           <!-- Empty query hint -->
           <div v-if="query.length < 2 && !loading" class="px-4 py-8 text-center text-slate-400 text-sm">
             <Search class="w-8 h-8 mx-auto mb-2 opacity-30" />
-            Kamida 2 harf kiriting
+            {{ t('search.minChars') }}
           </div>
 
           <!-- No results -->
           <div v-else-if="query.length >= 2 && results.length === 0 && !loading" class="px-4 py-8 text-center text-slate-400 text-sm">
-            "{{ query }}" bo'yicha hech narsa topilmadi
+            {{ t('search.noResults', { query }) }}
           </div>
 
           <!-- Result groups -->
@@ -159,7 +157,7 @@ onUnmounted(() => {
             <!-- Users group -->
             <div v-if="results.some(r => r.type === 'user')">
               <div class="px-4 pt-3 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                <Users class="w-3.5 h-3.5" /> Foydalanuvchilar
+                <Users class="w-3.5 h-3.5" /> {{ t('nav.users') }}
               </div>
               <button
                 v-for="(result, idx) in results.filter(r => r.type === 'user')"
@@ -185,7 +183,7 @@ onUnmounted(() => {
             <!-- Businesses group -->
             <div v-if="results.some(r => r.type === 'business')">
               <div class="px-4 pt-3 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                <Building2 class="w-3.5 h-3.5" /> Bizneslar
+                <Building2 class="w-3.5 h-3.5" /> {{ t('nav.businesses') }}
               </div>
               <button
                 v-for="result in results.filter(r => r.type === 'business')"
@@ -212,9 +210,9 @@ onUnmounted(() => {
 
         <!-- Footer hint -->
         <div class="px-4 py-2.5 border-t border-slate-100 flex items-center gap-4 text-xs text-slate-400">
-          <span><kbd class="px-1.5 py-0.5 rounded bg-slate-100 font-mono">↑↓</kbd> navigatsiya</span>
-          <span><kbd class="px-1.5 py-0.5 rounded bg-slate-100 font-mono">Enter</kbd> ochish</span>
-          <span><kbd class="px-1.5 py-0.5 rounded bg-slate-100 font-mono">Esc</kbd> yopish</span>
+          <span><kbd class="px-1.5 py-0.5 rounded bg-slate-100 font-mono">↑↓</kbd> {{ t('search.navigate') }}</span>
+          <span><kbd class="px-1.5 py-0.5 rounded bg-slate-100 font-mono">Enter</kbd> {{ t('search.open') }}</span>
+          <span><kbd class="px-1.5 py-0.5 rounded bg-slate-100 font-mono">Esc</kbd> {{ t('search.close') }}</span>
         </div>
       </div>
     </div>

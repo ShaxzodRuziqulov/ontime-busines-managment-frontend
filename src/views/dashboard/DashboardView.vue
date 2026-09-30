@@ -2,8 +2,8 @@
   <div class="flex flex-col gap-6 lg:p-0 p-4">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Bosh sahifa</h2>
-        <p class="text-slate-500 text-sm mt-1">Biznesingizning umumiy ko'rinishi</p>
+        <h2 class="text-2xl font-bold text-slate-800">{{ t('dashboard.title') }}</h2>
+        <p class="text-slate-500 text-sm mt-1">{{ t('dashboard.subtitle') }}</p>
       </div>
       <div v-if="!loading" class="flex items-center gap-2">
         <RouterLink
@@ -12,15 +12,15 @@
           class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
         >
           <UserPlus class="w-4 h-4" />
-          Xodim
+          {{ t('dashboard.staff') }}
         </RouterLink>
         <span
           v-else
-          title="Muddat tugagan - obuna sotib oling"
+          :title="t('common.expiredHint')"
           class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-400 text-sm font-medium opacity-60 cursor-not-allowed select-none"
         >
           <UserPlus class="w-4 h-4" />
-          Xodim
+          {{ t('dashboard.staff') }}
         </span>
         <RouterLink
           v-if="!businessStore.isReadOnly"
@@ -28,15 +28,15 @@
           class="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors"
         >
           <Plus class="w-4 h-4" />
-          Yangi navbat
+          {{ t('dashboard.newBooking') }}
         </RouterLink>
         <span
           v-else
-          title="Muddat tugagan - obuna sotib oling"
+          :title="t('common.expiredHint')"
           class="flex items-center gap-1.5 bg-slate-300 text-white px-3.5 py-2 rounded-xl text-sm font-semibold opacity-60 cursor-not-allowed select-none"
         >
           <Plus class="w-4 h-4" />
-          Yangi navbat
+          {{ t('dashboard.newBooking') }}
         </span>
       </div>
     </div>
@@ -59,15 +59,15 @@
         <div class="flex items-center gap-3">
           <Clock class="w-6 h-6 flex-shrink-0" />
           <div>
-            <p class="font-semibold">Sinov davri faol</p>
+            <p class="font-semibold">{{ t('dashboard.trialActive') }}</p>
             <p class="text-sm text-amber-100">
-              {{ businessStore.trialDaysLeft }} kun qoldi - hozir to'liq funksional
+              {{ t('dashboard.trialLeft', { n: businessStore.trialDaysLeft }) }}
             </p>
           </div>
         </div>
         <div class="text-right">
           <div class="text-3xl font-bold">{{ businessStore.trialDaysLeft }}</div>
-          <div class="text-xs text-amber-100">kun</div>
+          <div class="text-xs text-amber-100">{{ t('dashboard.days') }}</div>
         </div>
       </div>
 
@@ -78,12 +78,12 @@
         <div class="flex items-center gap-3">
           <AlertCircle class="w-6 h-6 text-red-500 flex-shrink-0" />
           <div>
-            <p class="font-semibold text-red-700">Sinov/obuna muddati tugagan</p>
-            <p class="text-sm text-red-500 mt-0.5">Faqat ko'rish mumkin - navbat va boshqa amallar uchun obuna faollashtiring</p>
+            <p class="font-semibold text-red-700">{{ t('dashboard.expiredTitle') }}</p>
+            <p class="text-sm text-red-500 mt-0.5">{{ t('dashboard.expiredDesc') }}</p>
           </div>
         </div>
         <RouterLink to="/business" class="flex-shrink-0 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
-          Biznesim
+          {{ t('dashboard.myBusiness') }}
         </RouterLink>
       </div>
 
@@ -106,8 +106,8 @@
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4">
         <div class="flex flex-col lg:flex-row lg:items-center gap-5">
           <div class="lg:w-52 flex-shrink-0">
-            <h2 class="font-semibold text-slate-800">Navbatlar holati</h2>
-            <p class="text-xs text-slate-500 mt-1">Joriy navbatlar bo'yicha tezkor ko'rinish</p>
+            <h2 class="font-semibold text-slate-800">{{ t('dashboard.bookingStatusTitle') }}</h2>
+            <p class="text-xs text-slate-500 mt-1">{{ t('dashboard.bookingStatusDesc') }}</p>
           </div>
 
           <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -135,7 +135,7 @@
               <div class="css-hover-tooltip opacity-0 invisible
                  group-hover:opacity-100
                  group-hover:visible">
-                <span>Sahifaga utish</span>
+                <span>{{ t('dashboard.goToPage') }}</span>
               </div>
             </RouterLink>
           </div>
@@ -145,8 +145,8 @@
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h2 class="font-semibold text-slate-800">Biznes tayyorligi</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Mijozlar navbat olishi uchun asosiy sozlamalar</p>
+            <h2 class="font-semibold text-slate-800">{{ t('dashboard.readinessTitle') }}</h2>
+            <p class="text-xs text-slate-500 mt-0.5">{{ t('dashboard.readinessDesc') }}</p>
           </div>
           <span
             :class="[
@@ -179,11 +179,11 @@
                 <p class="text-xs text-slate-500 mt-1 leading-5">{{ step.description }}</p>
               </div>
             </div>
-            <span class="text-xs font-medium text-primary-600 flex-shrink-0">Ochish</span>
+            <span class="text-xs font-medium text-primary-600 flex-shrink-0">{{ t('dashboard.open') }}</span>
             <div class="css-hover-tooltip opacity-0 invisible
                  group-hover:opacity-100
                  group-hover:visible">
-              <span>{{step.label}} sahifasiga utish</span>
+              <span>{{ t('dashboard.goToNamedPage', { name: step.label }) }}</span>
             </div>
           </RouterLink>
         </div>
@@ -194,13 +194,13 @@
           <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <h2 class="font-semibold text-slate-800 flex items-center gap-2">
               <Sun class="w-4 h-4 text-amber-500" />
-              Bugungi navbatlar
+              {{ t('dashboard.todayBookings') }}
             </h2>
             <span class="text-xs font-medium bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">{{ todayBookings.length }}</span>
           </div>
 
           <div v-if="todayBookings.length === 0" class="px-6 py-10 text-center text-slate-500 text-sm">
-            Bugun uchun navbat yo'q
+            {{ t('dashboard.noToday') }}
           </div>
 
           <div v-else class="divide-y divide-slate-50 max-h-96 overflow-y-auto">
@@ -220,14 +220,14 @@
 
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm">
           <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 class="font-semibold text-slate-800">So'nggi navbatlar</h2>
+            <h2 class="font-semibold text-slate-800">{{ t('dashboard.recentBookings') }}</h2>
             <RouterLink to="/bookings" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
-              Barchasini ko'rish
+              {{ t('dashboard.viewAll') }}
             </RouterLink>
           </div>
 
           <div v-if="recentBookings.length === 0" class="px-6 py-10 text-center text-slate-500 text-sm">
-            Hali navbat yo'q
+            {{ t('dashboard.noBookings') }}
           </div>
 
           <div v-else class="divide-y divide-slate-50">
@@ -274,9 +274,12 @@ import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import { todayIso } from '@/utils/scheduling'
 import { bookingCustomerName } from '@/utils/names'
 import type { Booking, OfferedService, StaffMember, Review, BusinessHours } from '@/types'
+import { useI18n } from 'vue-i18n'
+import { dateLocale } from '@/i18n'
 
 const businessStore = useBusinessStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const bookings = ref<Booking[]>([])
 const totalBookings = ref(0)
@@ -315,47 +318,47 @@ const recentBookings = computed(() =>
 const activeHours = computed(() => hours.value.filter((item) => !item.closed && item.opensAt && item.closesAt))
 
 const mainStats = computed(() => [
-  { label: 'Jami navbatlar', value: totalBookings.value, icon: CalendarCheck, color: 'bg-blue-50 text-blue-600' },
-  { label: 'Bugungi navbatlar', value: todayBookings.value.length, icon: Sun, color: 'bg-orange-50 text-orange-600' },
-  { label: 'Bekor qilingan', value: cancelledBookings.value.length, icon: AlertCircle, color: 'bg-red-50 text-red-600' },
-  { label: "O'rtacha reyting", value: avgRating.value, icon: Star, color: 'bg-amber-50 text-amber-600' },
+  { label: t('dashboard.totalBookings'), value: totalBookings.value, icon: CalendarCheck, color: 'bg-blue-50 text-blue-600' },
+  { label: t('dashboard.todayBookings'), value: todayBookings.value.length, icon: Sun, color: 'bg-orange-50 text-orange-600' },
+  { label: t('dashboard.cancelled'), value: cancelledBookings.value.length, icon: AlertCircle, color: 'bg-red-50 text-red-600' },
+  { label: t('dashboard.avgRating'), value: avgRating.value, icon: Star, color: 'bg-amber-50 text-amber-600' },
 ])
 
 const bookingStats = computed(() => [
-  { label: 'Kutilmoqda', value: pendingBookings.value.length, icon: AlertCircle, iconClass: 'bg-amber-100 text-amber-600', barClass: 'bg-amber-400' },
-  { label: 'Tasdiqlangan', value: confirmedBookings.value.length, icon: TrendingUp, iconClass: 'bg-blue-100 text-blue-600', barClass: 'bg-blue-500' },
-  { label: 'Bajarildi', value: completedBookings.value.length, icon: CheckCircle2, iconClass: 'bg-emerald-100 text-emerald-600', barClass: 'bg-emerald-500' },
+  { label: t('status.booking.PENDING'), value: pendingBookings.value.length, icon: AlertCircle, iconClass: 'bg-amber-100 text-amber-600', barClass: 'bg-amber-400' },
+  { label: t('status.booking.CONFIRMED'), value: confirmedBookings.value.length, icon: TrendingUp, iconClass: 'bg-blue-100 text-blue-600', barClass: 'bg-blue-500' },
+  { label: t('status.booking.COMPLETED'), value: completedBookings.value.length, icon: CheckCircle2, iconClass: 'bg-emerald-100 text-emerald-600', barClass: 'bg-emerald-500' },
 ])
 
 const setupSteps = computed(() => {
   const business = businessStore.business
   return [
     {
-      label: "Biznes ma'lumoti",
+      label: t('dashboard.stepBusiness'),
       description: business?.name && business?.contactPhone && business?.city
-        ? 'Nomi, telefon va shahar kiritilgan'
-        : "Nom, telefon va shaharni to'ldiring",
+        ? t('dashboard.stepBusinessDone')
+        : t('dashboard.stepBusinessTodo'),
       done: Boolean(business?.name && business?.contactPhone && business?.city),
       to: '/business',
       icon: Briefcase,
     },
     {
-      label: 'Xizmatlar',
-      description: services.value.length ? `${services.value.length} ta xizmat bor` : "Mijoz tanlaydigan xizmat qo'shing",
+      label: t('dashboard.stepServices'),
+      description: services.value.length ? t('dashboard.stepServicesDone', { n: services.value.length }) : t('dashboard.stepServicesTodo'),
       done: services.value.length > 0,
       to: '/services',
       icon: Briefcase,
     },
     {
-      label: 'Xodimlar',
-      description: staff.value.length ? `${staff.value.length} ta xodim bor` : "Navbat qabul qiladigan xodim qo'shing",
+      label: t('dashboard.stepStaff'),
+      description: staff.value.length ? t('dashboard.stepStaffDone', { n: staff.value.length }) : t('dashboard.stepStaffTodo'),
       done: staff.value.length > 0,
       to: '/staff',
       icon: Users,
     },
     {
-      label: 'Ish vaqti',
-      description: activeHours.value.length ? `${activeHours.value.length} kun ochiq` : 'Haftalik ish vaqtini belgilang',
+      label: t('dashboard.stepHours'),
+      description: activeHours.value.length ? t('dashboard.stepHoursDone', { n: activeHours.value.length }) : t('dashboard.stepHoursTodo'),
       done: activeHours.value.length > 0,
       to: '/hours',
       icon: Clock,
@@ -371,7 +374,7 @@ function bookingPercent(value: number) {
 }
 
 function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('uz-UZ', {
+  return new Date(iso).toLocaleString(dateLocale(), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -381,7 +384,7 @@ function formatDateTime(iso: string) {
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })
 }
 
 onMounted(async () => {
@@ -399,17 +402,17 @@ onMounted(async () => {
     if (bookingsResult.status === 'fulfilled') {
       bookings.value = bookingsResult.value.data.content
       totalBookings.value = bookingsResult.value.data.totalElements
-    } else failures.push('navbatlar')
+    } else failures.push(t('dashboard.failedBookings'))
     if (servicesResult.status === 'fulfilled') services.value = servicesResult.value.data
-    else failures.push('xizmatlar')
+    else failures.push(t('dashboard.failedServices'))
     if (staffResult.status === 'fulfilled') staff.value = staffResult.value.data
-    else failures.push('xodimlar')
+    else failures.push(t('dashboard.failedStaff'))
     if (hoursResult.status === 'fulfilled') hours.value = hoursResult.value.data
-    else failures.push('ish vaqti')
+    else failures.push(t('dashboard.failedHours'))
     if (reviewsResult.status === 'fulfilled') reviews.value = reviewsResult.value.data
-    else failures.push('sharhlar')
+    else failures.push(t('dashboard.failedReviews'))
 
-    if (failures.length > 0) toast.error(`Ba'zi ma'lumotlar yuklanmadi: ${failures.join(', ')}`)
+    if (failures.length > 0) toast.error(t('dashboard.partialLoadError', { list: failures.join(', ') }))
   } finally {
     loading.value = false
   }
