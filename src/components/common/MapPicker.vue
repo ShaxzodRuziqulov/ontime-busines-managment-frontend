@@ -203,7 +203,9 @@ onMounted(() => {
     zoomControl: !props.disabled,
     dragging: !props.disabled,
     scrollWheelZoom: !props.disabled,
+    attributionControl: false,
   })
+  L.control.attribution({ prefix: false }).addTo(map)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map)
