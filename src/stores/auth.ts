@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/api/auth'
 import { t } from '@/i18n'
+import { useToast } from '@/composables/useToast'
 import type { AuthResponse, LoginRequest, RegisterRequest } from '@/types'
 
 function parseJwtPayload(token: string): Record<string, any> | null {
@@ -46,12 +47,26 @@ export const useAuthStore = defineStore('auth', () => {
         return Date.now() >= payload.exp * 1000
     }
 
+    // "Sessiya tugadi" xabari bir vaqtda bir necha marta chiqib ketmasligi uchun belgi.
+    // Masalan, sahifa 5 ta so'rov yuborsa va hammasi 401 qaytarsa — xabar faqat 1 marta chiqadi.
+    // Foydalanuvchi qayta kirganda (login) bu belgi yana false qilinadi.
+    let sessionExpiredNotified = false
+
+    // Sessiya tugaganda chaqiriladi: foydalanuvchiga xabar ko'rsatadi va tizimdan chiqaradi.
+    function expireSession() {
+        if (!sessionExpiredNotified) {
+            useToast().info(t('common.sessionExpired'))
+            sessionExpiredNotified = true
+        }
+        logout()
+    }
+
     // Sessiya haqiqiy holatini tekshiradi: token bor-yo'qligi va muddati.
-    // Muddati tugagan bo'lsa — avtomatik logout qiladi va false qaytaradi.
+    // Muddati tugagan bo'lsa — xabar chiqaradi, logout qiladi va false qaytaradi.
     function checkAuth(): boolean {
         if (!user.value || !token.value) return false
         if (isTokenExpired()) {
-            logout()
+            expireSession()
             return false
         }
         return true
@@ -67,6 +82,8 @@ export const useAuthStore = defineStore('auth', () => {
         }
         user.value = data
         token.value = data.accessToken
+        // Yangi sessiya boshlandi — keyingi safar muddati tugasa, xabar yana chiqishi kerak.
+        sessionExpiredNotified = false
         localStorage.setItem('token', data.accessToken)
         localStorage.setItem('user', JSON.stringify(data))
         const { useBusinessStore } = await import('./business')
@@ -122,6 +139,7 @@ export const useAuthStore = defineStore('auth', () => {
         hasPendingCredentials: computed(() => !!pendingCredentials.value),
         isTokenExpired,
         checkAuth,
+        expireSession,
         login,
         register,
         relogin,

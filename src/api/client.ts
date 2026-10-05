@@ -29,9 +29,11 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // 401 Unauthorized — server tokenni qabul qilmadi (muddati tugagan yoki bekor qilingan).
+    // Foydalanuvchiga "Sessiya tugadi" xabarini ko'rsatib, tizimdan chiqaramiz.
     if (error.response?.status === 401 && !isAuthRequest(error.config?.url)) {
       import('@/stores/auth').then(({ useAuthStore }) => {
-        useAuthStore().logout()
+        useAuthStore().expireSession()
       })
       import('@/router').then(({ default: router }) => {
         if (router.currentRoute.value.name !== 'login') {

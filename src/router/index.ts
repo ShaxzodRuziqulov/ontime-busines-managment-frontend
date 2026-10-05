@@ -1,10 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { checkToken } from "@/helpers/checkToken.ts";
-import { useToast } from "@/composables/useToast.ts";
-import { t } from '@/i18n'
-
-const Toast = useToast();
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -171,16 +166,14 @@ const router = createRouter({
   ],
 })
 
-let sessionExpiredShown = false;
-
 router.beforeEach((to, _, next) => {
   const auth = useAuthStore();
 
-  if (auth.isAuthenticated && !checkToken()) {
-      if (!sessionExpiredShown) {
-          Toast.info(t('common.sessionExpired'))
-          sessionExpiredShown = true
-      }
+  // Brauzerda token saqlangan, lekin muddati o'tib ketgan — demak sessiya tugagan.
+  // Diqqat: bu yerda `auth.isAuthenticated` ishlatib bo'lmaydi, chunki token muddati
+  // tugaganda u allaqachon false bo'ladi va bu shart hech qachon bajarilmay qoladi.
+  if (auth.token && auth.isTokenExpired()) {
+      auth.expireSession()
       if (to.meta.guest) return next()
       return next({ name: 'login' })
   }
