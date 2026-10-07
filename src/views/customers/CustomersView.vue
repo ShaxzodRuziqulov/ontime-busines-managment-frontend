@@ -157,7 +157,7 @@
       :title="editing ? t('customers.editTitle') : t('customers.newTitle')"
       @close="showModal = false"
     >
-      <form @submit.prevent="save" class="space-y-4">
+      <form @submit.prevent="save" class="space-y-4 p-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ t('customers.firstName') }}</label>
           <input

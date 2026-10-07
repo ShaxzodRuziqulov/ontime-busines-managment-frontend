@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between lg:p-0 p-4 gap-4 mb-6">
+    <div class="flex items-center justify-between p-4 gap-4 mb-6">
       <div>
         <h2 class="text-2xl font-bold text-slate-800">
           {{ t('nav.bookings') }}
@@ -13,7 +13,7 @@
       <button
         v-if="!businessStore.isReadOnly"
         @click="openCreate()"
-        class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+        class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
       >
         <Plus class="w-4 h-4" />
         {{ t('bookings.add') }}

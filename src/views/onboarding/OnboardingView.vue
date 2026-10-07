@@ -60,7 +60,7 @@
             <p v-html="t('onboarding.noteOwnerHtml')" />
             <p class="mt-1">
               <span v-html="t('onboarding.noteStaffHtml')" />
-              <button type="button" class="underline font-medium hover:text-blue-800" @click="logoutAndWait">
+              <button type="button" class="ml-2 underline font-medium hover:text-blue-800" @click="logoutAndWait">
                 {{ t('onboarding.relogin') }}
               </button>.
             </p>
